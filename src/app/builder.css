@@ -1,0 +1,130 @@
+.builder-wide {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 440px);
+}
+
+.theme-classicLight {
+  color: #2f2a24;
+}
+
+.theme-botanical,
+.theme-minimal {
+  color: #fff;
+}
+
+.field-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.toggle-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.toggle-item {
+  align-items: center;
+  background: #fbf8f3;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: flex;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 12px;
+}
+
+.toggle-item input {
+  accent-color: var(--accent);
+}
+
+.nested-fields {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+}
+
+.success-message {
+  background: #dff4e9;
+  border-radius: 6px;
+  color: var(--success);
+  font-weight: 800;
+  margin: 0;
+  padding: 12px;
+}
+
+.dashboard-section {
+  margin-bottom: 18px;
+}
+
+.empty-state {
+  display: grid;
+  gap: 12px;
+  justify-items: start;
+  padding: 22px;
+}
+
+.draft-list {
+  display: grid;
+}
+
+.draft-row {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 18px;
+}
+
+.draft-row:last-child {
+  border-bottom: 0;
+}
+
+.draft-row h3 {
+  margin-bottom: 6px;
+}
+
+.draft-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+}
+
+.mini-section-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.mini-section-list span {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.draft-row .mini-section-list span {
+  background: #fbf8f3;
+  border-color: var(--line);
+}
+
+@media (max-width: 560px) {
+  .field-row,
+  .toggle-grid,
+  .draft-row {
+    grid-template-columns: 1fr;
+  }
+
+  .draft-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
