@@ -90,6 +90,10 @@ export function readDrafts(): InvitationDraft[] {
   }
 }
 
+export function findDraftBySlug(slug: string) {
+  return readDrafts().find((draft) => draft.slug === slug);
+}
+
 export function saveDraft(draft: InvitationDraft) {
   const drafts = readDrafts();
   const nextDrafts = [
