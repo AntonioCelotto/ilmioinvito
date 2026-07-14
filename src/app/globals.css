@@ -416,6 +416,35 @@ h3 {
   resize: vertical;
 }
 
+.preview-link-panel {
+  align-items: center;
+  background: #fff7ea;
+  border: 1px solid #e8c898;
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.preview-link-panel div {
+  display: grid;
+  gap: 5px;
+}
+
+.preview-link-panel span {
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.preview-link-panel strong {
+  color: var(--ink);
+  font-family: monospace;
+  font-size: 14px;
+  word-break: break-word;
+}
+
 .success-box {
   background: #e7f7ed;
   border: 1px solid #b8e5ca;
@@ -437,7 +466,10 @@ h3 {
   font-size: 14px;
 }
 
-.success-box .button {
+.success-box .button.secondary {
+  background: #fff;
+  border-color: #b8e5ca;
+  color: var(--success);
   width: fit-content;
 }
 
