@@ -33,6 +33,29 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="section demo-status">
+        <div className="section-inner split">
+          <div>
+            <p className="eyebrow">Demo aggiornata</p>
+            <h2>Salva una bozza e apri subito il suo link.</h2>
+            <p className="muted">
+              Il builder ora genera automaticamente il link pubblico
+              dell'invito. Dopo il salvataggio puoi aprirlo dal builder oppure
+              dalla dashboard demo.
+            </p>
+          </div>
+          <div className="demo-steps">
+            <a className="button" href="/builder">
+              Apri builder
+            </a>
+            <a className="button light" href="/dashboard">
+              Vai alla dashboard
+            </a>
+            <span>Flusso: crea invito -> salva bozza -> apri anteprima.</span>
+          </div>
+        </div>
+      </section>
+
       <section className="section">
         <div className="section-inner split">
           <div>
