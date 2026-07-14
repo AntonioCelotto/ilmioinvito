@@ -142,7 +142,7 @@ export function BuilderClient() {
 
     saveDraft(nextDraft);
     setDraft(nextDraft);
-    setSavedMessage("Bozza salvata. Ora la trovi in dashboard.");
+    setSavedMessage("Bozza salvata. Link anteprima creato automaticamente.");
   }
 
   return (
@@ -365,7 +365,15 @@ export function BuilderClient() {
         <button className="button" type="button" onClick={handleSave}>
           Salva bozza
         </button>
-        {savedMessage ? <p className="success-message">{savedMessage}</p> : null}
+        {savedMessage ? (
+          <div className="success-box">
+            <p>{savedMessage}</p>
+            <span>{publicPath}</span>
+            <a className="button secondary" href={publicPath}>
+              Apri anteprima
+            </a>
+          </div>
+        ) : null}
       </form>
 
       <div
