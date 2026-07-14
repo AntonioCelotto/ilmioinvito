@@ -149,6 +149,15 @@ export function BuilderClient() {
     <div className="builder builder-wide">
       <form className="form-panel">
         <h3>Dati invito</h3>
+        <div className="preview-link-panel">
+          <div>
+            <span>Link anteprima generato</span>
+            <strong>{publicPath}</strong>
+          </div>
+          <a className="button" href={publicPath}>
+            Apri link
+          </a>
+        </div>
         <div className="field">
           <label htmlFor="title">Titolo invito</label>
           <input
