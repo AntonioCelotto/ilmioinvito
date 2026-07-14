@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./builder.css";
 
 export const metadata: Metadata = {
   title: "ilmioinvito.com",
