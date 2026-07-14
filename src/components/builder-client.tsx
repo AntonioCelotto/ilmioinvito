@@ -369,7 +369,7 @@ export function BuilderClient() {
           <div className="success-box">
             <p>{savedMessage}</p>
             <span>{publicPath}</span>
-            <a className="button secondary" href={publicPath}>
+            <a className="button" href={publicPath}>
               Apri anteprima
             </a>
           </div>
