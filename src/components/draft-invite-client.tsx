@@ -7,6 +7,7 @@ import {
   InvitationDraft,
   InvitationSectionKey
 } from "@/lib/draft-storage";
+import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 
 type DraftInviteClientProps = {
@@ -56,8 +57,18 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setDraft(findDraftBySlug(slug) ?? null);
-    setLoaded(true);
+    const localDraft = findDraftBySlug(slug);
+
+    if (localDraft) {
+      setDraft(localDraft);
+      setLoaded(true);
+      return;
+    }
+
+    findDraftBySlugFromSupabase(slug).then((remoteDraft) => {
+      setDraft(remoteDraft);
+      setLoaded(true);
+    });
   }, [slug]);
 
   const invitation = draft ?? fallbackDraft;
@@ -99,9 +110,9 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             <div className="empty-state">
               <h2>Bozza non trovata su questo browser.</h2>
               <p className="muted">
-                La demo legge le bozze salvate localmente. Apri questo link dallo
-                stesso browser in cui hai salvato la bozza, oppure torna al
-                builder e salva di nuovo.
+                La demo cerca prima le bozze locali e poi Supabase. Se l'invito
+                e ancora in bozza, aprilo dallo stesso browser/account con cui lo
+                hai creato.
               </p>
               <a className="button" href="/builder">
                 Torna al builder
