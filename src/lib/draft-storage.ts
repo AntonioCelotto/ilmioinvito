@@ -31,6 +31,8 @@ export type InvitationTheme = {
   fontStyle: "serif" | "modern" | "script";
 };
 
+export type InvitationBlockTexts = Record<InvitationSectionKey, string>;
+
 export type InvitationDraft = {
   id: string;
   slug: string;
@@ -43,6 +45,7 @@ export type InvitationDraft = {
   whatsappNumber: string;
   story: string;
   dressCode: string;
+  blockTexts: InvitationBlockTexts;
   activeSections: InvitationSectionKey[];
   locations: InvitationLocation[];
   media: InvitationMedia[];
@@ -60,6 +63,18 @@ export const defaultSections: InvitationSectionKey[] = [
   "gallery",
   "dressCode"
 ];
+
+export const defaultBlockTexts: InvitationBlockTexts = {
+  countdown: "Il conto alla rovescia e iniziato: manca sempre meno al grande giorno.",
+  ceremony: "La cerimonia sara il primo momento da vivere insieme, con tutte le persone piu importanti.",
+  reception: "Dopo la cerimonia continueremo a festeggiare nella location scelta per il ricevimento.",
+  rsvp: "Conferma la tua presenza e indicaci eventuali accompagnatori o note utili.",
+  gallery: "Qui potremo raccogliere foto, video e ricordi collegati all'invito.",
+  video: "Uno spazio dedicato al video invito o a un messaggio speciale per gli ospiti.",
+  program: "Il programma della giornata sara aggiornato con orari, momenti principali e indicazioni utili.",
+  dressCode: "Segui le indicazioni di stile pensate per rendere l'evento ancora piu armonioso.",
+  giftInfo: "Qui puoi inserire indicazioni su regalo, lista nozze, IBAN o altre informazioni utili."
+};
 
 export function makeSlug(value: string) {
   const slug = value
@@ -84,7 +99,15 @@ export function readDrafts(): InvitationDraft[] {
   }
 
   try {
-    return JSON.parse(raw) as InvitationDraft[];
+    const drafts = JSON.parse(raw) as InvitationDraft[];
+
+    return drafts.map((draft) => ({
+      ...draft,
+      blockTexts: {
+        ...defaultBlockTexts,
+        ...(draft.blockTexts ?? {})
+      }
+    }));
   } catch {
     return [];
   }
