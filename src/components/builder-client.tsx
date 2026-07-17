@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import { AuthPanel } from "@/components/auth-panel";
 import {
+  defaultBlockTexts,
   defaultSections,
   InvitationDraft,
   InvitationLocation,
@@ -25,6 +26,18 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
   program: "Programma",
   dressCode: "Dress code",
   giftInfo: "Regalo / info utili"
+};
+
+const blockTextHelpers: Record<InvitationSectionKey, string> = {
+  countdown: "Testo sopra il conto alla rovescia.",
+  ceremony: "Indicazioni per chiesa o cerimonia.",
+  reception: "Indicazioni per location e ricevimento.",
+  rsvp: "Testo per la conferma partecipazione.",
+  gallery: "Testo per foto e ricordi.",
+  video: "Testo per il video invito.",
+  program: "Programma della giornata.",
+  dressCode: "Indicazioni di stile per gli invitati.",
+  giftInfo: "Informazioni su regalo, lista nozze o note utili."
 };
 
 const initialLocations: InvitationLocation[] = [
@@ -67,6 +80,7 @@ export function BuilderClient() {
     whatsappNumber: demoInvitation.whatsappNumber,
     story: demoInvitation.story,
     dressCode: demoInvitation.dressCode,
+    blockTexts: defaultBlockTexts,
     activeSections: defaultSections,
     locations: initialLocations,
     media: [
@@ -125,6 +139,16 @@ export function BuilderClient() {
       media: current.media.map((item) =>
         item.id === id ? { ...item, ...patch } : item
       )
+    }));
+  }
+
+  function updateBlockText(section: InvitationSectionKey, value: string) {
+    setDraft((current) => ({
+      ...current,
+      blockTexts: {
+        ...current.blockTexts,
+        [section]: value
+      }
     }));
   }
 
@@ -236,6 +260,37 @@ export function BuilderClient() {
             </label>
           ))}
         </div>
+
+        <h3>Testi blocchi invito</h3>
+        {(Object.keys(sectionLabels) as InvitationSectionKey[]).map((section) => {
+          const isActive = draft.activeSections.includes(section);
+
+          return (
+            <div className="nested-fields block-editor" key={section}>
+              <div className="block-editor-head">
+                <div>
+                  <span>{isActive ? "Visibile nel link" : "Nascosto dal link"}</span>
+                  <strong>{sectionLabels[section]}</strong>
+                </div>
+                <label className="toggle-item compact">
+                  <input
+                    checked={isActive}
+                    type="checkbox"
+                    onChange={() => toggleSection(section)}
+                  />
+                  <span>Attivo</span>
+                </label>
+              </div>
+              <div className="field">
+                <label>{blockTextHelpers[section]}</label>
+                <textarea
+                  value={draft.blockTexts[section]}
+                  onChange={(event) => updateBlockText(section, event.target.value)}
+                />
+              </div>
+            </div>
+          );
+        })}
 
         <h3>Geolocalizzazione</h3>
         {draft.locations.map((location) => (
@@ -411,6 +466,7 @@ export function BuilderClient() {
               <span key={section}>{sectionLabels[section]}</span>
             ))}
           </div>
+          <p>{draft.blockTexts[draft.activeSections[0] ?? "countdown"]}</p>
           <p className="muted">Link previsto: {publicPath}</p>
         </div>
       </div>
