@@ -142,8 +142,45 @@ export async function signInWithEmail(email: string) {
   return supabase.auth.signInWithOtp({
     email,
     options: {
+      shouldCreateUser: false,
       emailRedirectTo: `${window.location.origin}/dashboard`
     }
+  });
+}
+
+export async function registerWithEmailPassword(
+  fullName: string,
+  email: string,
+  password: string
+) {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return { error: { message: "Supabase non e configurato." } };
+  }
+
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName
+      },
+      emailRedirectTo: `${window.location.origin}/dashboard`
+    }
+  });
+}
+
+export async function loginWithEmailPassword(email: string, password: string) {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return { error: { message: "Supabase non e configurato." } };
+  }
+
+  return supabase.auth.signInWithPassword({
+    email,
+    password
   });
 }
 
