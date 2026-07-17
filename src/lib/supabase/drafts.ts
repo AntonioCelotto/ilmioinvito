@@ -1,4 +1,5 @@
 import {
+  defaultBlockTexts,
   InvitationDraft,
   InvitationLocation,
   InvitationMedia,
@@ -47,6 +48,10 @@ function timeOrNull(value: string) {
 function themeWithDisplayDate(draft: InvitationDraft) {
   return {
     ...draft.theme,
+    blockTexts: {
+      ...defaultBlockTexts,
+      ...(draft.blockTexts ?? {})
+    },
     eventDateLabel: draft.eventDate,
     eventTimeLabel: draft.eventTime
   };
@@ -55,6 +60,7 @@ function themeWithDisplayDate(draft: InvitationDraft) {
 function readDisplayTheme(value: unknown) {
   if (value && typeof value === "object") {
     return value as Partial<InvitationTheme> & {
+      blockTexts?: Partial<Record<InvitationSectionKey, string>>;
       eventDateLabel?: string;
       eventTimeLabel?: string;
     };
@@ -113,6 +119,10 @@ function rowToDraft(row: any): InvitationDraft {
     whatsappNumber: row.whatsapp_number ?? "",
     story: content?.story ?? "",
     dressCode: content?.dress_code ?? "",
+    blockTexts: {
+      ...defaultBlockTexts,
+      ...(displayTheme.blockTexts ?? {})
+    },
     activeSections,
     locations,
     media,
