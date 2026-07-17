@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { demoInvitation } from "@/lib/demo-data";
+import { AuthPanel } from "@/components/auth-panel";
 import {
   defaultSections,
   InvitationDraft,
@@ -12,6 +13,7 @@ import {
   makeSlug,
   saveDraft
 } from "@/lib/draft-storage";
+import { saveDraftToSupabase } from "@/lib/supabase/drafts";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
   countdown: "Countdown",
@@ -133,7 +135,7 @@ export function BuilderClient() {
     }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     const nextDraft = {
       ...draft,
       slug: makeSlug(draft.title),
@@ -142,12 +144,16 @@ export function BuilderClient() {
 
     saveDraft(nextDraft);
     setDraft(nextDraft);
-    setSavedMessage("Bozza salvata. Link anteprima creato automaticamente.");
+    setSavedMessage("Salvataggio locale completato. Invio a Supabase...");
+
+    const result = await saveDraftToSupabase(nextDraft);
+    setSavedMessage(result.message);
   }
 
   return (
     <div className="builder builder-wide">
       <form className="form-panel">
+        <AuthPanel compact />
         <h3>Dati invito</h3>
         <div className="preview-link-panel">
           <div>
