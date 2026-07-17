@@ -46,10 +46,22 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
+    if (isRegister && result.data?.session) {
+      window.location.href = "/dashboard";
+      return;
+    }
+
     if (isRegister) {
-      setMessage(
-        "Registrazione creata. Controlla la tua email per confermare l'account, poi accedi."
-      );
+      const loginResult = await loginWithEmailPassword(email, password);
+
+      if (loginResult.error) {
+        setMessage(
+          "Account creato. Se non riesci ad accedere subito, disattiva la conferma email in Supabase Auth."
+        );
+        return;
+      }
+
+      window.location.href = "/dashboard";
       return;
     }
 
