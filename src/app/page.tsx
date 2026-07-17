@@ -6,6 +6,8 @@ export default function HomePage() {
           ilmioinvito.com
         </a>
         <nav className="nav" aria-label="Navigazione principale">
+          <a href="/registrati">Registrati</a>
+          <a href="/login">Accedi</a>
           <a href="/builder">Crea invito</a>
           <a href="/dashboard">Dashboard demo</a>
           <a href="/i/dora-lorenzo-demo">Invito demo</a>
@@ -22,11 +24,11 @@ export default function HomePage() {
               controllare partecipanti, risposte e modifiche da un unico posto.
             </p>
             <div className="actions">
-              <a className="button" href="/builder">
-                Crea il tuo invito
+              <a className="button" href="/registrati">
+                Registrati
               </a>
-              <a className="button secondary" href="/i/dora-lorenzo-demo">
-                Guarda demo
+              <a className="button secondary" href="/login">
+                Accedi
               </a>
             </div>
           </div>
@@ -39,19 +41,18 @@ export default function HomePage() {
             <p className="eyebrow">Demo aggiornata</p>
             <h2>Salva una bozza e apri subito il suo link.</h2>
             <p className="muted">
-              Il builder ora genera automaticamente il link pubblico
-              dell'invito. Dopo il salvataggio puoi aprirlo dal builder oppure
-              dalla dashboard demo.
+              Il flusso ora parte dalla registrazione cliente. Dopo l'accesso
+              puoi creare la bozza, salvare i dati e aprire il link anteprima.
             </p>
           </div>
           <div className="demo-steps">
-            <a className="button" href="/builder">
-              Apri builder
+            <a className="button" href="/registrati">
+              Registrati
             </a>
-            <a className="button light" href="/dashboard">
-              Vai alla dashboard
+            <a className="button light" href="/login">
+              Accedi
             </a>
-            <span>Flusso: crea invito, salva bozza, apri anteprima.</span>
+            <span>Flusso: registrati, accedi, crea invito, salva bozza.</span>
           </div>
         </div>
       </section>
