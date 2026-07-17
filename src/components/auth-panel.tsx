@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getCurrentUser, signInWithEmail, signOut } from "@/lib/supabase/drafts";
+import { getCurrentUser, signOut } from "@/lib/supabase/drafts";
 
 type AuthPanelProps = {
   compact?: boolean;
 };
 
 export function AuthPanel({ compact = false }: AuthPanelProps) {
-  const [email, setEmail] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -19,18 +18,6 @@ export function AuthPanel({ compact = false }: AuthPanelProps) {
       setLoading(false);
     });
   }, []);
-
-  async function handleLogin() {
-    setMessage("");
-    const { error } = await signInWithEmail(email);
-
-    if (error) {
-      setMessage(error.message);
-      return;
-    }
-
-    setMessage("Controlla la tua email: ti ho inviato il link di accesso.");
-  }
 
   async function handleSignOut() {
     await signOut();
@@ -60,19 +47,15 @@ export function AuthPanel({ compact = false }: AuthPanelProps) {
     <div className={compact ? "auth-panel compact" : "auth-panel"}>
       <div>
         <span>Accesso cliente</span>
-        <strong>Salva bozze su Supabase</strong>
+        <strong>Registrati prima di entrare</strong>
       </div>
       <div className="auth-actions">
-        <input
-          aria-label="Email accesso cliente"
-          placeholder="email cliente"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
-        <button className="button" type="button" onClick={handleLogin}>
-          Entra
-        </button>
+        <a className="button" href="/registrati">
+          Registrati
+        </a>
+        <a className="button light" href="/login">
+          Accedi
+        </a>
       </div>
       {message ? <p className="muted">{message}</p> : null}
     </div>
