@@ -342,6 +342,13 @@ h3 {
   padding: 16px 18px;
 }
 
+.panel-note {
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  margin: 0;
+  padding: 12px 18px;
+}
+
 .table {
   border-collapse: collapse;
   width: 100%;
@@ -414,6 +421,51 @@ h3 {
 .field textarea {
   min-height: 112px;
   resize: vertical;
+}
+
+.auth-panel {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 14px;
+}
+
+.auth-panel.compact {
+  margin-bottom: 0;
+}
+
+.auth-panel div {
+  display: grid;
+  gap: 5px;
+}
+
+.auth-panel span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.auth-panel strong {
+  color: var(--ink);
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.auth-actions input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 44px;
+  padding: 10px 12px;
 }
 
 .preview-link-panel {
