@@ -51,7 +51,7 @@ export default function HomePage() {
             <a className="button light" href="/dashboard">
               Vai alla dashboard
             </a>
-            <span>Flusso: crea invito -> salva bozza -> apri anteprima.</span>
+            <span>Flusso: crea invito, salva bozza, apri anteprima.</span>
           </div>
         </div>
       </section>
