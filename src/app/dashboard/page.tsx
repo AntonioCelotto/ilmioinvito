@@ -1,4 +1,5 @@
 import { DashboardClient } from "@/components/dashboard-client";
+import { AuthGate } from "@/components/auth-gate";
 
 export default function DashboardPage() {
   return (
@@ -18,7 +19,9 @@ export default function DashboardPage() {
         </aside>
 
         <section className="main">
-          <DashboardClient />
+          <AuthGate>
+            <DashboardClient />
+          </AuthGate>
         </section>
       </div>
     </main>
