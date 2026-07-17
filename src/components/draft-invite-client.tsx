@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import {
+  defaultBlockTexts,
   findDraftBySlug,
   InvitationDraft,
   InvitationSectionKey
@@ -26,6 +27,7 @@ const fallbackDraft: InvitationDraft = {
   whatsappNumber: demoInvitation.whatsappNumber,
   story: demoInvitation.story,
   dressCode: demoInvitation.dressCode,
+  blockTexts: defaultBlockTexts,
   activeSections: ["countdown", "reception", "rsvp", "dressCode"],
   locations: [
     {
@@ -50,6 +52,80 @@ const fallbackDraft: InvitationDraft = {
 
 function sectionIsActive(draft: InvitationDraft, section: InvitationSectionKey) {
   return draft.activeSections.includes(section);
+}
+
+function blockText(draft: InvitationDraft, section: InvitationSectionKey) {
+  return draft.blockTexts?.[section] || defaultBlockTexts[section];
+}
+
+function parseEventDate(draft: InvitationDraft) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(draft.eventDate)) {
+    const time = draft.eventTime || "00:00";
+    const normalizedTime = time.length === 5 ? `${time}:00` : time;
+    return new Date(`${draft.eventDate}T${normalizedTime}`);
+  }
+
+  if (draft.slug === demoInvitation.slug) {
+    return new Date(demoInvitation.eventDateIso);
+  }
+
+  return null;
+}
+
+function eventDateIsoFromDraft(draft: InvitationDraft) {
+  const eventDate = parseEventDate(draft);
+
+  if (!eventDate || Number.isNaN(eventDate.getTime())) {
+    return demoInvitation.eventDateIso;
+  }
+
+  return eventDate.toISOString();
+}
+
+function CountdownBlock({ draft }: { draft: InvitationDraft }) {
+  const [now, setNow] = useState(() => Date.now());
+  const eventDate = parseEventDate(draft);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 60000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  if (!eventDate || Number.isNaN(eventDate.getTime())) {
+    return (
+      <p className="invite-date-line">
+        {draft.eventDate}
+        {draft.eventTime ? `, ore ${draft.eventTime}` : ""}
+      </p>
+    );
+  }
+
+  const diff = Math.max(0, eventDate.getTime() - now);
+  const totalMinutes = Math.floor(diff / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  return (
+    <div className="countdown-panel light-panel">
+      <div>
+        <strong>{days}</strong>
+        <span>Giorni</span>
+      </div>
+      <div>
+        <strong>{hours}</strong>
+        <span>Ore</span>
+      </div>
+      <div>
+        <strong>{minutes}</strong>
+        <span>Minuti</span>
+      </div>
+      <div>
+        <strong>{draft.eventTime || "--"}</strong>
+        <span>Inizio</span>
+      </div>
+    </div>
+  );
 }
 
 export function DraftInviteClient({ slug }: DraftInviteClientProps) {
@@ -122,49 +198,119 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
         </section>
       ) : null}
 
-      <section className="section">
-        <div className="section-inner split">
-          <div>
+      <section className="section invite-section">
+        <div className="section-inner invite-section-inner">
             <p className="eyebrow">La storia</p>
             <h2>Un invito pensato per essere personale.</h2>
-            <p className="muted">{invitation.story}</p>
-          </div>
-          <div>
-            <p className="eyebrow">Dettagli evento</p>
-            <ul className="feature-list">
-              <li>
-                <h3>Quando</h3>
-                <span className="muted">
-                  {invitation.eventDate}, ore {invitation.eventTime}
-                </span>
-              </li>
-              {invitation.locations.map((location) => (
-                <li key={location.id}>
-                  <h3>{location.name || "Location"}</h3>
-                  <span className="muted">{location.address || "Da definire"}</span>
-                  {location.mapsUrl ? (
-                    <a className="button" href={location.mapsUrl}>
-                      Apri mappa
-                    </a>
-                  ) : null}
-                </li>
-              ))}
-              {sectionIsActive(invitation, "dressCode") ? (
-                <li>
-                  <h3>Dress code</h3>
-                  <span className="muted">{invitation.dressCode}</span>
-                </li>
-              ) : null}
-            </ul>
-          </div>
+            <p className="muted invite-copy">{invitation.story}</p>
         </div>
       </section>
 
+      {sectionIsActive(invitation, "countdown") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Countdown</p>
+            <h2>Il grande giorno si avvicina.</h2>
+            <p className="muted invite-copy">{blockText(invitation, "countdown")}</p>
+            <CountdownBlock draft={invitation} />
+          </div>
+        </section>
+      ) : null}
+
+      {sectionIsActive(invitation, "ceremony") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Cerimonia</p>
+            <h2>Il primo momento da condividere.</h2>
+            <p className="muted invite-copy">{blockText(invitation, "ceremony")}</p>
+            <div className="invite-location-grid">
+              {invitation.locations
+                .filter((location) => ["church", "ceremony", "main"].includes(location.type))
+                .map((location) => (
+                  <div className="invite-location" key={location.id}>
+                    <h3>{location.name || "Cerimonia"}</h3>
+                    <p className="muted">{location.address || "Indirizzo da definire"}</p>
+                    {location.mapsUrl ? (
+                      <a className="button" href={location.mapsUrl}>
+                        Apri mappa
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {sectionIsActive(invitation, "reception") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Ricevimento</p>
+            <h2>Festeggiamo insieme.</h2>
+            <p className="muted invite-copy">{blockText(invitation, "reception")}</p>
+            <div className="invite-location-grid">
+              {invitation.locations
+                .filter((location) => ["reception", "main", "other"].includes(location.type))
+                .map((location) => (
+                  <div className="invite-location" key={location.id}>
+                    <h3>{location.name || "Ricevimento"}</h3>
+                    <p className="muted">{location.address || "Indirizzo da definire"}</p>
+                    {location.mapsUrl ? (
+                      <a className="button" href={location.mapsUrl}>
+                        Apri mappa
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {sectionIsActive(invitation, "program") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Programma</p>
+            <h2>La giornata.</h2>
+            <p className="muted invite-copy">{blockText(invitation, "program")}</p>
+            <p className="invite-date-line">
+              {invitation.eventDate}
+              {invitation.eventTime ? `, ore ${invitation.eventTime}` : ""}
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      {sectionIsActive(invitation, "dressCode") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Dress code</p>
+            <h2>{invitation.dressCode || "Indicazioni di stile"}</h2>
+            <p className="muted invite-copy">{blockText(invitation, "dressCode")}</p>
+          </div>
+        </section>
+      ) : null}
+
+      {sectionIsActive(invitation, "giftInfo") ? (
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
+            <p className="eyebrow">Info utili</p>
+            <h2>Regalo e dettagli.</h2>
+            <p className="muted invite-copy">{blockText(invitation, "giftInfo")}</p>
+          </div>
+        </section>
+      ) : null}
+
       {sectionIsActive(invitation, "gallery") || sectionIsActive(invitation, "video") ? (
-        <section className="section">
-          <div className="section-inner">
+        <section className="section invite-section">
+          <div className="section-inner invite-section-inner">
             <p className="eyebrow">Foto e video</p>
             <h2>Media dell'invito</h2>
+            <p className="muted invite-copy">
+              {sectionIsActive(invitation, "video")
+                ? blockText(invitation, "video")
+                : blockText(invitation, "gallery")}
+            </p>
             {invitation.media.some((item) => item.url) ? (
               <div className="media-grid">
                 {invitation.media
@@ -185,18 +331,15 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
 
       {sectionIsActive(invitation, "rsvp") ? (
         <section className="section dark">
-          <div className="section-inner split">
+          <div className="section-inner invite-section-inner">
             <div>
               <p className="eyebrow">RSVP</p>
               <h2>Conferma la tua presenza.</h2>
-              <p className="muted">
-                In questa fase demo il bottone apre WhatsApp. Nel prodotto finale
-                la risposta verra salvata anche in dashboard.
-              </p>
+              <p className="muted invite-copy">{blockText(invitation, "rsvp")}</p>
             </div>
             <div className="rsvp">
               <InviteRsvp
-                eventDateIso={demoInvitation.eventDateIso}
+                eventDateIso={eventDateIsoFromDraft(invitation)}
                 invitationTitle={invitation.title}
                 whatsappNumber={invitation.whatsappNumber}
               />
