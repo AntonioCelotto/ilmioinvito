@@ -1,4 +1,5 @@
 import { BuilderClient } from "@/components/builder-client";
+import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
   return (
@@ -24,7 +25,7 @@ export default function BuilderPage() {
               <h2>Crea il tuo invito</h2>
               <p className="muted">
                 Salva una bozza, scegli sezioni, location, media e grafica.
-                Il salvataggio account su Supabase arriva nel prossimo step.
+                Per usare il builder devi prima registrarti e accedere.
               </p>
             </div>
             <a className="button" href="/dashboard">
@@ -32,7 +33,9 @@ export default function BuilderPage() {
             </a>
           </div>
 
-          <BuilderClient />
+          <AuthGate>
+            <BuilderClient />
+          </AuthGate>
         </section>
       </div>
     </main>
