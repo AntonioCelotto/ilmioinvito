@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { demoGuests, demoInvitation } from "@/lib/demo-data";
+import { AuthPanel } from "@/components/auth-panel";
 import { InvitationDraft, readDrafts } from "@/lib/draft-storage";
+import { loadUserDraftsFromSupabase } from "@/lib/supabase/drafts";
 
 const labels = {
   confirmed: "Confermato",
@@ -12,9 +14,23 @@ const labels = {
 
 export function DashboardClient() {
   const [drafts, setDrafts] = useState<InvitationDraft[]>([]);
+  const [remoteMessage, setRemoteMessage] = useState("");
 
   useEffect(() => {
-    setDrafts(readDrafts());
+    const localDrafts = readDrafts();
+    setDrafts(localDrafts);
+
+    loadUserDraftsFromSupabase().then((result) => {
+      setRemoteMessage(result.message);
+
+      if (result.drafts.length > 0) {
+        const remoteIds = new Set(result.drafts.map((draft) => draft.id));
+        setDrafts([
+          ...result.drafts,
+          ...localDrafts.filter((draft) => !remoteIds.has(draft.id))
+        ]);
+      }
+    });
   }, []);
 
   const confirmed = demoGuests.filter((guest) => guest.status === "confirmed");
@@ -37,18 +53,21 @@ export function DashboardClient() {
         </a>
       </div>
 
+      <AuthPanel />
+
       <section className="panel dashboard-section">
         <div className="panel-header">
           <h3>Bozze salvate</h3>
-          <span className="muted">{drafts.length} bozze locali</span>
+          <span className="muted">{drafts.length} bozze</span>
         </div>
+        {remoteMessage ? <p className="panel-note">{remoteMessage}</p> : null}
         {drafts.length === 0 ? (
           <div className="empty-state">
             <h3>Nessuna bozza salvata</h3>
             <p className="muted">
               Crea un invito dal builder e premi "Salva bozza". In questa prima
-              fase la bozza viene salvata nel browser; il prossimo step la
-              colleghera all'account Supabase.
+              fase puoi salvarla nel browser; se accedi con email viene salvata
+              anche su Supabase.
             </p>
             <a className="button" href="/builder">
               Crea invito
