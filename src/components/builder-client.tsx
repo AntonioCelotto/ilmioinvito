@@ -143,7 +143,7 @@ function PreviewSection({
         <p>{text}</p>
         <strong className="phone-featured-text">
           {draft.eventDate || "Data da definire"}
-          {draft.eventTime ? ` Â· ${draft.eventTime}` : ""}
+          {draft.eventTime ? ` · ${draft.eventTime}` : ""}
         </strong>
       </section>
     );
@@ -167,7 +167,7 @@ function PreviewSection({
         <span className="phone-slot-label">RSVP</span>
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
-        <span className="phone-preview-button">ParteciperÃ²</span>
+        <span className="phone-preview-button">Parteciperò</span>
       </section>
     );
   }
@@ -579,7 +579,7 @@ export function BuilderClient() {
             <header className="phone-hero-preview">
               <p className="phone-kicker">Il nostro invito</p>
               <h2>{draft.title || "Titolo invito"}</h2>
-              <p>{draft.subtitle || "Il sottotitolo apparirÃ  qui"}</p>
+              <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
               <div className="phone-meta">
                 <span>{draft.eventDate || "Data"}</span>
                 <span>{draft.eventTime || "Ora"}</span>
@@ -612,4 +612,3 @@ export function BuilderClient() {
     </div>
   );
 }
-
