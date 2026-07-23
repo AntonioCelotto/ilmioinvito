@@ -47,7 +47,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (isRegister && result.data?.session) {
-      window.location.href = "/dashboard";
+      window.location.href = "/templates";
       return;
     }
 
@@ -61,11 +61,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         return;
       }
 
-      window.location.href = "/dashboard";
+      window.location.href = "/templates";
       return;
     }
 
-    window.location.href = "/dashboard";
+    window.location.href = "/templates";
   }
 
   return (

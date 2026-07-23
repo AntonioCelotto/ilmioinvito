@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import { AuthPanel } from "@/components/auth-panel";
 import {
@@ -15,6 +15,10 @@ import {
   saveDraft
 } from "@/lib/draft-storage";
 import { saveDraftToSupabase } from "@/lib/supabase/drafts";
+import {
+  invitationTemplates,
+  readSelectedTemplate
+} from "@/lib/template-catalog";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
   countdown: "Countdown",
@@ -58,13 +62,6 @@ const initialLocations: InvitationLocation[] = [
     )}`
   }
 ];
-
-const initialTheme: InvitationTheme = {
-  template: "darkLuxury",
-  primaryColor: "#151313",
-  accentColor: "#b87333",
-  fontStyle: "serif"
-};
 
 function PreviewSection({
   draft,
@@ -181,6 +178,7 @@ function PreviewSection({
 }
 
 export function BuilderClient() {
+  const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
   const [draft, setDraft] = useState<InvitationDraft>({
     id: crypto.randomUUID(),
@@ -211,11 +209,17 @@ export function BuilderClient() {
         url: ""
       }
     ],
-    theme: initialTheme,
+    theme: invitationTemplates[0].theme,
     updatedAt: new Date().toISOString()
   });
 
   const publicPath = useMemo(() => `/i/${makeSlug(draft.title)}`, [draft.title]);
+
+  useEffect(() => {
+    const template = readSelectedTemplate();
+    setSelectedTemplate(template);
+    setDraft((current) => ({ ...current, theme: template.theme }));
+  }, []);
 
   function updateField<Key extends keyof InvitationDraft>(
     key: Key,
@@ -292,6 +296,16 @@ export function BuilderClient() {
     <div className="builder builder-wide">
       <form className="form-panel">
         <AuthPanel compact />
+        <div className="selected-template-panel">
+          <div>
+            <span>Template selezionato</span>
+            <strong>{selectedTemplate.name}</strong>
+            <small>{selectedTemplate.occasionLabel}</small>
+          </div>
+          <a className="button light" href="/templates">
+            Cambia template
+          </a>
+        </div>
         <h3>Dati invito</h3>
         <div className="preview-link-panel">
           <div>
@@ -493,24 +507,8 @@ export function BuilderClient() {
           </div>
         ))}
 
-        <h3>Grafica cliente</h3>
+        <h3>Personalizza il template</h3>
         <div className="field-row">
-          <div className="field">
-            <label>Template</label>
-            <select
-              value={draft.theme.template}
-              onChange={(event) =>
-                updateTheme({
-                  template: event.target.value as InvitationTheme["template"]
-                })
-              }
-            >
-              <option value="darkLuxury">Dark luxury</option>
-              <option value="classicLight">Classico chiaro</option>
-              <option value="botanical">Botanico</option>
-              <option value="minimal">Minimal</option>
-            </select>
-          </div>
           <div className="field">
             <label>Stile font</label>
             <select

@@ -10,7 +10,7 @@ export default function DashboardPage() {
             ilmioinvito
           </a>
           <nav aria-label="Dashboard">
-            <a href="/builder">Crea invito</a>
+            <a href="/templates">Crea invito</a>
             <a className="active" href="/dashboard">
               Dashboard
             </a>

@@ -48,7 +48,7 @@ export function DashboardClient() {
             Qui vedi bozze, inviti pubblicati, RSVP e impostazioni principali.
           </p>
         </div>
-        <a className="button" href="/builder">
+        <a className="button" href="/templates">
           Nuova bozza
         </a>
       </div>
@@ -69,7 +69,7 @@ export function DashboardClient() {
               fase puoi salvarla nel browser; se accedi con email viene salvata
               anche su Supabase.
             </p>
-            <a className="button" href="/builder">
+            <a className="button" href="/templates">
               Crea invito
             </a>
           </div>
