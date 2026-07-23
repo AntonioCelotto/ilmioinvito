@@ -26,9 +26,9 @@ export function AuthGate({ children }: AuthGateProps) {
     return (
       <div className="auth-required">
         <p className="eyebrow">Area riservata</p>
-        <h2>Registrati prima di creare il tuo invito.</h2>
+        <h2>Registrati prima di scegliere il tuo template.</h2>
         <p className="muted">
-          Per salvare bozze, dashboard e dati evento serve un account cliente.
+          Per scegliere un template e salvare il tuo invito serve un account cliente.
         </p>
         <div className="auth-actions">
           <a className="button" href="/registrati">

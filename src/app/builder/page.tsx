@@ -13,6 +13,7 @@ export default function BuilderPage() {
             <a className="active" href="/builder">
               Crea invito
             </a>
+            <a href="/templates">Scegli template</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/i/dora-lorenzo-demo">Anteprima pubblica</a>
           </nav>
@@ -24,7 +25,7 @@ export default function BuilderPage() {
               <p className="eyebrow">Builder MVP</p>
               <h2>Crea il tuo invito</h2>
               <p className="muted">
-                Salva una bozza, scegli sezioni, location, media e grafica.
+                Inserisci i dati, scegli sezioni e personalizza il template.
                 Per usare il builder devi prima registrarti e accedere.
               </p>
             </div>
