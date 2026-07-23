@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import { AuthPanel } from "@/components/auth-panel";
 import {
@@ -31,6 +31,8 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
   dressCode: "Dress code",
   giftInfo: "Regalo / info utili"
 };
+
+const sectionOrder = Object.keys(sectionLabels) as InvitationSectionKey[];
 
 const blockTextHelpers: Record<InvitationSectionKey, string> = {
   countdown: "Testo sopra il conto alla rovescia.",
@@ -82,7 +84,7 @@ function PreviewSection({
     );
 
     return (
-      <section className="phone-slot">
+      <section className="phone-slot" data-preview-section={section}>
         <span className="phone-slot-label">{sectionLabels[section]}</span>
         <p>{text}</p>
         {locations.map((location) => (
@@ -97,7 +99,7 @@ function PreviewSection({
 
   if (section === "countdown") {
     return (
-      <section className="phone-slot">
+      <section className="phone-slot" data-preview-section={section}>
         <span className="phone-slot-label">Countdown</span>
         <p>{text}</p>
         <div className="phone-countdown">
@@ -114,7 +116,7 @@ function PreviewSection({
     );
 
     return (
-      <section className="phone-slot">
+      <section className="phone-slot" data-preview-section={section}>
         <span className="phone-slot-label">{sectionLabels[section]}</span>
         <p>{text}</p>
         <div className="phone-media-grid">
@@ -135,7 +137,7 @@ function PreviewSection({
 
   if (section === "program") {
     return (
-      <section className="phone-slot">
+      <section className="phone-slot" data-preview-section={section}>
         <span className="phone-slot-label">Programma</span>
         <p>{text}</p>
         <strong className="phone-featured-text">
@@ -148,7 +150,7 @@ function PreviewSection({
 
   if (section === "dressCode") {
     return (
-      <section className="phone-slot">
+      <section className="phone-slot" data-preview-section={section}>
         <span className="phone-slot-label">Dress code</span>
         <strong className="phone-featured-text">
           {draft.dressCode || "Indicazioni di stile"}
@@ -160,7 +162,10 @@ function PreviewSection({
 
   if (section === "rsvp") {
     return (
-      <section className="phone-slot phone-rsvp-slot">
+      <section
+        className="phone-slot phone-rsvp-slot"
+        data-preview-section={section}
+      >
         <span className="phone-slot-label">RSVP</span>
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
@@ -170,7 +175,7 @@ function PreviewSection({
   }
 
   return (
-    <section className="phone-slot">
+    <section className="phone-slot" data-preview-section={section}>
       <span className="phone-slot-label">{sectionLabels[section]}</span>
       <p>{text}</p>
     </section>
@@ -178,6 +183,7 @@ function PreviewSection({
 }
 
 export function BuilderClient() {
+  const previewScreenRef = useRef<HTMLDivElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
   const [draft, setDraft] = useState<InvitationDraft>({
@@ -233,13 +239,36 @@ export function BuilderClient() {
   }
 
   function toggleSection(section: InvitationSectionKey) {
+    const isAdding = !draft.activeSections.includes(section);
+
     setDraft((current) => {
       const activeSections = current.activeSections.includes(section)
         ? current.activeSections.filter((item) => item !== section)
-        : [...current.activeSections, section];
+        : [...current.activeSections, section].sort(
+            (first, second) =>
+              sectionOrder.indexOf(first) - sectionOrder.indexOf(second)
+          );
 
       return { ...current, activeSections };
     });
+
+    if (isAdding) {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const preview = previewScreenRef.current;
+          const block = preview?.querySelector<HTMLElement>(
+            `[data-preview-section="${section}"]`
+          );
+
+          if (preview && block) {
+            preview.scrollTo({
+              behavior: "smooth",
+              top: Math.max(0, block.offsetTop - 70)
+            });
+          }
+        });
+      });
+    }
   }
 
   function updateLocation(id: string, patch: Partial<InvitationLocation>) {
@@ -559,7 +588,7 @@ export function BuilderClient() {
           }}
         >
           <div className="phone-notch" aria-hidden="true" />
-          <div className="phone-screen">
+          <div className="phone-screen" ref={previewScreenRef}>
             <header className="phone-hero-preview">
               <p className="phone-kicker">Il nostro invito</p>
               <h2>{draft.title || "Titolo invito"}</h2>
