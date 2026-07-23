@@ -234,9 +234,228 @@
   color: var(--muted);
 }
 
+.phone-preview-column {
+  position: sticky;
+  top: 22px;
+}
+
+.phone-preview-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.phone-preview-heading > div {
+  display: grid;
+  gap: 2px;
+}
+
+.phone-preview-heading span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.phone-preview-heading strong {
+  font-size: 15px;
+}
+
+.live-preview-badge {
+  align-items: center;
+  background: #dff4e9;
+  border-radius: 999px;
+  color: #17683e !important;
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px 10px;
+}
+
+.live-preview-badge::before {
+  background: #25a565;
+  border-radius: 50%;
+  content: "";
+  height: 7px;
+  width: 7px;
+}
+
 .preview-phone {
-  place-items: center;
+  display: block;
+  height: min(720px, calc(100vh - 130px));
+  max-height: none;
+  min-height: 590px;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
   text-align: center;
+}
+
+.phone-notch {
+  background: #151515;
+  border-radius: 0 0 14px 14px;
+  height: 24px;
+  left: 50%;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  width: 112px;
+  z-index: 2;
+}
+
+.phone-screen {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 58px 22px 28px;
+  scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+.phone-hero-preview {
+  display: grid;
+  gap: 10px;
+  min-height: 330px;
+  place-content: center;
+}
+
+.phone-hero-preview h2 {
+  color: inherit;
+  font-size: clamp(30px, 5vw, 44px);
+  margin: 0;
+}
+
+.phone-hero-preview p,
+.phone-slot p {
+  line-height: 1.55;
+  margin: 0;
+}
+
+.phone-kicker,
+.phone-slot-label {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.phone-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.phone-meta span {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.85;
+  padding: 5px 8px;
+}
+
+.phone-slot {
+  border-top: 1px solid rgba(255, 255, 255, 0.24);
+  display: grid;
+  gap: 14px;
+  padding: 34px 4px;
+}
+
+.theme-classicLight .phone-slot {
+  border-top-color: rgba(47, 42, 36, 0.22);
+}
+
+.phone-story-slot {
+  padding-bottom: 38px;
+}
+
+.phone-location,
+.phone-countdown,
+.phone-media-card,
+.phone-empty-card {
+  background: rgba(255, 255, 255, 0.13);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+}
+
+.theme-classicLight .phone-location,
+.theme-classicLight .phone-countdown,
+.theme-classicLight .phone-media-card,
+.theme-classicLight .phone-empty-card {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(47, 42, 36, 0.16);
+}
+
+.phone-location span,
+.phone-countdown span,
+.phone-media-card span,
+.phone-no-slots span {
+  font-size: 11px;
+  opacity: 0.78;
+}
+
+.phone-media-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.phone-media-card {
+  min-height: 96px;
+  place-content: center;
+}
+
+.phone-featured-text {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.phone-preview-button {
+  background: #fff;
+  border-radius: 999px;
+  color: #1d1917;
+  display: inline-flex;
+  font-size: 12px;
+  font-weight: 900;
+  justify-self: center;
+  padding: 10px 16px;
+}
+
+.phone-no-slots {
+  border: 1px dashed currentColor;
+  border-radius: 12px;
+  display: grid;
+  gap: 5px;
+  margin: 20px 0 40px;
+  opacity: 0.8;
+  padding: 22px;
+}
+
+.phone-preview-footer {
+  font-size: 10px;
+  opacity: 0.62;
+  overflow-wrap: anywhere;
+  padding-top: 20px;
+}
+
+.phone-preview-help {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+.preview-font-modern {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.preview-font-script h2,
+.preview-font-script .phone-featured-text {
+  font-family: "Brush Script MT", "Segoe Script", cursive;
 }
 
 @media (max-width: 560px) {
@@ -260,5 +479,17 @@
   .draft-actions {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 860px) {
+  .phone-preview-column {
+    position: static;
+  }
+
+  .preview-phone {
+    height: 680px;
+    margin: 0 auto;
+    width: min(100%, 420px);
   }
 }

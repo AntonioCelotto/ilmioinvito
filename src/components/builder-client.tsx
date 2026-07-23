@@ -66,6 +66,120 @@ const initialTheme: InvitationTheme = {
   fontStyle: "serif"
 };
 
+function PreviewSection({
+  draft,
+  section
+}: {
+  draft: InvitationDraft;
+  section: InvitationSectionKey;
+}) {
+  const text = draft.blockTexts[section] || defaultBlockTexts[section];
+
+  if (section === "ceremony" || section === "reception") {
+    const acceptedTypes =
+      section === "ceremony"
+        ? ["church", "ceremony", "main"]
+        : ["reception", "main", "other"];
+    const locations = draft.locations.filter((location) =>
+      acceptedTypes.includes(location.type)
+    );
+
+    return (
+      <section className="phone-slot">
+        <span className="phone-slot-label">{sectionLabels[section]}</span>
+        <p>{text}</p>
+        {locations.map((location) => (
+          <div className="phone-location" key={location.id}>
+            <strong>{location.name || sectionLabels[section]}</strong>
+            <span>{location.address || "Indirizzo da definire"}</span>
+          </div>
+        ))}
+      </section>
+    );
+  }
+
+  if (section === "countdown") {
+    return (
+      <section className="phone-slot">
+        <span className="phone-slot-label">Countdown</span>
+        <p>{text}</p>
+        <div className="phone-countdown">
+          <strong>{draft.eventDate || "Data"}</strong>
+          <span>{draft.eventTime ? `Ore ${draft.eventTime}` : "Orario da definire"}</span>
+        </div>
+      </section>
+    );
+  }
+
+  if (section === "gallery" || section === "video") {
+    const media = draft.media.filter((item) =>
+      section === "gallery" ? item.type === "photo" : item.type === "video"
+    );
+
+    return (
+      <section className="phone-slot">
+        <span className="phone-slot-label">{sectionLabels[section]}</span>
+        <p>{text}</p>
+        <div className="phone-media-grid">
+          {media.length > 0 ? (
+            media.map((item) => (
+              <div className="phone-media-card" key={item.id}>
+                <span>{item.type === "photo" ? "Foto" : "Video"}</span>
+                <strong>{item.title || "Media senza titolo"}</strong>
+              </div>
+            ))
+          ) : (
+            <div className="phone-empty-card">Aggiungi un contenuto</div>
+          )}
+        </div>
+      </section>
+    );
+  }
+
+  if (section === "program") {
+    return (
+      <section className="phone-slot">
+        <span className="phone-slot-label">Programma</span>
+        <p>{text}</p>
+        <strong className="phone-featured-text">
+          {draft.eventDate || "Data da definire"}
+          {draft.eventTime ? ` · ${draft.eventTime}` : ""}
+        </strong>
+      </section>
+    );
+  }
+
+  if (section === "dressCode") {
+    return (
+      <section className="phone-slot">
+        <span className="phone-slot-label">Dress code</span>
+        <strong className="phone-featured-text">
+          {draft.dressCode || "Indicazioni di stile"}
+        </strong>
+        <p>{text}</p>
+      </section>
+    );
+  }
+
+  if (section === "rsvp") {
+    return (
+      <section className="phone-slot phone-rsvp-slot">
+        <span className="phone-slot-label">RSVP</span>
+        <strong className="phone-featured-text">Conferma la tua presenza</strong>
+        <p>{text}</p>
+        <span className="phone-preview-button">Parteciperò</span>
+      </section>
+    );
+  }
+
+  return (
+    <section className="phone-slot">
+      <span className="phone-slot-label">{sectionLabels[section]}</span>
+      <p>{text}</p>
+    </section>
+  );
+}
+
 export function BuilderClient() {
   const [savedMessage, setSavedMessage] = useState("");
   const [draft, setDraft] = useState<InvitationDraft>({
@@ -446,30 +560,55 @@ export function BuilderClient() {
         ) : null}
       </form>
 
-      <div
-        className={`preview-phone theme-${draft.theme.template}`}
-        style={{
-          background: `linear-gradient(180deg, transparent, ${draft.theme.primaryColor}), ${draft.theme.accentColor}`
-        }}
-        aria-label="Anteprima invito"
-      >
-        <div>
-          <p className="eyebrow">Anteprima</p>
-          <h2>{draft.title}</h2>
-          <p>{draft.subtitle}</p>
-          <div className="invite-meta">
-            <span>{draft.eventDate}</span>
-            <span>{draft.eventTime}</span>
+      <aside className="phone-preview-column" aria-label="Anteprima invito in tempo reale">
+        <div className="phone-preview-heading">
+          <div>
+            <span>Anteprima telefono</span>
+            <strong>Aggiornamento in tempo reale</strong>
           </div>
-          <div className="mini-section-list">
-            {draft.activeSections.slice(0, 5).map((section) => (
-              <span key={section}>{sectionLabels[section]}</span>
-            ))}
-          </div>
-          <p>{draft.blockTexts[draft.activeSections[0] ?? "countdown"]}</p>
-          <p className="muted">Link previsto: {publicPath}</p>
+          <span className="live-preview-badge">Live</span>
         </div>
-      </div>
+        <div
+          className={`preview-phone theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
+          style={{
+            background: `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`
+          }}
+        >
+          <div className="phone-notch" aria-hidden="true" />
+          <div className="phone-screen">
+            <header className="phone-hero-preview">
+              <p className="phone-kicker">Il nostro invito</p>
+              <h2>{draft.title || "Titolo invito"}</h2>
+              <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
+              <div className="phone-meta">
+                <span>{draft.eventDate || "Data"}</span>
+                <span>{draft.eventTime || "Ora"}</span>
+              </div>
+            </header>
+
+            {draft.story ? (
+              <section className="phone-slot phone-story-slot">
+                <span className="phone-slot-label">La storia</span>
+                <p>{draft.story}</p>
+              </section>
+            ) : null}
+
+            {draft.activeSections.length > 0 ? (
+              draft.activeSections.map((section) => (
+                <PreviewSection draft={draft} key={section} section={section} />
+              ))
+            ) : (
+              <div className="phone-no-slots">
+                <strong>Nessuno slot attivo</strong>
+                <span>Attiva una sezione per vederla subito qui.</span>
+              </div>
+            )}
+
+            <footer className="phone-preview-footer">{publicPath}</footer>
+          </div>
+        </div>
+        <p className="phone-preview-help">Scorri dentro il telefono per vedere tutti gli slot.</p>
+      </aside>
     </div>
   );
 }
