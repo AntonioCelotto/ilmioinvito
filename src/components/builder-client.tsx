@@ -79,6 +79,80 @@ function mapDirectionsUrl(address: string) {
   )}`;
 }
 
+function AddressAutocomplete({
+  location,
+  onChange
+}: {
+  location: InvitationLocation;
+  onChange: (address: string) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const query = location.address.trim();
+
+    if (query.length < 3 || !open) {
+      setSuggestions([]);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`, {
+          signal: controller.signal
+        });
+        const data = (await response.json()) as { suggestions?: string[] };
+        setSuggestions(data.suggestions ?? []);
+      } catch {
+        if (!controller.signal.aborted) {
+          setSuggestions([]);
+        }
+      }
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [location.address, open]);
+
+  return (
+    <div className="address-autocomplete">
+      <input
+        autoComplete="off"
+        placeholder="Inizia a scrivere via, numero e città"
+        value={location.address}
+        onBlur={() => window.setTimeout(() => setOpen(false), 150)}
+        onChange={(event) => {
+          setOpen(true);
+          onChange(event.target.value);
+        }}
+        onFocus={() => setOpen(true)}
+      />
+      {open && suggestions.length > 0 ? (
+        <div className="address-suggestions">
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onMouseDown={() => {
+                onChange(suggestion);
+                setOpen(false);
+                setSuggestions([]);
+              }}
+            >
+              <span aria-hidden="true">⌖</span>
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function PreviewSection({
   draft,
   section
@@ -557,16 +631,16 @@ export function BuilderClient() {
                 </div>
                 <div className="field">
                   <label>Indirizzo completo</label>
-                  <input
-                    placeholder="Via, numero civico, città"
-                    value={location.address}
-                    onChange={(event) =>
+                  <AddressAutocomplete
+                    location={location}
+                    onChange={(address) =>
                       updateLocation(location.id, {
-                        address: event.target.value,
-                        mapsUrl: mapDirectionsUrl(event.target.value)
+                        address,
+                        mapsUrl: mapDirectionsUrl(address)
                       })
                     }
                   />
+                  <small>Scrivi almeno 3 caratteri e scegli l’indirizzo suggerito.</small>
                 </div>
                 <div className="field">
                   <label>Foto del luogo</label>

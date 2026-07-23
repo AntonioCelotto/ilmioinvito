@@ -263,6 +263,45 @@
   display: flex;
 }
 
+.address-autocomplete {
+  position: relative;
+}
+
+.address-suggestions {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 14px 35px rgba(45, 35, 28, 0.16);
+  display: grid;
+  left: 0;
+  overflow: hidden;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  z-index: 20;
+}
+
+.address-suggestions button {
+  align-items: flex-start;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  padding: 11px 12px;
+  text-align: left;
+}
+
+.address-suggestions button:last-child {
+  border-bottom: 0;
+}
+
+.address-suggestions button:hover {
+  background: #fbf8f3;
+}
+
 .map-placeholder {
   font-size: 12px;
   margin: 0;
