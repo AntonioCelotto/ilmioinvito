@@ -79,6 +79,34 @@ function mapDirectionsUrl(address: string) {
   )}`;
 }
 
+type AddressFeature = {
+  properties?: {
+    name?: string;
+    street?: string;
+    housenumber?: string;
+    postcode?: string;
+    city?: string;
+    district?: string;
+    state?: string;
+    country?: string;
+  };
+};
+
+function formatSuggestedAddress(feature: AddressFeature) {
+  const properties = feature.properties ?? {};
+  const street = [properties.street ?? properties.name, properties.housenumber]
+    .filter(Boolean)
+    .join(" ");
+  const city = [properties.postcode, properties.city ?? properties.district]
+    .filter(Boolean)
+    .join(" ");
+
+  return [street, city, properties.state, properties.country]
+    .filter(Boolean)
+    .filter((part, index, parts) => parts.indexOf(part) === index)
+    .join(", ");
+}
+
 function AddressAutocomplete({
   location,
   onChange
@@ -100,11 +128,22 @@ function AddressAutocomplete({
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       try {
-        const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`, {
-          signal: controller.signal
-        });
-        const data = (await response.json()) as { suggestions?: string[] };
-        setSuggestions(data.suggestions ?? []);
+        const endpoint = new URL("https://photon.komoot.io/api/");
+        endpoint.searchParams.set("q", query);
+        endpoint.searchParams.set("lang", "it");
+        endpoint.searchParams.set("limit", "5");
+
+        const response = await fetch(endpoint, { signal: controller.signal });
+        const data = (await response.json()) as {
+          features?: AddressFeature[];
+        };
+        const nextSuggestions = (data.features ?? [])
+          .map(formatSuggestedAddress)
+          .filter(Boolean)
+          .filter(
+            (address, index, addresses) => addresses.indexOf(address) === index
+          );
+        setSuggestions(nextSuggestions);
       } catch {
         if (!controller.signal.aborted) {
           setSuggestions([]);
@@ -121,7 +160,7 @@ function AddressAutocomplete({
   return (
     <div className="address-autocomplete">
       <input
-        autoComplete="off"
+        autoComplete="street-address"
         placeholder="Inizia a scrivere via, numero e città"
         value={location.address}
         onBlur={() => window.setTimeout(() => setOpen(false), 150)}
