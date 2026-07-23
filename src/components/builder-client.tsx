@@ -33,6 +33,7 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
 };
 
 const sectionOrder = Object.keys(sectionLabels) as InvitationSectionKey[];
+const locationSectionKeys: InvitationSectionKey[] = ["ceremony", "reception"];
 
 const blockTextHelpers: Record<InvitationSectionKey, string> = {
   countdown: "Testo sopra il conto alla rovescia.",
@@ -59,11 +60,21 @@ const initialLocations: InvitationLocation[] = [
     type: "reception",
     name: demoInvitation.venueName,
     address: demoInvitation.venueAddress,
-    mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    mapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       demoInvitation.venueAddress
     )}`
   }
 ];
+
+function mapDirectionsUrl(address: string) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    address
+  )}`;
+}
+
+function mapEmbedUrl(address: string) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+}
 
 function PreviewSection({
   draft,
@@ -75,22 +86,37 @@ function PreviewSection({
   const text = draft.blockTexts[section] || defaultBlockTexts[section];
 
   if (section === "ceremony" || section === "reception") {
-    const acceptedTypes =
-      section === "ceremony"
-        ? ["church", "ceremony", "main"]
-        : ["reception", "main", "other"];
-    const locations = draft.locations.filter((location) =>
-      acceptedTypes.includes(location.type)
-    );
+    if (section === "reception" && draft.activeSections.includes("ceremony")) {
+      return null;
+    }
 
     return (
-      <section className="phone-slot" data-preview-section={section}>
-        <span className="phone-slot-label">{sectionLabels[section]}</span>
-        <p>{text}</p>
-        {locations.map((location) => (
+      <section className="phone-slot" data-preview-section="ceremony">
+        <span className="phone-slot-label">Luoghi e mappa</span>
+        <p>
+          {draft.blockTexts.ceremony || draft.blockTexts.reception || text}
+        </p>
+        {draft.locations.map((location) => (
           <div className="phone-location" key={location.id}>
-            <strong>{location.name || sectionLabels[section]}</strong>
+            <strong>{location.name || "Luogo dell'evento"}</strong>
             <span>{location.address || "Indirizzo da definire"}</span>
+            {location.address ? (
+              <>
+                <iframe
+                  loading="lazy"
+                  src={mapEmbedUrl(location.address)}
+                  title={`Mappa ${location.name || "luogo"}`}
+                />
+                <a
+                  className="phone-map-button"
+                  href={mapDirectionsUrl(location.address)}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Portami
+                </a>
+              </>
+            ) : null}
           </div>
         ))}
       </section>
@@ -271,6 +297,45 @@ export function BuilderClient() {
     }
   }
 
+  function toggleLocationBlock() {
+    const isAdding = !locationSectionKeys.some((section) =>
+      draft.activeSections.includes(section)
+    );
+
+    setDraft((current) => {
+      const activeSections = isAdding
+        ? Array.from(
+            new Set([...current.activeSections, ...locationSectionKeys])
+          ).sort(
+            (first, second) =>
+              sectionOrder.indexOf(first) - sectionOrder.indexOf(second)
+          )
+        : current.activeSections.filter(
+            (section) => !locationSectionKeys.includes(section)
+          );
+
+      return { ...current, activeSections };
+    });
+
+    if (isAdding) {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const preview = previewScreenRef.current;
+          const block = preview?.querySelector<HTMLElement>(
+            '[data-preview-section="ceremony"]'
+          );
+
+          if (preview && block) {
+            preview.scrollTo({
+              behavior: "smooth",
+              top: Math.max(0, block.offsetTop - 70)
+            });
+          }
+        });
+      });
+    }
+  }
+
   function updateLocation(id: string, patch: Partial<InvitationLocation>) {
     setDraft((current) => ({
       ...current,
@@ -320,6 +385,10 @@ export function BuilderClient() {
     const result = await saveDraftToSupabase(nextDraft);
     setSavedMessage(result.message);
   }
+
+  const locationBlockActive = locationSectionKeys.some((section) =>
+    draft.activeSections.includes(section)
+  );
 
   return (
     <div className="builder builder-wide">
@@ -405,7 +474,95 @@ export function BuilderClient() {
         </div>
 
         <h3>Testi blocchi invito</h3>
-        {(Object.keys(sectionLabels) as InvitationSectionKey[]).map((section) => {
+        <div className="nested-fields block-editor location-block-editor">
+          <div className="block-editor-head">
+            <div>
+              <span>
+                {locationBlockActive ? "Visibile nel link" : "Nascosto dal link"}
+              </span>
+              <strong>Luoghi e mappa</strong>
+            </div>
+            <label className="toggle-item compact">
+              <input
+                checked={locationBlockActive}
+                type="checkbox"
+                onChange={toggleLocationBlock}
+              />
+              <span>Attivo</span>
+            </label>
+          </div>
+
+          <div className="field">
+            <label>Testo introduttivo del blocco</label>
+            <textarea
+              value={draft.blockTexts.ceremony}
+              onChange={(event) =>
+                updateBlockText("ceremony", event.target.value)
+              }
+            />
+          </div>
+
+          <div className="location-editor-grid">
+            {draft.locations.map((location) => (
+              <div className="location-editor-card" key={location.id}>
+                <strong>
+                  {["church", "ceremony"].includes(location.type)
+                    ? "Chiesa / Cerimonia"
+                    : "Ricevimento / Location"}
+                </strong>
+                <div className="field">
+                  <label>Nome del luogo</label>
+                  <input
+                    value={location.name}
+                    onChange={(event) =>
+                      updateLocation(location.id, { name: event.target.value })
+                    }
+                  />
+                </div>
+                <div className="field">
+                  <label>Indirizzo completo</label>
+                  <input
+                    placeholder="Via, numero civico, città"
+                    value={location.address}
+                    onChange={(event) =>
+                      updateLocation(location.id, {
+                        address: event.target.value,
+                        mapsUrl: mapDirectionsUrl(event.target.value)
+                      })
+                    }
+                  />
+                </div>
+                {location.address ? (
+                  <div className="builder-map-preview">
+                    <iframe
+                      loading="lazy"
+                      src={mapEmbedUrl(location.address)}
+                      title={`Mappa ${location.name || "luogo"}`}
+                    />
+                    <a
+                      className="button"
+                      href={mapDirectionsUrl(location.address)}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Portami
+                    </a>
+                  </div>
+                ) : (
+                  <p className="muted map-placeholder">
+                    Inserisci l’indirizzo per visualizzare la mappa.
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {sectionOrder
+          .filter(
+            (section) => section !== "ceremony" && section !== "reception"
+          )
+          .map((section) => {
           const isActive = draft.activeSections.includes(section);
 
           return (
@@ -434,54 +591,6 @@ export function BuilderClient() {
             </div>
           );
         })}
-
-        <h3>Geolocalizzazione</h3>
-        {draft.locations.map((location) => (
-          <div className="nested-fields" key={location.id}>
-            <div className="field-row">
-              <div className="field">
-                <label>Tipo</label>
-                <select
-                  value={location.type}
-                  onChange={(event) =>
-                    updateLocation(location.id, {
-                      type: event.target.value as InvitationLocation["type"]
-                    })
-                  }
-                >
-                  <option value="church">Chiesa</option>
-                  <option value="ceremony">Cerimonia</option>
-                  <option value="reception">Ricevimento</option>
-                  <option value="main">Location principale</option>
-                  <option value="other">Altro</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Nome luogo</label>
-                <input
-                  value={location.name}
-                  onChange={(event) =>
-                    updateLocation(location.id, { name: event.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="field">
-              <label>Indirizzo</label>
-              <input
-                value={location.address}
-                onChange={(event) =>
-                  updateLocation(location.id, {
-                    address: event.target.value,
-                    mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      event.target.value
-                    )}`
-                  })
-                }
-              />
-            </div>
-          </div>
-        ))}
 
         <h3>Foto e video</h3>
         {draft.media.map((item) => (

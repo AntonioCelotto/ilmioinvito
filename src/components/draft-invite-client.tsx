@@ -82,6 +82,46 @@ function eventDateIsoFromDraft(draft: InvitationDraft) {
   return eventDate.toISOString();
 }
 
+function mapDirectionsUrl(address: string) {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    address
+  )}`;
+}
+
+function mapEmbedUrl(address: string) {
+  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
+}
+
+function LocationMapCard({
+  location
+}: {
+  location: InvitationDraft["locations"][number];
+}) {
+  return (
+    <article className="invite-location">
+      <h3>{location.name || "Luogo dell'evento"}</h3>
+      <p className="muted">{location.address || "Indirizzo da definire"}</p>
+      {location.address ? (
+        <>
+          <iframe
+            loading="lazy"
+            src={mapEmbedUrl(location.address)}
+            title={`Mappa ${location.name || "luogo"}`}
+          />
+          <a
+            className="button"
+            href={mapDirectionsUrl(location.address)}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Portami
+          </a>
+        </>
+      ) : null}
+    </article>
+  );
+}
+
 function CountdownBlock({ draft }: { draft: InvitationDraft }) {
   const [now, setNow] = useState(() => Date.now());
   const eventDate = parseEventDate(draft);
@@ -217,51 +257,17 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
         </section>
       ) : null}
 
-      {sectionIsActive(invitation, "ceremony") ? (
+      {sectionIsActive(invitation, "ceremony") ||
+      sectionIsActive(invitation, "reception") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Cerimonia</p>
-            <h2>Il primo momento da condividere.</h2>
+            <p className="eyebrow">Luoghi e mappa</p>
+            <h2>Raggiungi ogni momento dell’evento.</h2>
             <p className="muted invite-copy">{blockText(invitation, "ceremony")}</p>
             <div className="invite-location-grid">
-              {invitation.locations
-                .filter((location) => ["church", "ceremony", "main"].includes(location.type))
-                .map((location) => (
-                  <div className="invite-location" key={location.id}>
-                    <h3>{location.name || "Cerimonia"}</h3>
-                    <p className="muted">{location.address || "Indirizzo da definire"}</p>
-                    {location.mapsUrl ? (
-                      <a className="button" href={location.mapsUrl}>
-                        Apri mappa
-                      </a>
-                    ) : null}
-                  </div>
-                ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
-      {sectionIsActive(invitation, "reception") ? (
-        <section className="section invite-section">
-          <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Ricevimento</p>
-            <h2>Festeggiamo insieme.</h2>
-            <p className="muted invite-copy">{blockText(invitation, "reception")}</p>
-            <div className="invite-location-grid">
-              {invitation.locations
-                .filter((location) => ["reception", "main", "other"].includes(location.type))
-                .map((location) => (
-                  <div className="invite-location" key={location.id}>
-                    <h3>{location.name || "Ricevimento"}</h3>
-                    <p className="muted">{location.address || "Indirizzo da definire"}</p>
-                    {location.mapsUrl ? (
-                      <a className="button" href={location.mapsUrl}>
-                        Apri mappa
-                      </a>
-                    ) : null}
-                  </div>
-                ))}
+              {invitation.locations.map((location) => (
+                <LocationMapCard key={location.id} location={location} />
+              ))}
             </div>
           </div>
         </section>
