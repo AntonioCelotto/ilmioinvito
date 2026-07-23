@@ -15,6 +15,8 @@ export type InvitationLocation = {
   name: string;
   address: string;
   mapsUrl: string;
+  enabled: boolean;
+  imageUrl: string;
 };
 
 export type InvitationMedia = {
@@ -103,6 +105,11 @@ export function readDrafts(): InvitationDraft[] {
 
     return drafts.map((draft) => ({
       ...draft,
+      locations: (draft.locations ?? []).map((location) => ({
+        ...location,
+        enabled: location.enabled ?? true,
+        imageUrl: location.imageUrl ?? ""
+      })),
       blockTexts: {
         ...defaultBlockTexts,
         ...(draft.blockTexts ?? {})

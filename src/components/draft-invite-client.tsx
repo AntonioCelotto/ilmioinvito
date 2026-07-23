@@ -37,7 +37,9 @@ const fallbackDraft: InvitationDraft = {
       address: demoInvitation.venueAddress,
       mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         demoInvitation.venueAddress
-      )}`
+      )}`,
+      enabled: true,
+      imageUrl: ""
     }
   ],
   media: [],
@@ -88,35 +90,30 @@ function mapDirectionsUrl(address: string) {
   )}`;
 }
 
-function mapEmbedUrl(address: string) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
-}
-
-function LocationMapCard({
+function LocationCard({
   location
 }: {
   location: InvitationDraft["locations"][number];
 }) {
   return (
     <article className="invite-location">
+      {location.imageUrl ? (
+        <img
+          alt={location.name || "Luogo dell'evento"}
+          src={location.imageUrl}
+        />
+      ) : null}
       <h3>{location.name || "Luogo dell'evento"}</h3>
       <p className="muted">{location.address || "Indirizzo da definire"}</p>
       {location.address ? (
-        <>
-          <iframe
-            loading="lazy"
-            src={mapEmbedUrl(location.address)}
-            title={`Mappa ${location.name || "luogo"}`}
-          />
-          <a
-            className="button"
-            href={mapDirectionsUrl(location.address)}
-            rel="noreferrer"
-            target="_blank"
-          >
-            Portami
-          </a>
-        </>
+        <a
+          className="button"
+          href={mapDirectionsUrl(location.address)}
+          rel="noreferrer"
+          target="_blank"
+        >
+          Portami
+        </a>
       ) : null}
     </article>
   );
@@ -261,12 +258,12 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       sectionIsActive(invitation, "reception") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Luoghi e mappa</p>
+            <p className="eyebrow">Luoghi</p>
             <h2>Raggiungi ogni momento dell’evento.</h2>
             <p className="muted invite-copy">{blockText(invitation, "ceremony")}</p>
             <div className="invite-location-grid">
-              {invitation.locations.map((location) => (
-                <LocationMapCard key={location.id} location={location} />
+              {invitation.locations.filter((location) => location.enabled).map((location) => (
+                <LocationCard key={location.id} location={location} />
               ))}
             </div>
           </div>

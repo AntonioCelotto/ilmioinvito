@@ -14,7 +14,10 @@ import {
   makeSlug,
   saveDraft
 } from "@/lib/draft-storage";
-import { saveDraftToSupabase } from "@/lib/supabase/drafts";
+import {
+  saveDraftToSupabase,
+  uploadLocationImage
+} from "@/lib/supabase/drafts";
 import {
   invitationTemplates,
   readSelectedTemplate
@@ -53,7 +56,9 @@ const initialLocations: InvitationLocation[] = [
     type: "church",
     name: "Chiesa / cerimonia",
     address: "",
-    mapsUrl: ""
+    mapsUrl: "",
+    enabled: true,
+    imageUrl: ""
   },
   {
     id: "loc-reception",
@@ -62,7 +67,9 @@ const initialLocations: InvitationLocation[] = [
     address: demoInvitation.venueAddress,
     mapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       demoInvitation.venueAddress
-    )}`
+    )}`,
+    enabled: true,
+    imageUrl: ""
   }
 ];
 
@@ -70,10 +77,6 @@ function mapDirectionsUrl(address: string) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
     address
   )}`;
-}
-
-function mapEmbedUrl(address: string) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(address)}&output=embed`;
 }
 
 function PreviewSection({
@@ -92,30 +95,29 @@ function PreviewSection({
 
     return (
       <section className="phone-slot" data-preview-section="ceremony">
-        <span className="phone-slot-label">Luoghi e mappa</span>
+        <span className="phone-slot-label">Luoghi</span>
         <p>
           {draft.blockTexts.ceremony || draft.blockTexts.reception || text}
         </p>
-        {draft.locations.map((location) => (
+        {draft.locations.filter((location) => location.enabled).map((location) => (
           <div className="phone-location" key={location.id}>
+            {location.imageUrl ? (
+              <img
+                alt={location.name || "Luogo dell'evento"}
+                src={location.imageUrl}
+              />
+            ) : null}
             <strong>{location.name || "Luogo dell'evento"}</strong>
             <span>{location.address || "Indirizzo da definire"}</span>
             {location.address ? (
-              <>
-                <iframe
-                  loading="lazy"
-                  src={mapEmbedUrl(location.address)}
-                  title={`Mappa ${location.name || "luogo"}`}
-                />
-                <a
-                  className="phone-map-button"
-                  href={mapDirectionsUrl(location.address)}
-                  rel="noreferrer"
-                  target="_blank"
-                >
-                  Portami
-                </a>
-              </>
+              <a
+                className="phone-map-button"
+                href={mapDirectionsUrl(location.address)}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Portami
+              </a>
             ) : null}
           </div>
         ))}
@@ -212,6 +214,7 @@ export function BuilderClient() {
   const previewScreenRef = useRef<HTMLDivElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
+  const [uploadingLocationId, setUploadingLocationId] = useState("");
   const [draft, setDraft] = useState<InvitationDraft>({
     id: crypto.randomUUID(),
     slug: demoInvitation.slug,
@@ -343,6 +346,25 @@ export function BuilderClient() {
         location.id === id ? { ...location, ...patch } : location
       )
     }));
+  }
+
+  async function handleLocationImage(
+    location: InvitationLocation,
+    file?: File
+  ) {
+    if (!file) {
+      return;
+    }
+
+    setUploadingLocationId(location.id);
+    setSavedMessage("Caricamento foto in corso...");
+    const result = await uploadLocationImage(draft.id, location.id, file);
+    setUploadingLocationId("");
+    setSavedMessage(result.message);
+
+    if (result.status === "remote") {
+      updateLocation(location.id, { imageUrl: result.url });
+    }
   }
 
   function updateMedia(id: string, patch: Partial<InvitationMedia>) {
@@ -480,7 +502,7 @@ export function BuilderClient() {
               <span>
                 {locationBlockActive ? "Visibile nel link" : "Nascosto dal link"}
               </span>
-              <strong>Luoghi e mappa</strong>
+              <strong>Luoghi</strong>
             </div>
             <label className="toggle-item compact">
               <input
@@ -505,11 +527,25 @@ export function BuilderClient() {
           <div className="location-editor-grid">
             {draft.locations.map((location) => (
               <div className="location-editor-card" key={location.id}>
-                <strong>
-                  {["church", "ceremony"].includes(location.type)
-                    ? "Chiesa / Cerimonia"
-                    : "Ricevimento / Location"}
-                </strong>
+                <div className="location-card-head">
+                  <strong>
+                    {["church", "ceremony"].includes(location.type)
+                      ? "Chiesa / Cerimonia"
+                      : "Ricevimento / Location"}
+                  </strong>
+                  <label className="toggle-item compact">
+                    <input
+                      checked={location.enabled}
+                      type="checkbox"
+                      onChange={() =>
+                        updateLocation(location.id, {
+                          enabled: !location.enabled
+                        })
+                      }
+                    />
+                    <span>{location.enabled ? "Visibile" : "Nascosto"}</span>
+                  </label>
+                </div>
                 <div className="field">
                   <label>Nome del luogo</label>
                   <input
@@ -532,13 +568,27 @@ export function BuilderClient() {
                     }
                   />
                 </div>
-                {location.address ? (
-                  <div className="builder-map-preview">
-                    <iframe
-                      loading="lazy"
-                      src={mapEmbedUrl(location.address)}
-                      title={`Mappa ${location.name || "luogo"}`}
+                <div className="field">
+                  <label>Foto del luogo</label>
+                  {location.imageUrl ? (
+                    <img
+                      className="location-photo-preview"
+                      alt={location.name || "Luogo dell'evento"}
+                      src={location.imageUrl}
                     />
+                  ) : null}
+                  <input
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={uploadingLocationId === location.id}
+                    type="file"
+                    onChange={(event) =>
+                      handleLocationImage(location, event.target.files?.[0])
+                    }
+                  />
+                  <small>JPG, PNG o WebP, massimo 8 MB.</small>
+                </div>
+                {location.address ? (
+                  <div className="location-directions">
                     <a
                       className="button"
                       href={mapDirectionsUrl(location.address)}
@@ -550,7 +600,7 @@ export function BuilderClient() {
                   </div>
                 ) : (
                   <p className="muted map-placeholder">
-                    Inserisci l’indirizzo per visualizzare la mappa.
+                    Inserisci l’indirizzo per attivare il pulsante Portami.
                   </p>
                 )}
               </div>
