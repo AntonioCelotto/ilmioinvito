@@ -375,20 +375,6 @@ export function BuilderClient() {
           />
         </div>
 
-        <h3>Sezioni attive</h3>
-        <div className="toggle-grid">
-          {(Object.keys(sectionLabels) as InvitationSectionKey[]).map((section) => (
-            <label className="toggle-item" key={section}>
-              <input
-                checked={draft.activeSections.includes(section)}
-                type="checkbox"
-                onChange={() => toggleSection(section)}
-              />
-              <span>{sectionLabels[section]}</span>
-            </label>
-          ))}
-        </div>
-
         <h3>Testi blocchi invito</h3>
         {(Object.keys(sectionLabels) as InvitationSectionKey[]).map((section) => {
           const isActive = draft.activeSections.includes(section);
