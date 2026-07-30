@@ -78,9 +78,10 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewSubtitle: "Fiorisce una nuova storia",
     theme: {
       template: "botanical",
-      primaryColor: "#25463a",
-      accentColor: "#d6bd8d",
-      fontStyle: "serif"
+      primaryColor: "#0b3a30",
+      accentColor: "#d2b46c",
+      fontStyle: "script",
+      backgroundImage: "/templates/wedding-giardino-segreto-v1.webp"
     }
   },
   {
