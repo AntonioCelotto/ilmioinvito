@@ -45,7 +45,7 @@ export function InviteRsvp({
     name: "",
     surname: "",
     phone: "",
-    notes: ""
+    additionalInfo: ""
   });
 
   const guestsText = useMemo(() => {
@@ -72,7 +72,9 @@ export function InviteRsvp({
       `Nome e cognome: ${form.name} ${form.surname}`.trim(),
       `Telefono: ${form.phone}`,
       `Accompagnatori: ${guestsText}`,
-      `Note: ${form.notes || "Nessuna nota"}`
+      `Allergie, intolleranze o altre informazioni: ${
+        form.additionalInfo || "Nessuna"
+      }`
     ].join("\n");
 
     return recipientNumber
@@ -185,12 +187,18 @@ export function InviteRsvp({
         ))}
 
         <div className="field">
-          <label htmlFor="notes">Note</label>
+          <label htmlFor="additional-info">
+            Allergie, intolleranze o altre informazioni
+          </label>
           <textarea
-            id="notes"
-            value={form.notes}
+            id="additional-info"
+            placeholder="Indica eventuali allergie, intolleranze alimentari o altre necessità"
+            value={form.additionalInfo}
             onChange={(event) =>
-              setForm((current) => ({ ...current, notes: event.target.value }))
+              setForm((current) => ({
+                ...current,
+                additionalInfo: event.target.value
+              }))
             }
           />
         </div>
