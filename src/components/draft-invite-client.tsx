@@ -242,7 +242,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
 
       <section className="section invite-section">
         <div className="section-inner invite-section-inner">
-            <p className="eyebrow">La storia</p>
             <h2>Un invito pensato per essere personale.</h2>
             <p className="muted invite-copy">{invitation.story}</p>
         </div>
@@ -251,7 +250,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       {sectionIsActive(invitation, "countdown") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Countdown</p>
             <h2>Il grande giorno si avvicina.</h2>
             <p className="muted invite-copy">{blockText(invitation, "countdown")}</p>
             <CountdownBlock draft={invitation} />
@@ -263,7 +261,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       sectionIsActive(invitation, "reception") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Luoghi</p>
             <h2>Raggiungi ogni momento dell’evento.</h2>
             <p className="muted invite-copy">{blockText(invitation, "ceremony")}</p>
             <div className="invite-location-grid">
@@ -278,7 +275,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       {sectionIsActive(invitation, "program") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Programma</p>
             <h2>La giornata.</h2>
             <p className="muted invite-copy">{blockText(invitation, "program")}</p>
             <p className="invite-date-line">
@@ -292,7 +288,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       {sectionIsActive(invitation, "dressCode") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Dress code</p>
             <h2>{invitation.dressCode || "Indicazioni di stile"}</h2>
             <p className="muted invite-copy">{blockText(invitation, "dressCode")}</p>
           </div>
@@ -302,7 +297,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       {sectionIsActive(invitation, "giftInfo") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Info utili</p>
             <h2>Regalo e dettagli.</h2>
             <p className="muted invite-copy">{blockText(invitation, "giftInfo")}</p>
           </div>
@@ -312,7 +306,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       {sectionIsActive(invitation, "gallery") || sectionIsActive(invitation, "video") ? (
         <section className="section invite-section">
           <div className="section-inner invite-section-inner">
-            <p className="eyebrow">Foto e video</p>
             <h2>Media dell'invito</h2>
             <p className="muted invite-copy">
               {sectionIsActive(invitation, "video")
@@ -341,7 +334,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
         <section className="section dark">
           <div className="section-inner invite-section-inner">
             <div>
-              <p className="eyebrow">RSVP</p>
               <h2>Conferma la tua presenza.</h2>
               <p className="muted invite-copy">{blockText(invitation, "rsvp")}</p>
             </div>

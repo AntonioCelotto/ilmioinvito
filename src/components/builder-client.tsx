@@ -179,7 +179,6 @@ function PreviewSection({
 
     return (
       <section className="phone-slot" data-preview-section="ceremony">
-        <span className="phone-slot-label">Luoghi</span>
         <p>
           {draft.blockTexts.ceremony || draft.blockTexts.reception || text}
         </p>
@@ -212,7 +211,6 @@ function PreviewSection({
   if (section === "countdown") {
     return (
       <section className="phone-slot" data-preview-section={section}>
-        <span className="phone-slot-label">Countdown</span>
         <p>{text}</p>
         <div className="phone-countdown">
           <strong>{draft.eventDate || "Data"}</strong>
@@ -229,7 +227,6 @@ function PreviewSection({
 
     return (
       <section className="phone-slot" data-preview-section={section}>
-        <span className="phone-slot-label">{sectionLabels[section]}</span>
         <p>{text}</p>
         <div className="phone-media-grid">
           {media.length > 0 ? (
@@ -250,7 +247,6 @@ function PreviewSection({
   if (section === "program") {
     return (
       <section className="phone-slot" data-preview-section={section}>
-        <span className="phone-slot-label">Programma</span>
         <p>{text}</p>
         <strong className="phone-featured-text">
           {draft.eventDate || "Data da definire"}
@@ -263,7 +259,6 @@ function PreviewSection({
   if (section === "dressCode") {
     return (
       <section className="phone-slot" data-preview-section={section}>
-        <span className="phone-slot-label">Dress code</span>
         <strong className="phone-featured-text">
           {draft.dressCode || "Indicazioni di stile"}
         </strong>
@@ -278,7 +273,6 @@ function PreviewSection({
         className="phone-slot phone-rsvp-slot"
         data-preview-section={section}
       >
-        <span className="phone-slot-label">RSVP</span>
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
         <span className="phone-preview-button">Parteciperò</span>
@@ -288,7 +282,6 @@ function PreviewSection({
 
   return (
     <section className="phone-slot" data-preview-section={section}>
-      <span className="phone-slot-label">{sectionLabels[section]}</span>
       <p>{text}</p>
     </section>
   );
@@ -849,7 +842,6 @@ export function BuilderClient() {
 
             {draft.story ? (
               <section className="phone-slot phone-story-slot">
-                <span className="phone-slot-label">La storia</span>
                 <p>{draft.story}</p>
               </section>
             ) : null}
