@@ -884,6 +884,12 @@ h3 {
   gap: 12px;
 }
 
+.rsvp-warning {
+  color: #ffd7c2;
+  font-size: 13px;
+  margin: 0;
+}
+
 .rsvp-form .field label,
 .guest-head {
   color: rgba(255, 255, 255, 0.78);

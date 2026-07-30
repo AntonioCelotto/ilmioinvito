@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type ExtraGuest = {
   id: number;
@@ -8,54 +8,38 @@ type ExtraGuest = {
   surname: string;
 };
 
-type Countdown = {
-  days: string;
-  hours: string;
-  minutes: string;
-  seconds: string;
-};
-
 type InviteRsvpProps = {
-  eventDateIso: string;
   whatsappNumber: string;
   invitationTitle: string;
 };
 
-const emptyCountdown: Countdown = {
-  days: "00",
-  hours: "00",
-  minutes: "00",
-  seconds: "00"
-};
+function normalizeWhatsappNumber(value: string) {
+  const trimmed = value.trim();
+  const digits = trimmed.replace(/\D/g, "");
 
-function pad(value: number) {
-  return String(value).padStart(2, "0");
-}
-
-function calculateCountdown(eventDateIso: string): Countdown {
-  const target = new Date(eventDateIso).getTime();
-  const distance = target - Date.now();
-
-  if (distance <= 0) {
-    return emptyCountdown;
+  if (!digits) {
+    return "";
   }
 
-  return {
-    days: pad(Math.floor(distance / (1000 * 60 * 60 * 24))),
-    hours: pad(Math.floor((distance / (1000 * 60 * 60)) % 24)),
-    minutes: pad(Math.floor((distance / (1000 * 60)) % 60)),
-    seconds: pad(Math.floor((distance / 1000) % 60))
-  };
+  if (trimmed.startsWith("+")) {
+    return digits;
+  }
+
+  if (digits.startsWith("00")) {
+    return digits.slice(2);
+  }
+
+  if (digits.startsWith("39")) {
+    return digits;
+  }
+
+  return digits.length === 10 ? `39${digits}` : digits;
 }
 
 export function InviteRsvp({
-  eventDateIso,
   whatsappNumber,
   invitationTitle
 }: InviteRsvpProps) {
-  const [countdown, setCountdown] = useState<Countdown>(() =>
-    calculateCountdown(eventDateIso)
-  );
   const [extraGuests, setExtraGuests] = useState<ExtraGuest[]>([]);
   const [form, setForm] = useState({
     name: "",
@@ -63,14 +47,6 @@ export function InviteRsvp({
     phone: "",
     notes: ""
   });
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setCountdown(calculateCountdown(eventDateIso));
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [eventDateIso]);
 
   const guestsText = useMemo(() => {
     const filledGuests = extraGuests
@@ -85,44 +61,34 @@ export function InviteRsvp({
       : "Nessun ospite aggiuntivo";
   }, [extraGuests]);
 
+  const recipientNumber = useMemo(
+    () => normalizeWhatsappNumber(whatsappNumber),
+    [whatsappNumber]
+  );
+
   const whatsappLink = useMemo(() => {
     const message = [
       `CONFERMA ${invitationTitle.toUpperCase()}`,
-      `Nome: ${form.name} ${form.surname}`.trim(),
+      `Nome e cognome: ${form.name} ${form.surname}`.trim(),
       `Telefono: ${form.phone}`,
-      `Ospiti aggiuntivi: ${guestsText}`,
+      `Accompagnatori: ${guestsText}`,
       `Note: ${form.notes || "Nessuna nota"}`
-    ].join(" | ");
+    ].join("\n");
 
-    return `https://wa.me/39${whatsappNumber}?text=${encodeURIComponent(message)}`;
-  }, [form, guestsText, invitationTitle, whatsappNumber]);
+    return recipientNumber
+      ? `https://wa.me/${recipientNumber}?text=${encodeURIComponent(message)}`
+      : "";
+  }, [form, guestsText, invitationTitle, recipientNumber]);
 
   return (
     <div className="rsvp-stack">
-      <section className="countdown-panel" aria-label="Countdown evento">
-        <div>
-          <strong>{countdown.days}</strong>
-          <span>Giorni</span>
-        </div>
-        <div>
-          <strong>{countdown.hours}</strong>
-          <span>Ore</span>
-        </div>
-        <div>
-          <strong>{countdown.minutes}</strong>
-          <span>Minuti</span>
-        </div>
-        <div>
-          <strong>{countdown.seconds}</strong>
-          <span>Secondi</span>
-        </div>
-      </section>
-
       <form
         className="rsvp-form"
         onSubmit={(event) => {
           event.preventDefault();
-          window.open(whatsappLink, "_blank", "noopener,noreferrer");
+          if (whatsappLink) {
+            window.open(whatsappLink, "_blank", "noopener,noreferrer");
+          }
         }}
       >
         <div className="field">
@@ -229,7 +195,17 @@ export function InviteRsvp({
           />
         </div>
 
-        <button className="button light" type="submit">
+        {!recipientNumber ? (
+          <p className="rsvp-warning">
+            Il numero WhatsApp per le conferme non è stato configurato.
+          </p>
+        ) : null}
+
+        <button
+          className="button light"
+          disabled={!recipientNumber}
+          type="submit"
+        >
           Invia conferma su WhatsApp
         </button>
       </form>
