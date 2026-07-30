@@ -82,11 +82,11 @@ function LocationCard({
           src={location.imageUrl}
         />
       ) : null}
-      <h3>{location.name || "Luogo dell'evento"}</h3>
-      <p className="muted">{location.address || "Indirizzo da definire"}</p>
       {location.description ? (
         <p className="invite-location-description">{location.description}</p>
       ) : null}
+      <h3>{location.name || "Luogo dell'evento"}</h3>
+      <p className="muted">{location.address || "Indirizzo da definire"}</p>
       {location.address ? (
         <a
           className="button"
