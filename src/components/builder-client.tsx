@@ -251,13 +251,13 @@ function PreviewSection({
                 src={location.imageUrl}
               />
             ) : null}
-            <strong>{location.name || "Luogo dell'evento"}</strong>
-            <span>{location.address || "Indirizzo da definire"}</span>
             {location.description ? (
               <p className="phone-location-description">
                 {location.description}
               </p>
             ) : null}
+            <strong>{location.name || "Luogo dell'evento"}</strong>
+            <span>{location.address || "Indirizzo da definire"}</span>
             {location.address ? (
               <a
                 className="phone-map-button"
