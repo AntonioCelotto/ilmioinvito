@@ -9,6 +9,7 @@ import {
   InvitationDraft,
   InvitationLocation,
   InvitationMedia,
+  InvitationProgramItem,
   InvitationSectionKey,
   InvitationTheme,
   makeSlug,
@@ -314,10 +315,18 @@ function PreviewSection({
     return (
       <section className="phone-slot" data-preview-section={section}>
         <p>{text}</p>
-        <strong className="phone-featured-text">
-          {draft.eventDate || "Data da definire"}
-          {draft.eventTime ? ` · ${draft.eventTime}` : ""}
-        </strong>
+        <div className="phone-program-list">
+          {draft.program.length > 0 ? (
+            draft.program.map((item) => (
+              <div className="phone-program-item" key={item.id}>
+                <strong>{item.time || "--:--"}</strong>
+                <span>{item.description || "Descrizione del programma"}</span>
+              </div>
+            ))
+          ) : (
+            <span>Aggiungi il primo orario del programma</span>
+          )}
+        </div>
       </section>
     );
   }
@@ -373,6 +382,13 @@ export function BuilderClient() {
     blockTexts: defaultBlockTexts,
     activeSections: defaultSections,
     locations: initialLocations,
+    program: [
+      {
+        id: "program-1",
+        time: demoInvitation.eventTime,
+        description: ""
+      }
+    ],
     media: [
       {
         id: "media-photo-1",
@@ -516,6 +532,39 @@ export function BuilderClient() {
       media: current.media.map((item) =>
         item.id === id ? { ...item, ...patch } : item
       )
+    }));
+  }
+
+  function updateProgramItem(
+    id: string,
+    patch: Partial<InvitationProgramItem>
+  ) {
+    setDraft((current) => ({
+      ...current,
+      program: current.program.map((item) =>
+        item.id === id ? { ...item, ...patch } : item
+      )
+    }));
+  }
+
+  function addProgramItem() {
+    setDraft((current) => ({
+      ...current,
+      program: [
+        ...current.program,
+        {
+          id: crypto.randomUUID(),
+          time: "",
+          description: ""
+        }
+      ]
+    }));
+  }
+
+  function removeProgramItem(id: string) {
+    setDraft((current) => ({
+      ...current,
+      program: current.program.filter((item) => item.id !== id)
     }));
   }
 
@@ -833,6 +882,69 @@ export function BuilderClient() {
                   <span className="muted">
                     Puoi inserirlo con o senza il prefisso +39.
                   </span>
+                </div>
+              ) : null}
+              {section === "program" ? (
+                <div className="program-editor">
+                  <div className="program-editor-head">
+                    <strong>Orari del programma</strong>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={addProgramItem}
+                    >
+                      + Aggiungi orario
+                    </button>
+                  </div>
+                  {draft.program.length === 0 ? (
+                    <p className="muted">
+                      Premi “+ Aggiungi orario” per creare la prima voce.
+                    </p>
+                  ) : null}
+                  {draft.program.map((item, index) => (
+                    <div className="program-editor-item" key={item.id}>
+                      <div className="program-editor-item-head">
+                        <strong>Voce {index + 1}</strong>
+                        <button
+                          className="editor-remove-button"
+                          type="button"
+                          onClick={() => removeProgramItem(item.id)}
+                        >
+                          Rimuovi
+                        </button>
+                      </div>
+                      <div className="field">
+                        <label htmlFor={`program-time-${item.id}`}>
+                          Orario
+                        </label>
+                        <input
+                          id={`program-time-${item.id}`}
+                          type="time"
+                          value={item.time}
+                          onChange={(event) =>
+                            updateProgramItem(item.id, {
+                              time: event.target.value
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="field">
+                        <label htmlFor={`program-description-${item.id}`}>
+                          Descrizione
+                        </label>
+                        <textarea
+                          id={`program-description-${item.id}`}
+                          placeholder="Es. Arrivo degli invitati, inizio cerimonia, cena..."
+                          value={item.description}
+                          onChange={(event) =>
+                            updateProgramItem(item.id, {
+                              description: event.target.value
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : null}
               <div className="field">

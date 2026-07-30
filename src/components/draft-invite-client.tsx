@@ -44,6 +44,7 @@ const fallbackDraft: InvitationDraft = {
       imageUrl: ""
     }
   ],
+  program: [],
   media: [],
   theme: {
     template: "darkLuxury",
@@ -226,10 +227,21 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           <div className="section-inner invite-section-inner">
             <h2>La giornata.</h2>
             <p className="muted invite-copy">{blockText(invitation, "program")}</p>
-            <p className="invite-date-line">
-              {invitation.eventDate}
-              {invitation.eventTime ? `, ore ${invitation.eventTime}` : ""}
-            </p>
+            {invitation.program.length > 0 ? (
+              <div className="invite-program">
+                {invitation.program.map((item) => (
+                  <article className="invite-program-item" key={item.id}>
+                    <time>{item.time || "--:--"}</time>
+                    <p>{item.description || "Programma da definire"}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="invite-date-line">
+                {invitation.eventDate}
+                {invitation.eventTime ? `, ore ${invitation.eventTime}` : ""}
+              </p>
+            )}
           </div>
         </section>
       ) : null}
