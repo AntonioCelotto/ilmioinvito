@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { savePublicRsvp } from "@/lib/supabase/rsvps";
 
 type Guest = {
   id: number;
@@ -10,6 +11,7 @@ type Guest = {
 };
 
 type InviteRsvpProps = {
+  invitationId: string;
   whatsappNumber: string;
   invitationTitle: string;
 };
@@ -38,6 +40,7 @@ function normalizeWhatsappNumber(value: string) {
 }
 
 export function InviteRsvp({
+  invitationId,
   whatsappNumber,
   invitationTitle
 }: InviteRsvpProps) {
@@ -45,6 +48,8 @@ export function InviteRsvp({
     { id: 1, name: "", surname: "", additionalInfo: "" }
   ]);
   const [phone, setPhone] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const guestsText = useMemo(() => {
     return guests
@@ -82,10 +87,17 @@ export function InviteRsvp({
     <div className="rsvp-stack">
       <form
         className="rsvp-form"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
+          setSubmitting(true);
+          setSubmitMessage("");
+
+          const result = await savePublicRsvp(invitationId, phone, guests);
+          setSubmitMessage(result.message);
+          setSubmitting(false);
+
           if (whatsappLink) {
-            window.open(whatsappLink, "_blank", "noopener,noreferrer");
+            window.location.href = whatsappLink;
           }
         }}
       >
@@ -194,12 +206,18 @@ export function InviteRsvp({
           </p>
         ) : null}
 
+        {submitMessage ? (
+          <p className={submitMessage.startsWith("Conferma salvata") ? "rsvp-success" : "rsvp-warning"}>
+            {submitMessage}
+          </p>
+        ) : null}
+
         <button
           className="button light"
-          disabled={!recipientNumber}
+          disabled={!recipientNumber || submitting}
           type="submit"
         >
-          Invia conferma su WhatsApp
+          {submitting ? "Salvataggio..." : "Conferma e invia su WhatsApp"}
         </button>
       </form>
     </div>

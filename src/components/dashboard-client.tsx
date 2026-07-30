@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { demoGuests, demoInvitation } from "@/lib/demo-data";
+import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
 import { InvitationDraft, readDrafts } from "@/lib/draft-storage";
 import { loadUserDraftsFromSupabase } from "@/lib/supabase/drafts";
-
-const labels = {
-  confirmed: "Confermato",
-  declined: "Non partecipa",
-  pending: "In attesa"
-};
+import {
+  DashboardRsvp,
+  loadDashboardRsvps
+} from "@/lib/supabase/rsvps";
+import { downloadGuestPdf } from "@/lib/guest-pdf";
 
 export function DashboardClient() {
   const [drafts, setDrafts] = useState<InvitationDraft[]>([]);
   const [remoteMessage, setRemoteMessage] = useState("");
+  const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
+  const [rsvpMessage, setRsvpMessage] = useState("");
+  const [selectedInvitationId, setSelectedInvitationId] = useState("all");
 
   useEffect(() => {
     const localDrafts = readDrafts();
@@ -31,12 +32,41 @@ export function DashboardClient() {
         ]);
       }
     });
+
+    loadDashboardRsvps().then((result) => {
+      setRsvps(result.rsvps);
+      setRsvpMessage(result.message);
+    });
   }, []);
 
-  const confirmed = demoGuests.filter((guest) => guest.status === "confirmed");
-  const pending = demoGuests.filter((guest) => guest.status === "pending");
-  const declined = demoGuests.filter((guest) => guest.status === "declined");
-  const totalPeople = confirmed.reduce((sum, guest) => sum + guest.partySize, 0);
+  const invitationsWithRsvps = useMemo(() => {
+    const invitations = new Map<string, string>();
+    rsvps.forEach((rsvp) =>
+      invitations.set(rsvp.invitationId, rsvp.invitationTitle)
+    );
+    return Array.from(invitations, ([id, title]) => ({ id, title }));
+  }, [rsvps]);
+
+  const visibleRsvps = useMemo(
+    () =>
+      selectedInvitationId === "all"
+        ? rsvps
+        : rsvps.filter((rsvp) => rsvp.invitationId === selectedInvitationId),
+    [rsvps, selectedInvitationId]
+  );
+
+  const responseGroups = new Set(
+    visibleRsvps.map((rsvp) => rsvp.responseGroupId)
+  ).size;
+  const guestsWithInformation = visibleRsvps.filter(
+    (rsvp) => rsvp.additionalInfo.trim().length > 0
+  ).length;
+  const selectedInvitationTitle =
+    selectedInvitationId === "all"
+      ? "Tutti gli inviti"
+      : invitationsWithRsvps.find(
+          (invitation) => invitation.id === selectedInvitationId
+        )?.title ?? "Invito";
 
   return (
     <>
@@ -102,78 +132,104 @@ export function DashboardClient() {
 
       <div className="metrics">
         <div className="metric">
-          <span className="muted">Conferme demo</span>
-          <strong>{confirmed.length}</strong>
+          <span className="muted">Invitati confermati</span>
+          <strong>{visibleRsvps.length}</strong>
         </div>
         <div className="metric">
-          <span className="muted">Persone demo</span>
-          <strong>{totalPeople}</strong>
+          <span className="muted">Conferme ricevute</span>
+          <strong>{responseGroups}</strong>
         </div>
         <div className="metric">
-          <span className="muted">In attesa</span>
-          <strong>{pending.length}</strong>
+          <span className="muted">Con allergie o note</span>
+          <strong>{guestsWithInformation}</strong>
         </div>
         <div className="metric">
-          <span className="muted">Rifiuti</span>
-          <strong>{declined.length}</strong>
+          <span className="muted">Inviti con risposte</span>
+          <strong>{invitationsWithRsvps.length}</strong>
         </div>
       </div>
 
-      <div className="grid">
-        <section className="panel">
-          <div className="panel-header">
-            <h3>Partecipanti demo</h3>
-            <span className="muted">{demoGuests.length} risposte</span>
+      <section className="panel guest-dashboard">
+        <div className="guest-dashboard-head">
+          <div>
+            <h3>Lista invitati</h3>
+            <p className="muted">
+              Conferme, contatti, allergie e informazioni di ogni partecipante.
+            </p>
           </div>
-          <table className="table">
+          <div className="guest-dashboard-actions">
+            <label className="field compact-field">
+              <span>Filtra per invito</span>
+              <select
+                value={selectedInvitationId}
+                onChange={(event) =>
+                  setSelectedInvitationId(event.target.value)
+                }
+              >
+                <option value="all">Tutti gli inviti</option>
+                {invitationsWithRsvps.map((invitation) => (
+                  <option value={invitation.id} key={invitation.id}>
+                    {invitation.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="button"
+              disabled={visibleRsvps.length === 0}
+              type="button"
+              onClick={() =>
+                downloadGuestPdf(selectedInvitationTitle, visibleRsvps)
+              }
+            >
+              Scarica PDF
+            </button>
+          </div>
+        </div>
+
+        {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
+        {visibleRsvps.length === 0 ? (
+          <div className="empty-state">
+            <h3>Nessuna conferma ricevuta</h3>
+            <p className="muted">
+              Quando gli invitati compileranno il modulo RSVP, compariranno qui
+              automaticamente.
+            </p>
+          </div>
+        ) : (
+          <div className="guest-table-scroll">
+            <table className="table guest-table">
             <thead>
               <tr>
-                <th>Nome</th>
-                <th>Stato</th>
-                <th>Persone</th>
-                <th>Note</th>
+                <th>Invitato</th>
+                <th>Invito</th>
+                <th>Telefono</th>
+                <th>Allergie e informazioni</th>
+                <th>Ricevuto</th>
               </tr>
             </thead>
             <tbody>
-              {demoGuests.map((guest) => (
-                <tr key={guest.id}>
-                  <td>{guest.name}</td>
+              {visibleRsvps.map((rsvp) => (
+                <tr key={rsvp.id}>
                   <td>
-                    <span className={`status ${guest.status}`}>
-                      {labels[guest.status]}
-                    </span>
+                    <strong>{rsvp.guestName}</strong>
                   </td>
-                  <td>{guest.partySize}</td>
-                  <td>{guest.note ?? "-"}</td>
+                  <td>{rsvp.invitationTitle}</td>
+                  <td>{rsvp.contactPhone || "-"}</td>
+                  <td>{rsvp.additionalInfo || "Nessuna"}</td>
+                  <td>
+                    {new Intl.DateTimeFormat("it-IT", {
+                      dateStyle: "short",
+                      timeStyle: "short"
+                    }).format(new Date(rsvp.createdAt))}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </section>
-
-        <aside className="form-panel">
-          <h3>Impostazioni demo</h3>
-          <div className="field">
-            <label htmlFor="whatsapp">WhatsApp RSVP</label>
-            <input id="whatsapp" defaultValue={demoInvitation.whatsappNumber} />
           </div>
-          <div className="field">
-            <label htmlFor="slug">Link pubblico</label>
-            <input id="slug" defaultValue={`/i/${demoInvitation.slug}`} />
-          </div>
-          <div className="field">
-            <label htmlFor="status">Stato pubblicazione</label>
-            <select id="status" defaultValue="published">
-              <option value="draft">Bozza</option>
-              <option value="published">Pubblicato</option>
-              <option value="archived">Archiviato</option>
-            </select>
-          </div>
-          <button className="button" type="button">
-            Salva modifiche
-          </button>
-        </aside>
-      </div>
+        )}
+      </section>
     </>
   );
 }

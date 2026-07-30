@@ -284,6 +284,7 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             </div>
             <div className="rsvp">
               <InviteRsvp
+                invitationId={invitation.id}
                 invitationTitle={invitation.title}
                 whatsappNumber={invitation.whatsappNumber}
               />
