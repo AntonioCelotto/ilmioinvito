@@ -277,13 +277,30 @@ function PreviewSection({
       >
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
-        <div className="phone-rsvp-preview" aria-hidden="true">
-          <span>Nome</span>
-          <span>Cognome</span>
-          <span>Telefono WhatsApp</span>
-          <span>Accompagnatori e note</span>
-        </div>
-        <span className="phone-preview-button">Invia su WhatsApp</span>
+        <form
+          className="phone-rsvp-preview"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <input aria-label="Nome" placeholder="Nome" />
+          <input aria-label="Cognome" placeholder="Cognome" />
+          <input
+            aria-label="Telefono WhatsApp"
+            inputMode="tel"
+            placeholder="Telefono WhatsApp"
+            type="tel"
+          />
+          <input
+            aria-label="Accompagnatori"
+            placeholder="Accompagnatori"
+          />
+          <textarea
+            aria-label="Allergie, intolleranze o altre informazioni"
+            placeholder="Allergie, intolleranze o altre informazioni"
+          />
+          <button className="phone-preview-button" type="submit">
+            Invia su WhatsApp
+          </button>
+        </form>
       </section>
     );
   }
