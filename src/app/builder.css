@@ -459,6 +459,11 @@
   border-top-color: rgba(47, 42, 36, 0.22);
 }
 
+.theme-classicLight .phone-kicker,
+.theme-classicLight .phone-slot-label {
+  color: #8a7046;
+}
+
 .phone-story-slot {
   padding-bottom: 38px;
 }

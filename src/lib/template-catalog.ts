@@ -62,9 +62,10 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewSubtitle: "Insieme, per sempre",
     theme: {
       template: "classicLight",
-      primaryColor: "#f4eee6",
-      accentColor: "#a47f68",
-      fontStyle: "script"
+      primaryColor: "#fffaf2",
+      accentColor: "#b89a62",
+      fontStyle: "script",
+      backgroundImage: "/templates/wedding-promessa-elegante-v1.webp"
     }
   },
   {

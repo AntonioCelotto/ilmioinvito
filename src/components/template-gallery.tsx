@@ -23,7 +23,12 @@ function TemplateCard({
       <div
         className="template-card-preview"
         style={{
-          background: `linear-gradient(155deg, ${template.theme.accentColor}, ${template.theme.primaryColor} 58%)`
+          backgroundColor: template.theme.primaryColor,
+          backgroundImage: template.theme.backgroundImage
+            ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${template.theme.backgroundImage}")`
+            : `linear-gradient(155deg, ${template.theme.accentColor}, ${template.theme.primaryColor} 58%)`,
+          backgroundPosition: "center",
+          backgroundSize: "cover"
         }}
       >
         <span>{template.occasionLabel}</span>
