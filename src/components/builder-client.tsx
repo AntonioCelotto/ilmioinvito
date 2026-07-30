@@ -22,6 +22,7 @@ import {
   invitationTemplates,
   readSelectedTemplate
 } from "@/lib/template-catalog";
+import { LiveCountdown } from "@/components/live-countdown";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
   countdown: "Countdown",
@@ -212,10 +213,11 @@ function PreviewSection({
     return (
       <section className="phone-slot" data-preview-section={section}>
         <p>{text}</p>
-        <div className="phone-countdown">
-          <strong>{draft.eventDate || "Data"}</strong>
-          <span>{draft.eventTime ? `Ore ${draft.eventTime}` : "Orario da definire"}</span>
-        </div>
+        <LiveCountdown
+          className="phone-countdown"
+          eventDate={draft.eventDate}
+          eventTime={draft.eventTime}
+        />
       </section>
     );
   }
@@ -299,7 +301,7 @@ export function BuilderClient() {
     title: demoInvitation.title,
     subtitle: demoInvitation.subtitle,
     hostName: demoInvitation.hostName,
-    eventDate: demoInvitation.eventDate,
+    eventDate: demoInvitation.eventDateIso.slice(0, 10),
     eventTime: demoInvitation.eventTime,
     whatsappNumber: demoInvitation.whatsappNumber,
     story: demoInvitation.story,
@@ -534,6 +536,7 @@ export function BuilderClient() {
             <label htmlFor="date">Data evento</label>
             <input
               id="date"
+              type="date"
               value={draft.eventDate}
               onChange={(event) => updateField("eventDate", event.target.value)}
             />
@@ -542,6 +545,7 @@ export function BuilderClient() {
             <label htmlFor="time">Orario</label>
             <input
               id="time"
+              type="time"
               value={draft.eventTime}
               onChange={(event) => updateField("eventTime", event.target.value)}
             />
