@@ -712,6 +712,32 @@ export function BuilderClient() {
                   <span>Attivo</span>
                 </label>
               </div>
+              {section === "countdown" ? (
+                <div className="field-row">
+                  <div className="field">
+                    <label htmlFor="countdown-date">Data dell’evento</label>
+                    <input
+                      id="countdown-date"
+                      type="date"
+                      value={draft.eventDate}
+                      onChange={(event) =>
+                        updateField("eventDate", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="countdown-time">Ora dell’evento</label>
+                    <input
+                      id="countdown-time"
+                      type="time"
+                      value={draft.eventTime}
+                      onChange={(event) =>
+                        updateField("eventTime", event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
               <div className="field">
                 <label>{blockTextHelpers[section]}</label>
                 <textarea
