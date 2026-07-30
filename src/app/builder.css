@@ -267,6 +267,13 @@
   position: relative;
 }
 
+.address-search-status {
+  color: var(--muted);
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+}
+
 .address-suggestions {
   background: #fff;
   border: 1px solid var(--line);
