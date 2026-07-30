@@ -514,6 +514,23 @@
   width: 100%;
 }
 
+.phone-rsvp-preview {
+  display: grid;
+  gap: 7px;
+}
+
+.phone-rsvp-preview span {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  font-size: 10px;
+  opacity: 0.75;
+  padding: 8px 9px;
+}
+
+.theme-classicLight .phone-rsvp-preview span {
+  border-color: rgba(47, 42, 36, 0.2);
+}
+
 .phone-map-button {
   background: #fff;
   border-radius: 999px;

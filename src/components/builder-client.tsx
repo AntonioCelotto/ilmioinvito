@@ -277,7 +277,13 @@ function PreviewSection({
       >
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
-        <span className="phone-preview-button">Parteciperò</span>
+        <div className="phone-rsvp-preview" aria-hidden="true">
+          <span>Nome</span>
+          <span>Cognome</span>
+          <span>Telefono WhatsApp</span>
+          <span>Accompagnatori e note</span>
+        </div>
+        <span className="phone-preview-button">Invia su WhatsApp</span>
       </section>
     );
   }
@@ -552,14 +558,6 @@ export function BuilderClient() {
           </div>
         </div>
         <div className="field">
-          <label htmlFor="whatsapp">Numero WhatsApp RSVP</label>
-          <input
-            id="whatsapp"
-            value={draft.whatsappNumber}
-            onChange={(event) => updateField("whatsappNumber", event.target.value)}
-          />
-        </div>
-        <div className="field">
           <label htmlFor="story">Racconto</label>
           <textarea
             id="story"
@@ -736,6 +734,26 @@ export function BuilderClient() {
                       }
                     />
                   </div>
+                </div>
+              ) : null}
+              {section === "rsvp" ? (
+                <div className="field">
+                  <label htmlFor="rsvp-whatsapp">
+                    Numero WhatsApp che riceverà le conferme
+                  </label>
+                  <input
+                    id="rsvp-whatsapp"
+                    inputMode="tel"
+                    placeholder="+39 345 123 4567"
+                    type="tel"
+                    value={draft.whatsappNumber}
+                    onChange={(event) =>
+                      updateField("whatsappNumber", event.target.value)
+                    }
+                  />
+                  <span className="muted">
+                    Puoi inserirlo con o senza il prefisso +39.
+                  </span>
                 </div>
               ) : null}
               <div className="field">

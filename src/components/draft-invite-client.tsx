@@ -61,30 +61,6 @@ function blockText(draft: InvitationDraft, section: InvitationSectionKey) {
   return draft.blockTexts?.[section] || defaultBlockTexts[section];
 }
 
-function parseEventDate(draft: InvitationDraft) {
-  if (/^\d{4}-\d{2}-\d{2}$/.test(draft.eventDate)) {
-    const time = draft.eventTime || "00:00";
-    const normalizedTime = time.length === 5 ? `${time}:00` : time;
-    return new Date(`${draft.eventDate}T${normalizedTime}`);
-  }
-
-  if (draft.slug === demoInvitation.slug) {
-    return new Date(demoInvitation.eventDateIso);
-  }
-
-  return null;
-}
-
-function eventDateIsoFromDraft(draft: InvitationDraft) {
-  const eventDate = parseEventDate(draft);
-
-  if (!eventDate || Number.isNaN(eventDate.getTime())) {
-    return demoInvitation.eventDateIso;
-  }
-
-  return eventDate.toISOString();
-}
-
 function mapDirectionsUrl(address: string) {
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
     address
@@ -308,7 +284,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             </div>
             <div className="rsvp">
               <InviteRsvp
-                eventDateIso={eventDateIsoFromDraft(invitation)}
                 invitationTitle={invitation.title}
                 whatsappNumber={invitation.whatsappNumber}
               />
