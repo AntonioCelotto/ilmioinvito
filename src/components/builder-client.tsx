@@ -80,6 +80,63 @@ function mapDirectionsUrl(address: string) {
   )}`;
 }
 
+function PhoneRsvpPreview() {
+  const [guests, setGuests] = useState([{ id: 1 }]);
+
+  return (
+    <form
+      className="phone-rsvp-preview"
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <input
+        aria-label="Telefono WhatsApp"
+        inputMode="tel"
+        placeholder="Telefono WhatsApp"
+        type="tel"
+      />
+      {guests.map((guest, index) => (
+        <div className="phone-guest-card" key={guest.id}>
+          <strong>Invitato {index + 1}</strong>
+          <input aria-label={`Nome invitato ${index + 1}`} placeholder="Nome" />
+          <input
+            aria-label={`Cognome invitato ${index + 1}`}
+            placeholder="Cognome"
+          />
+          <textarea
+            aria-label={`Allergie e informazioni invitato ${index + 1}`}
+            placeholder="Allergie e informazioni aggiuntive"
+          />
+          {index > 0 ? (
+            <button
+              className="phone-remove-guest"
+              type="button"
+              onClick={() =>
+                setGuests((current) =>
+                  current.filter((item) => item.id !== guest.id)
+                )
+              }
+            >
+              Rimuovi
+            </button>
+          ) : null}
+        </div>
+      ))}
+      <button
+        className="phone-add-guest"
+        type="button"
+        onClick={() =>
+          setGuests((current) => [...current, { id: Date.now() }])
+        }
+      >
+        + Aggiungi invitato
+      </button>
+      <button className="phone-preview-button" type="submit">
+        Invia su WhatsApp
+      </button>
+    </form>
+  );
+}
+
 function AddressAutocomplete({
   location,
   onChange
@@ -277,30 +334,7 @@ function PreviewSection({
       >
         <strong className="phone-featured-text">Conferma la tua presenza</strong>
         <p>{text}</p>
-        <form
-          className="phone-rsvp-preview"
-          onSubmit={(event) => event.preventDefault()}
-        >
-          <input aria-label="Nome" placeholder="Nome" />
-          <input aria-label="Cognome" placeholder="Cognome" />
-          <input
-            aria-label="Telefono WhatsApp"
-            inputMode="tel"
-            placeholder="Telefono WhatsApp"
-            type="tel"
-          />
-          <input
-            aria-label="Accompagnatori"
-            placeholder="Accompagnatori"
-          />
-          <textarea
-            aria-label="Allergie, intolleranze o altre informazioni"
-            placeholder="Allergie, intolleranze o altre informazioni"
-          />
-          <button className="phone-preview-button" type="submit">
-            Invia su WhatsApp
-          </button>
-        </form>
+        <PhoneRsvpPreview />
       </section>
     );
   }
