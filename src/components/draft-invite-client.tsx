@@ -36,6 +36,7 @@ const fallbackDraft: InvitationDraft = {
       type: "reception",
       name: demoInvitation.venueName,
       address: demoInvitation.venueAddress,
+      description: "",
       mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
         demoInvitation.venueAddress
       )}`,
@@ -82,6 +83,9 @@ function LocationCard({
       ) : null}
       <h3>{location.name || "Luogo dell'evento"}</h3>
       <p className="muted">{location.address || "Indirizzo da definire"}</p>
+      {location.description ? (
+        <p className="invite-location-description">{location.description}</p>
+      ) : null}
       {location.address ? (
         <a
           className="button"

@@ -95,6 +95,7 @@ function rowToDraft(row: any): InvitationDraft {
       type: location.type,
       name: location.name ?? "",
       address: location.address ?? "",
+      description: location.description ?? "",
       mapsUrl: location.maps_url ?? "",
       enabled: location.enabled ?? true,
       imageUrl: location.image_url ?? ""
@@ -347,6 +348,7 @@ export async function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveR
         type: location.type,
         name: location.name || "Location",
         address: location.address,
+        description: location.description,
         maps_url: location.mapsUrl,
         enabled: location.enabled,
         image_url: location.imageUrl || null,

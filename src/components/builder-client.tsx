@@ -57,6 +57,7 @@ const initialLocations: InvitationLocation[] = [
     type: "church",
     name: "Chiesa / cerimonia",
     address: "",
+    description: "",
     mapsUrl: "",
     enabled: true,
     imageUrl: ""
@@ -66,6 +67,7 @@ const initialLocations: InvitationLocation[] = [
     type: "reception",
     name: demoInvitation.venueName,
     address: demoInvitation.venueAddress,
+    description: "",
     mapsUrl: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
       demoInvitation.venueAddress
     )}`,
@@ -250,6 +252,11 @@ function PreviewSection({
             ) : null}
             <strong>{location.name || "Luogo dell'evento"}</strong>
             <span>{location.address || "Indirizzo da definire"}</span>
+            {location.description ? (
+              <p className="phone-location-description">
+                {location.description}
+              </p>
+            ) : null}
             {location.address ? (
               <a
                 className="phone-map-button"
@@ -697,6 +704,27 @@ export function BuilderClient() {
                     }
                   />
                   <small>Scrivi almeno 3 caratteri e scegli l’indirizzo suggerito.</small>
+                </div>
+                <div className="field">
+                  <label>
+                    Testo descrittivo per{" "}
+                    {["church", "ceremony"].includes(location.type)
+                      ? "la chiesa / cerimonia"
+                      : "il ricevimento / location"}
+                  </label>
+                  <textarea
+                    placeholder={
+                      ["church", "ceremony"].includes(location.type)
+                        ? "Scrivi le informazioni sulla cerimonia..."
+                        : "Scrivi le informazioni sul ricevimento..."
+                    }
+                    value={location.description}
+                    onChange={(event) =>
+                      updateLocation(location.id, {
+                        description: event.target.value
+                      })
+                    }
+                  />
                 </div>
                 <div className="field">
                   <label>Foto del luogo</label>
