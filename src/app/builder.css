@@ -327,6 +327,39 @@
   padding: 12px;
 }
 
+.program-add-slot-button {
+  align-items: center;
+  background: #fff;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  color: var(--accent-dark);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  gap: 10px;
+  justify-content: center;
+  min-height: 54px;
+  padding: 10px 16px;
+  width: 100%;
+}
+
+.program-add-slot-button span {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 50%;
+  color: #fff;
+  display: inline-flex;
+  font-size: 24px;
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  width: 32px;
+}
+
+.program-add-slot-button:hover {
+  background: #fff8f1;
+}
+
 .editor-remove-button {
   background: transparent;
   border: 1px solid var(--line);
@@ -785,15 +818,6 @@
   .block-editor-head {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .program-editor-head {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .program-editor-head .button {
-    width: 100%;
   }
 
   .invite-program-item {
