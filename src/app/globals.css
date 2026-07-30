@@ -905,7 +905,7 @@ h3 {
 .guest-row {
   display: grid;
   gap: 8px;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 1fr;
 }
 
 .guest-row input {
@@ -914,6 +914,29 @@ h3 {
   border-radius: 6px;
   min-height: 42px;
   padding: 10px 12px;
+}
+
+.guest-card {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.guest-card-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.guest-card textarea {
+  background: #fff;
+  border: 0;
+  border-radius: 6px;
+  min-height: 78px;
+  padding: 10px 12px;
+  resize: vertical;
 }
 
 .remove-button {

@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 
-type ExtraGuest = {
+type Guest = {
   id: number;
   name: string;
   surname: string;
+  additionalInfo: string;
 };
 
 type InviteRsvpProps = {
@@ -40,26 +41,24 @@ export function InviteRsvp({
   whatsappNumber,
   invitationTitle
 }: InviteRsvpProps) {
-  const [extraGuests, setExtraGuests] = useState<ExtraGuest[]>([]);
-  const [form, setForm] = useState({
-    name: "",
-    surname: "",
-    phone: "",
-    additionalInfo: ""
-  });
+  const [guests, setGuests] = useState<Guest[]>([
+    { id: 1, name: "", surname: "", additionalInfo: "" }
+  ]);
+  const [phone, setPhone] = useState("");
 
   const guestsText = useMemo(() => {
-    const filledGuests = extraGuests
+    return guests
       .map((guest, index) => {
-        const fullName = `${guest.name} ${guest.surname}`.trim();
-        return fullName ? `${index + 1}. ${fullName}` : null;
+        const fullName = `${guest.name} ${guest.surname}`.trim() || "Nome non indicato";
+        return [
+          `${index + 1}. ${fullName}`,
+          `   Allergie e informazioni aggiuntive: ${
+            guest.additionalInfo || "Nessuna"
+          }`
+        ].join("\n");
       })
-      .filter(Boolean);
-
-    return filledGuests.length > 0
-      ? filledGuests.join(" | ")
-      : "Nessun ospite aggiuntivo";
-  }, [extraGuests]);
+      .join("\n");
+  }, [guests]);
 
   const recipientNumber = useMemo(
     () => normalizeWhatsappNumber(whatsappNumber),
@@ -69,18 +68,15 @@ export function InviteRsvp({
   const whatsappLink = useMemo(() => {
     const message = [
       `CONFERMA ${invitationTitle.toUpperCase()}`,
-      `Nome e cognome: ${form.name} ${form.surname}`.trim(),
-      `Telefono: ${form.phone}`,
-      `Accompagnatori: ${guestsText}`,
-      `Allergie, intolleranze o altre informazioni: ${
-        form.additionalInfo || "Nessuna"
-      }`
+      `Telefono di contatto: ${phone}`,
+      `Invitati (${guests.length}):`,
+      guestsText
     ].join("\n");
 
     return recipientNumber
       ? `https://wa.me/${recipientNumber}?text=${encodeURIComponent(message)}`
       : "";
-  }, [form, guestsText, invitationTitle, recipientNumber]);
+  }, [guests.length, guestsText, invitationTitle, phone, recipientNumber]);
 
   return (
     <div className="rsvp-stack">
@@ -94,114 +90,103 @@ export function InviteRsvp({
         }}
       >
         <div className="field">
-          <label htmlFor="name">Nome</label>
-          <input
-            id="name"
-            required
-            value={form.name}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, name: event.target.value }))
-            }
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="surname">Cognome</label>
-          <input
-            id="surname"
-            required
-            value={form.surname}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, surname: event.target.value }))
-            }
-          />
-        </div>
-        <div className="field">
           <label htmlFor="phone">Telefono WhatsApp</label>
           <input
             id="phone"
             required
             type="tel"
-            value={form.phone}
-            onChange={(event) =>
-              setForm((current) => ({ ...current, phone: event.target.value }))
-            }
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
           />
         </div>
 
         <div className="guest-head">
-          <strong>Altri ospiti</strong>
+          <strong>Dati degli invitati</strong>
           <button
             className="button secondary"
             type="button"
             onClick={() =>
-              setExtraGuests((current) => [
+              setGuests((current) => [
                 ...current,
-                { id: Date.now(), name: "", surname: "" }
+                {
+                  id: Date.now(),
+                  name: "",
+                  surname: "",
+                  additionalInfo: ""
+                }
               ])
             }
           >
-            + Aggiungi
+            + Aggiungi invitato
           </button>
         </div>
 
-        {extraGuests.map((guest) => (
-          <div className="guest-row" key={guest.id}>
-            <input
-              placeholder="Nome ospite"
-              value={guest.name}
+        {guests.map((guest, index) => (
+          <div className="guest-card" key={guest.id}>
+            <div className="guest-card-head">
+              <strong>Invitato {index + 1}</strong>
+              {index > 0 ? (
+                <button
+                  className="remove-button"
+                  type="button"
+                  onClick={() =>
+                    setGuests((current) =>
+                      current.filter((item) => item.id !== guest.id)
+                    )
+                  }
+                >
+                  Rimuovi
+                </button>
+              ) : null}
+            </div>
+            <div className="guest-row">
+              <input
+                aria-label={`Nome invitato ${index + 1}`}
+                placeholder="Nome"
+                required
+                value={guest.name}
+                onChange={(event) =>
+                  setGuests((current) =>
+                    current.map((item) =>
+                      item.id === guest.id
+                        ? { ...item, name: event.target.value }
+                        : item
+                    )
+                  )
+                }
+              />
+              <input
+                aria-label={`Cognome invitato ${index + 1}`}
+                placeholder="Cognome"
+                required
+                value={guest.surname}
+                onChange={(event) =>
+                  setGuests((current) =>
+                    current.map((item) =>
+                      item.id === guest.id
+                        ? { ...item, surname: event.target.value }
+                        : item
+                    )
+                  )
+                }
+              />
+            </div>
+            <textarea
+              aria-label={`Allergie e informazioni aggiuntive invitato ${index + 1}`}
+              placeholder="Allergie, intolleranze o informazioni aggiuntive"
+              value={guest.additionalInfo}
               onChange={(event) =>
-                setExtraGuests((current) =>
+                setGuests((current) =>
                   current.map((item) =>
                     item.id === guest.id
-                      ? { ...item, name: event.target.value }
+                      ? { ...item, additionalInfo: event.target.value }
                       : item
                   )
                 )
               }
             />
-            <input
-              placeholder="Cognome ospite"
-              value={guest.surname}
-              onChange={(event) =>
-                setExtraGuests((current) =>
-                  current.map((item) =>
-                    item.id === guest.id
-                      ? { ...item, surname: event.target.value }
-                      : item
-                  )
-                )
-              }
-            />
-            <button
-              className="remove-button"
-              type="button"
-              onClick={() =>
-                setExtraGuests((current) =>
-                  current.filter((item) => item.id !== guest.id)
-                )
-              }
-            >
-              Rimuovi
-            </button>
           </div>
         ))}
-
-        <div className="field">
-          <label htmlFor="additional-info">
-            Allergie, intolleranze o altre informazioni
-          </label>
-          <textarea
-            id="additional-info"
-            placeholder="Indica eventuali allergie, intolleranze alimentari o altre necessità"
-            value={form.additionalInfo}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                additionalInfo: event.target.value
-              }))
-            }
-          />
-        </div>
 
         {!recipientNumber ? (
           <p className="rsvp-warning">
