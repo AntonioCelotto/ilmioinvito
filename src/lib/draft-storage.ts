@@ -27,6 +27,12 @@ export type InvitationMedia = {
   url: string;
 };
 
+export type InvitationProgramItem = {
+  id: string;
+  time: string;
+  description: string;
+};
+
 export type InvitationTheme = {
   template: "darkLuxury" | "classicLight" | "botanical" | "minimal";
   primaryColor: string;
@@ -52,6 +58,7 @@ export type InvitationDraft = {
   blockTexts: InvitationBlockTexts;
   activeSections: InvitationSectionKey[];
   locations: InvitationLocation[];
+  program: InvitationProgramItem[];
   media: InvitationMedia[];
   theme: InvitationTheme;
   updatedAt: string;
@@ -112,6 +119,11 @@ export function readDrafts(): InvitationDraft[] {
         description: location.description ?? "",
         enabled: location.enabled ?? true,
         imageUrl: location.imageUrl ?? ""
+      })),
+      program: (draft.program ?? []).map((item, index) => ({
+        id: item.id || `program-${index + 1}`,
+        time: item.time ?? "",
+        description: item.description ?? ""
       })),
       blockTexts: {
         ...defaultBlockTexts,

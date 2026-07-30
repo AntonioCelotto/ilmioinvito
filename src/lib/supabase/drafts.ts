@@ -127,6 +127,13 @@ function rowToDraft(row: any): InvitationDraft {
     whatsappNumber: row.whatsapp_number ?? "",
     story: content?.story ?? "",
     dressCode: content?.dress_code ?? "",
+    program: Array.isArray(content?.program)
+      ? content.program.map((item: any, index: number) => ({
+          id: item.id ?? `program-${index + 1}`,
+          time: item.time ?? "",
+          description: item.description ?? ""
+        }))
+      : [],
     blockTexts: {
       ...defaultBlockTexts,
       ...(displayTheme.blockTexts ?? {})
@@ -313,6 +320,7 @@ export async function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveR
     invitation_id: draft.id,
     story: draft.story,
     dress_code: draft.dressCode,
+    program: draft.program,
     theme: themeWithDisplayDate(draft),
     updated_at: new Date().toISOString()
   });
