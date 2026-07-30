@@ -888,13 +888,6 @@ export function BuilderClient() {
                 <div className="program-editor">
                   <div className="program-editor-head">
                     <strong>Orari del programma</strong>
-                    <button
-                      className="button secondary"
-                      type="button"
-                      onClick={addProgramItem}
-                    >
-                      + Aggiungi orario
-                    </button>
                   </div>
                   {draft.program.length === 0 ? (
                     <p className="muted">
@@ -945,6 +938,15 @@ export function BuilderClient() {
                       </div>
                     </div>
                   ))}
+                  <button
+                    aria-label="Aggiungi un nuovo slot al programma"
+                    className="program-add-slot-button"
+                    type="button"
+                    onClick={addProgramItem}
+                  >
+                    <span aria-hidden="true">+</span>
+                    <strong>Aggiungi nuovo slot</strong>
+                  </button>
                 </div>
               ) : null}
               <div className="field">
