@@ -14,6 +14,7 @@ export type InvitationLocation = {
   type: "main" | "ceremony" | "reception" | "church" | "other";
   name: string;
   address: string;
+  description: string;
   mapsUrl: string;
   enabled: boolean;
   imageUrl: string;
@@ -108,6 +109,7 @@ export function readDrafts(): InvitationDraft[] {
       ...draft,
       locations: (draft.locations ?? []).map((location) => ({
         ...location,
+        description: location.description ?? "",
         enabled: location.enabled ?? true,
         imageUrl: location.imageUrl ?? ""
       })),
