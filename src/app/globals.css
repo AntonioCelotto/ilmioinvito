@@ -229,6 +229,18 @@ textarea {
   color: #3d342d;
 }
 
+.template-card-classicLight .template-card-preview > span,
+.template-card-classicLight .template-card-preview small {
+  background: rgba(255, 250, 242, 0.78);
+  border-radius: 999px;
+  padding: 5px 9px;
+  width: fit-content;
+}
+
+.template-card-classicLight .template-card-preview small {
+  display: inline-block;
+}
+
 .template-card-classicLight .template-card-preview::after {
   border-color: rgba(61, 52, 45, 0.28);
 }

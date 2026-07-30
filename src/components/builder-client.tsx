@@ -827,7 +827,12 @@ export function BuilderClient() {
         <div
           className={`preview-phone theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
           style={{
-            background: `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`
+            backgroundColor: draft.theme.primaryColor,
+            backgroundImage: draft.theme.backgroundImage
+              ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${draft.theme.backgroundImage}")`
+              : `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`,
+            backgroundPosition: "top center",
+            backgroundSize: "cover"
           }}
         >
           <div className="phone-notch" aria-hidden="true" />

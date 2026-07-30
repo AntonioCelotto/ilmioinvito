@@ -200,7 +200,12 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       <section
         className={`invite-hero theme-${invitation.theme.template}`}
         style={{
-          background: `linear-gradient(180deg, rgba(15, 13, 12, 0.2), ${invitation.theme.primaryColor}), ${invitation.theme.accentColor}`
+          backgroundColor: invitation.theme.primaryColor,
+          backgroundImage: invitation.theme.backgroundImage
+            ? `linear-gradient(rgba(255, 250, 242, 0.12), rgba(255, 250, 242, 0.22)), url("${invitation.theme.backgroundImage}")`
+            : `linear-gradient(180deg, rgba(15, 13, 12, 0.2), ${invitation.theme.primaryColor})`,
+          backgroundPosition: "center",
+          backgroundSize: "cover"
         }}
       >
         <div>

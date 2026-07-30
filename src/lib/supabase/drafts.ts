@@ -85,7 +85,8 @@ function rowToDraft(row: any): InvitationDraft {
     template: (themeRow?.template_slug ?? displayTheme.template ?? "darkLuxury") as InvitationTheme["template"],
     primaryColor: themeRow?.primary_color ?? displayTheme.primaryColor ?? "#151313",
     accentColor: themeRow?.accent_color ?? displayTheme.accentColor ?? "#b87333",
-    fontStyle: (themeRow?.font_style ?? displayTheme.fontStyle ?? "serif") as InvitationTheme["fontStyle"]
+    fontStyle: (themeRow?.font_style ?? displayTheme.fontStyle ?? "serif") as InvitationTheme["fontStyle"],
+    backgroundImage: displayTheme.backgroundImage
   };
 
   const locations: InvitationLocation[] = (row.invitation_locations ?? []).map(

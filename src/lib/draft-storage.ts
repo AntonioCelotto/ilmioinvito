@@ -31,6 +31,7 @@ export type InvitationTheme = {
   primaryColor: string;
   accentColor: string;
   fontStyle: "serif" | "modern" | "script";
+  backgroundImage?: string;
 };
 
 export type InvitationBlockTexts = Record<InvitationSectionKey, string>;
