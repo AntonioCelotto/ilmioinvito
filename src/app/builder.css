@@ -480,6 +480,16 @@
   padding: 13px;
 }
 
+.phone-countdown {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  text-align: center;
+}
+
+.phone-countdown strong {
+  display: block;
+  font-size: 18px;
+}
+
 .theme-classicLight .phone-location,
 .theme-classicLight .phone-countdown,
 .theme-classicLight .phone-media-card,

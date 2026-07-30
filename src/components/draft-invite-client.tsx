@@ -10,6 +10,7 @@ import {
 } from "@/lib/draft-storage";
 import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
+import { LiveCountdown } from "@/components/live-countdown";
 
 type DraftInviteClientProps = {
   slug: string;
@@ -120,48 +121,16 @@ function LocationCard({
 }
 
 function CountdownBlock({ draft }: { draft: InvitationDraft }) {
-  const [now, setNow] = useState(() => Date.now());
-  const eventDate = parseEventDate(draft);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => setNow(Date.now()), 60000);
-    return () => window.clearInterval(interval);
-  }, []);
-
-  if (!eventDate || Number.isNaN(eventDate.getTime())) {
-    return (
-      <p className="invite-date-line">
-        {draft.eventDate}
-        {draft.eventTime ? `, ore ${draft.eventTime}` : ""}
-      </p>
-    );
-  }
-
-  const diff = Math.max(0, eventDate.getTime() - now);
-  const totalMinutes = Math.floor(diff / 60000);
-  const days = Math.floor(totalMinutes / 1440);
-  const hours = Math.floor((totalMinutes % 1440) / 60);
-  const minutes = totalMinutes % 60;
-
   return (
-    <div className="countdown-panel light-panel">
-      <div>
-        <strong>{days}</strong>
-        <span>Giorni</span>
-      </div>
-      <div>
-        <strong>{hours}</strong>
-        <span>Ore</span>
-      </div>
-      <div>
-        <strong>{minutes}</strong>
-        <span>Minuti</span>
-      </div>
-      <div>
-        <strong>{draft.eventTime || "--"}</strong>
-        <span>Inizio</span>
-      </div>
-    </div>
+    <LiveCountdown
+      className="countdown-panel light-panel"
+      eventDate={
+        draft.slug === demoInvitation.slug
+          ? demoInvitation.eventDateIso.slice(0, 10)
+          : draft.eventDate
+      }
+      eventTime={draft.eventTime}
+    />
   );
 }
 
