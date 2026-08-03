@@ -33,6 +33,11 @@ export type InvitationProgramItem = {
   description: string;
 };
 
+export type InvitationGiftWish = {
+  id: string;
+  title: string;
+};
+
 export type InvitationTheme = {
   template: "darkLuxury" | "classicLight" | "botanical" | "minimal";
   primaryColor: string;
@@ -55,6 +60,8 @@ export type InvitationDraft = {
   whatsappNumber: string;
   story: string;
   dressCode: string;
+  giftIban: string;
+  giftWishes: InvitationGiftWish[];
   blockTexts: InvitationBlockTexts;
   activeSections: InvitationSectionKey[];
   locations: InvitationLocation[];
@@ -124,6 +131,11 @@ export function readDrafts(): InvitationDraft[] {
         id: item.id || `program-${index + 1}`,
         time: item.time ?? "",
         description: item.description ?? ""
+      })),
+      giftIban: draft.giftIban ?? "",
+      giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({
+        id: wish.id || `wish-${index + 1}`,
+        title: wish.title ?? ""
       })),
       blockTexts: {
         ...defaultBlockTexts,

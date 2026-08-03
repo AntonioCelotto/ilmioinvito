@@ -318,6 +318,66 @@
   flex-direction: column;
 }
 
+.invite-dress-code-card,
+.gift-iban-card {
+  background: #fbf8f3;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  padding: 24px;
+  width: min(100%, 720px);
+}
+
+.gift-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.gift-wish-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 820px);
+}
+
+.gift-wish-card {
+  align-items: center;
+  background: #fbf8f3;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  min-height: 90px;
+  padding: 16px;
+}
+
+.gift-wish-card span { color: var(--accent); font-size: 28px; }
+.gift-iban-card strong { overflow-wrap: anywhere; }
+
+.guest-media-area { display: grid; gap: 22px; width: min(100%, 860px); }
+.guest-media-form { background: #fbf8f3; border: 1px solid var(--line); border-radius: 14px; display: grid; gap: 14px; padding: 18px; text-align: left; }
+.guest-media-gallery,
+.moderation-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.guest-media-card,
+.moderation-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 10px; overflow: hidden; padding: 12px; text-align: left; }
+.guest-media-card img,
+.guest-media-card video,
+.moderation-card img,
+.moderation-card video { border-radius: 8px; height: 210px; object-fit: cover; width: 100%; }
+.moderation-card > div { display: grid; gap: 6px; }
+.moderation-actions { display: flex !important; flex-wrap: wrap; gap: 8px; }
+.status.approved { background: #dff4e9; color: #17663d; }
+.status.rejected { background: #f7dfdf; color: #8b2c2c; }
+
+@media (max-width: 760px) {
+  .gift-wish-grid,
+  .guest-media-gallery,
+  .moderation-grid { grid-template-columns: 1fr; }
+}
+
 .location-editor-card {
   background: #fbf8f3;
   border: 1px solid var(--line);

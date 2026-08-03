@@ -8,7 +8,6 @@ import {
   defaultSections,
   InvitationDraft,
   InvitationLocation,
-  InvitationMedia,
   InvitationProgramItem,
   InvitationSectionKey,
   InvitationTheme,
@@ -328,9 +327,7 @@ function PreviewSection({
   }
 
   if (section === "gallery" || section === "video") {
-    const media = draft.media.filter((item) =>
-      section === "gallery" ? item.type === "photo" : item.type === "video"
-    );
+    const media = draft.media;
 
     return (
       <section className="phone-slot" data-preview-section={section}>
@@ -344,7 +341,7 @@ function PreviewSection({
               </div>
             ))
           ) : (
-            <div className="phone-empty-card">Aggiungi un contenuto</div>
+            <div className="phone-empty-card">Gli invitati potranno caricare foto, video e dediche</div>
           )}
         </div>
       </section>
@@ -378,6 +375,22 @@ function PreviewSection({
           {draft.dressCode || "Indicazioni di stile"}
         </strong>
         <p>{text}</p>
+      </section>
+    );
+  }
+
+  if (section === "giftInfo") {
+    return (
+      <section className="phone-slot" data-preview-section={section}>
+        <p>{text}</p>
+        {draft.giftIban ? <strong className="phone-featured-text">IBAN: {draft.giftIban}</strong> : null}
+        <div className="phone-program-list">
+          {draft.giftWishes.map((wish) => (
+            <div className="phone-program-item" key={wish.id}>
+              <span>{wish.title || "Nuovo desiderio"}</span>
+            </div>
+          ))}
+        </div>
       </section>
     );
   }
@@ -421,6 +434,8 @@ export function BuilderClient() {
     whatsappNumber: demoInvitation.whatsappNumber,
     story: demoInvitation.story,
     dressCode: demoInvitation.dressCode,
+    giftIban: "",
+    giftWishes: [],
     blockTexts: defaultBlockTexts,
     activeSections: defaultSections,
     locations: initialLocations,
@@ -591,15 +606,6 @@ export function BuilderClient() {
     }
   }
 
-  function updateMedia(id: string, patch: Partial<InvitationMedia>) {
-    setDraft((current) => ({
-      ...current,
-      media: current.media.map((item) =>
-        item.id === id ? { ...item, ...patch } : item
-      )
-    }));
-  }
-
   function updateProgramItem(
     id: string,
     patch: Partial<InvitationProgramItem>
@@ -630,6 +636,29 @@ export function BuilderClient() {
     setDraft((current) => ({
       ...current,
       program: current.program.filter((item) => item.id !== id)
+    }));
+  }
+
+  function addGiftWish() {
+    setDraft((current) => ({
+      ...current,
+      giftWishes: [...current.giftWishes, { id: crypto.randomUUID(), title: "" }]
+    }));
+  }
+
+  function updateGiftWish(id: string, title: string) {
+    setDraft((current) => ({
+      ...current,
+      giftWishes: current.giftWishes.map((wish) =>
+        wish.id === id ? { ...wish, title } : wish
+      )
+    }));
+  }
+
+  function removeGiftWish(id: string) {
+    setDraft((current) => ({
+      ...current,
+      giftWishes: current.giftWishes.filter((wish) => wish.id !== id)
     }));
   }
 
@@ -737,15 +766,6 @@ export function BuilderClient() {
             onChange={(event) => updateField("story", event.target.value)}
           />
         </div>
-        <div className="field">
-          <label htmlFor="dressCode">Dress code</label>
-          <input
-            id="dressCode"
-            value={draft.dressCode}
-            onChange={(event) => updateField("dressCode", event.target.value)}
-          />
-        </div>
-
         <h3>Testi blocchi invito</h3>
         <div className="block-order-panel">
           <div className="block-order-heading">
@@ -1064,6 +1084,51 @@ export function BuilderClient() {
                   </button>
                 </div>
               ) : null}
+              {section === "dressCode" ? (
+                <div className="field">
+                  <label htmlFor="dressCode">Titolo e stile richiesto</label>
+                  <input
+                    id="dressCode"
+                    placeholder="Es. Elegante estivo"
+                    value={draft.dressCode}
+                    onChange={(event) => updateField("dressCode", event.target.value)}
+                  />
+                </div>
+              ) : null}
+              {section === "giftInfo" ? (
+                <div className="gift-editor">
+                  <div className="field">
+                    <label htmlFor="gift-iban">IBAN per eventuale bonifico</label>
+                    <input
+                      id="gift-iban"
+                      placeholder="IT00 A000 0000 0000 0000 0000 000"
+                      value={draft.giftIban}
+                      onChange={(event) => updateField("giftIban", event.target.value)}
+                    />
+                  </div>
+                  <div className="program-editor-head"><strong>Lista dei desideri</strong></div>
+                  {draft.giftWishes.map((wish, index) => (
+                    <div className="program-editor-item" key={wish.id}>
+                      <div className="program-editor-item-head">
+                        <strong>Desiderio {index + 1}</strong>
+                        <button className="editor-remove-button" type="button" onClick={() => removeGiftWish(wish.id)}>Rimuovi</button>
+                      </div>
+                      <div className="field">
+                        <label htmlFor={`gift-wish-${wish.id}`}>Nome del desiderio</label>
+                        <input
+                          id={`gift-wish-${wish.id}`}
+                          placeholder="Es. Viaggio di nozze, lavatrice, costruzioni LEGO"
+                          value={wish.title}
+                          onChange={(event) => updateGiftWish(wish.id, event.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button className="program-add-slot-button" type="button" onClick={addGiftWish}>
+                    <span aria-hidden="true">+</span><strong>Aggiungi desiderio</strong>
+                  </button>
+                </div>
+              ) : null}
               <div className="field">
                 <label>{blockTextHelpers[section]}</label>
                 <textarea
@@ -1074,45 +1139,6 @@ export function BuilderClient() {
             </div>
           );
         })}
-
-        <h3>Foto e video</h3>
-        {draft.media.map((item) => (
-          <div className="nested-fields" key={item.id}>
-            <div className="field-row">
-              <div className="field">
-                <label>Tipo media</label>
-                <select
-                  value={item.type}
-                  onChange={(event) =>
-                    updateMedia(item.id, {
-                      type: event.target.value as InvitationMedia["type"]
-                    })
-                  }
-                >
-                  <option value="photo">Foto</option>
-                  <option value="video">Video</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Titolo</label>
-                <input
-                  value={item.title}
-                  onChange={(event) =>
-                    updateMedia(item.id, { title: event.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="field">
-              <label>Link file o asset caricato</label>
-              <input
-                placeholder="Upload Supabase Storage nel prossimo step"
-                value={item.url}
-                onChange={(event) => updateMedia(item.id, { url: event.target.value })}
-              />
-            </div>
-          </div>
-        ))}
 
         <h3>Personalizza il template</h3>
         <div className="field-row">

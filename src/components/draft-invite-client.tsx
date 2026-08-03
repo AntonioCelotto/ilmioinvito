@@ -11,6 +11,7 @@ import {
 import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 import { LiveCountdown } from "@/components/live-countdown";
+import { InviteGuestMedia } from "@/components/invite-guest-media";
 
 type DraftInviteClientProps = {
   slug: string;
@@ -28,6 +29,8 @@ const fallbackDraft: InvitationDraft = {
   whatsappNumber: demoInvitation.whatsappNumber,
   story: demoInvitation.story,
   dressCode: demoInvitation.dressCode,
+  giftIban: "",
+  giftWishes: [],
   blockTexts: defaultBlockTexts,
   activeSections: ["countdown", "reception", "rsvp", "dressCode"],
   locations: [
@@ -129,6 +132,7 @@ function CountdownBlock({ draft }: { draft: InvitationDraft }) {
 export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const [draft, setDraft] = useState<InvitationDraft | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [ibanCopied, setIbanCopied] = useState(false);
 
   useEffect(() => {
     const localDraft = findDraftBySlug(slug);
@@ -273,8 +277,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           style={{ order: sectionPosition(invitation, "dressCode") }}
         >
           <div className="section-inner invite-section-inner">
-            <h2>{invitation.dressCode || "Indicazioni di stile"}</h2>
-            <p className="muted invite-copy">{blockText(invitation, "dressCode")}</p>
+            <div className="invite-dress-code-card">
+              <h2>{invitation.dressCode || "Indicazioni di stile"}</h2>
+              <p className="muted invite-copy">{blockText(invitation, "dressCode")}</p>
+            </div>
           </div>
         </section>
       ) : null}
@@ -287,6 +293,26 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           <div className="section-inner invite-section-inner">
             <h2>Regalo e dettagli.</h2>
             <p className="muted invite-copy">{blockText(invitation, "giftInfo")}</p>
+            {invitation.giftWishes.length > 0 ? (
+              <div className="gift-wish-grid">
+                {invitation.giftWishes.filter((wish) => wish.title.trim()).map((wish) => (
+                  <article className="gift-wish-card" key={wish.id}>
+                    <span aria-hidden="true">♡</span>
+                    <strong>{wish.title}</strong>
+                  </article>
+                ))}
+              </div>
+            ) : null}
+            {invitation.giftIban ? (
+              <div className="gift-iban-card">
+                <span>IBAN per il bonifico</span>
+                <strong>{invitation.giftIban}</strong>
+                <button className="button" type="button" onClick={async () => {
+                  await navigator.clipboard.writeText(invitation.giftIban);
+                  setIbanCopied(true);
+                }}>{ibanCopied ? "IBAN copiato" : "Copia IBAN"}</button>
+              </div>
+            ) : null}
           </div>
         </section>
       ) : null}
@@ -317,6 +343,7 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             ) : (
               <p className="muted">Nessun media caricato in questa bozza.</p>
             )}
+            <InviteGuestMedia invitationId={invitation.id} />
           </div>
         </section>
       ) : null}

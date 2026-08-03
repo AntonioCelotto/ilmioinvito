@@ -9,6 +9,11 @@ import {
   loadDashboardRsvps
 } from "@/lib/supabase/rsvps";
 import { downloadGuestPdf } from "@/lib/guest-pdf";
+import {
+  GuestMediaItem,
+  loadDashboardGuestMedia,
+  updateGuestMediaStatus
+} from "@/lib/supabase/guest-media";
 
 export function DashboardClient() {
   const [drafts, setDrafts] = useState<InvitationDraft[]>([]);
@@ -16,6 +21,8 @@ export function DashboardClient() {
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
+  const [guestMedia, setGuestMedia] = useState<GuestMediaItem[]>([]);
+  const [mediaMessage, setMediaMessage] = useState("");
 
   useEffect(() => {
     const localDrafts = readDrafts();
@@ -37,7 +44,19 @@ export function DashboardClient() {
       setRsvps(result.rsvps);
       setRsvpMessage(result.message);
     });
+    loadDashboardGuestMedia().then((result) => {
+      setGuestMedia(result.items);
+      setMediaMessage(result.message);
+    });
   }, []);
+
+  async function changeMediaStatus(id: string, status: GuestMediaItem["status"]) {
+    const result = await updateGuestMediaStatus(id, status);
+    setMediaMessage(result.message);
+    if (result.ok) {
+      setGuestMedia((current) => current.map((item) => item.id === id ? { ...item, status } : item));
+    }
+  }
 
   const invitationsWithRsvps = useMemo(() => {
     const invitations = new Map<string, string>();
@@ -227,6 +246,33 @@ export function DashboardClient() {
               ))}
             </tbody>
           </table>
+          </div>
+        )}
+      </section>
+
+      <section className="panel guest-dashboard media-moderation">
+        <div className="guest-dashboard-head">
+          <div>
+            <h3>Foto, video e dediche degli invitati</h3>
+            <p className="muted">Approva i contenuti prima di mostrarli nell’invito.</p>
+          </div>
+          <span className="status pending">{guestMedia.filter((item) => item.status === "pending").length} da approvare</span>
+        </div>
+        {mediaMessage ? <p className="panel-note">{mediaMessage}</p> : null}
+        {guestMedia.length === 0 ? (
+          <div className="empty-state"><h3>Nessun contenuto ricevuto</h3><p className="muted">Le foto, i video e le dediche inviati dagli ospiti compariranno qui.</p></div>
+        ) : (
+          <div className="moderation-grid">
+            {guestMedia.map((item) => (
+              <article className="moderation-card" key={item.id}>
+                {item.mediaType === "photo" ? <img src={item.url} alt={`Contenuto di ${item.guestName}`} /> : <video src={item.url} controls preload="metadata" />}
+                <div><span className={`status ${item.status}`}>{item.status === "pending" ? "Da approvare" : item.status === "approved" ? "Approvato" : "Rifiutato"}</span><strong>{item.guestName}</strong><small>{item.invitationTitle}</small>{item.dedication ? <p>{item.dedication}</p> : null}</div>
+                <div className="moderation-actions">
+                  <button className="button" type="button" onClick={() => changeMediaStatus(item.id, "approved")}>Approva</button>
+                  <button className="button secondary" type="button" onClick={() => changeMediaStatus(item.id, "rejected")}>Rifiuta</button>
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </section>
