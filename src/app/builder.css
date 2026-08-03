@@ -244,6 +244,80 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.block-order-panel {
+  background: #f7f1e9;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px;
+}
+
+.block-order-heading div {
+  display: grid;
+  gap: 3px;
+}
+
+.block-order-heading span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.block-order-list {
+  display: grid;
+  gap: 8px;
+}
+
+.block-order-item {
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  cursor: grab;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 48px;
+  padding: 8px 10px;
+}
+
+.block-order-item.dragging {
+  opacity: 0.45;
+}
+
+.block-drag-handle {
+  color: var(--accent-dark);
+  font-size: 22px;
+  letter-spacing: -5px;
+}
+
+.block-order-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.block-order-actions button {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 17px;
+  height: 32px;
+  width: 34px;
+}
+
+.block-order-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.invite-dynamic-sections {
+  display: flex;
+  flex-direction: column;
+}
+
 .location-editor-card {
   background: #fbf8f3;
   border: 1px solid var(--line);

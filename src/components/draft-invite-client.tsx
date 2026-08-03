@@ -59,6 +59,17 @@ function sectionIsActive(draft: InvitationDraft, section: InvitationSectionKey) 
   return draft.activeSections.includes(section);
 }
 
+function sectionPosition(
+  draft: InvitationDraft,
+  ...sections: InvitationSectionKey[]
+) {
+  const positions = sections
+    .map((section) => draft.activeSections.indexOf(section))
+    .filter((position) => position >= 0);
+
+  return positions.length > 0 ? Math.min(...positions) : 999;
+}
+
 function blockText(draft: InvitationDraft, section: InvitationSectionKey) {
   return draft.blockTexts?.[section] || defaultBlockTexts[section];
 }
@@ -197,8 +208,12 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
         </div>
       </section>
 
+      <div className="invite-dynamic-sections">
       {sectionIsActive(invitation, "countdown") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "countdown") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>Il grande giorno si avvicina.</h2>
             <p className="muted invite-copy">{blockText(invitation, "countdown")}</p>
@@ -209,7 +224,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
 
       {sectionIsActive(invitation, "ceremony") ||
       sectionIsActive(invitation, "reception") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "ceremony", "reception") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>Raggiungi ogni momento dell’evento.</h2>
             <p className="muted invite-copy">{blockText(invitation, "ceremony")}</p>
@@ -223,7 +241,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       ) : null}
 
       {sectionIsActive(invitation, "program") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "program") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>La giornata.</h2>
             <p className="muted invite-copy">{blockText(invitation, "program")}</p>
@@ -247,7 +268,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       ) : null}
 
       {sectionIsActive(invitation, "dressCode") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "dressCode") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>{invitation.dressCode || "Indicazioni di stile"}</h2>
             <p className="muted invite-copy">{blockText(invitation, "dressCode")}</p>
@@ -256,7 +280,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       ) : null}
 
       {sectionIsActive(invitation, "giftInfo") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "giftInfo") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>Regalo e dettagli.</h2>
             <p className="muted invite-copy">{blockText(invitation, "giftInfo")}</p>
@@ -265,7 +292,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       ) : null}
 
       {sectionIsActive(invitation, "gallery") || sectionIsActive(invitation, "video") ? (
-        <section className="section invite-section">
+        <section
+          className="section invite-section"
+          style={{ order: sectionPosition(invitation, "gallery", "video") }}
+        >
           <div className="section-inner invite-section-inner">
             <h2>Media dell'invito</h2>
             <p className="muted invite-copy">
@@ -292,7 +322,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       ) : null}
 
       {sectionIsActive(invitation, "rsvp") ? (
-        <section className="section dark">
+        <section
+          className="section dark"
+          style={{ order: sectionPosition(invitation, "rsvp") }}
+        >
           <div className="section-inner invite-section-inner">
             <div>
               <h2>Conferma la tua presenza.</h2>
@@ -309,6 +342,7 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           </div>
         </section>
       ) : null}
+      </div>
     </main>
   );
 }
