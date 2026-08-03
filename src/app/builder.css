@@ -372,6 +372,52 @@
 .status.approved { background: #dff4e9; color: #17663d; }
 .status.rejected { background: #f7dfdf; color: #8b2c2c; }
 
+.social-composer-heading {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.social-composer-heading > span {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  font-size: 24px;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.social-composer-heading div,
+.social-post-author div { display: grid; gap: 2px; }
+.social-composer-heading small,
+.social-post-author small { color: var(--muted); }
+.social-publish-button { justify-self: end; min-width: 130px; }
+
+.guest-media-gallery.social-feed {
+  grid-template-columns: minmax(0, 680px);
+  justify-content: center;
+}
+
+.social-post { padding: 14px; }
+.social-post-author { align-items: center; display: flex; gap: 10px; }
+.social-post-author > span {
+  align-items: center;
+  background: var(--accent);
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  font-weight: 900;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+.social-post-dedication { line-height: 1.55; margin: 4px 0; white-space: pre-line; }
+.guest-media-card.social-post img,
+.guest-media-card.social-post video { height: auto; max-height: 620px; object-fit: contain; }
+
 @media (max-width: 760px) {
   .gift-wish-grid,
   .guest-media-gallery,
