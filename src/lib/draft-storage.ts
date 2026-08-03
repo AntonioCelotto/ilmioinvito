@@ -87,8 +87,8 @@ export const defaultBlockTexts: InvitationBlockTexts = {
   ceremony: "La cerimonia sara il primo momento da vivere insieme, con tutte le persone piu importanti.",
   reception: "Dopo la cerimonia continueremo a festeggiare nella location scelta per il ricevimento.",
   rsvp: "Conferma la tua presenza e indicaci eventuali accompagnatori o note utili.",
-  gallery: "Qui potremo raccogliere foto, video e ricordi collegati all'invito.",
-  video: "Uno spazio dedicato al video invito o a un messaggio speciale per gli ospiti.",
+  gallery: "Condividete con noi le vostre foto, i vostri video e una dedica speciale.",
+  video: "Condividete con noi le vostre foto, i vostri video e una dedica speciale.",
   program: "Il programma della giornata sara aggiornato con orari, momenti principali e indicazioni utili.",
   dressCode: "Segui le indicazioni di stile pensate per rendere l'evento ancora piu armonioso.",
   giftInfo: "Qui puoi inserire indicazioni su regalo, lista nozze, IBAN o altre informazioni utili."

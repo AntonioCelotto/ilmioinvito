@@ -29,8 +29,8 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
   ceremony: "Chiesa / cerimonia",
   reception: "Ricevimento / location",
   rsvp: "Conferma partecipazione",
-  gallery: "Foto",
-  video: "Video",
+  gallery: "Social",
+  video: "Social",
   program: "Programma",
   dressCode: "Dress code",
   giftInfo: "Regalo / info utili"
@@ -75,7 +75,7 @@ function expandBlockOrder(
 
 function blockLabel(section: InvitationSectionKey) {
   if (section === "ceremony") return "Luoghi";
-  if (section === "gallery") return "Foto e video";
+  if (section === "gallery") return "Social";
   return sectionLabels[section];
 }
 
@@ -84,8 +84,8 @@ const blockTextHelpers: Record<InvitationSectionKey, string> = {
   ceremony: "Indicazioni per chiesa o cerimonia.",
   reception: "Indicazioni per location e ricevimento.",
   rsvp: "Testo per la conferma partecipazione.",
-  gallery: "Testo per foto e ricordi.",
-  video: "Testo per il video invito.",
+  gallery: "Dedica o informazioni da mostrare sopra la sezione Social.",
+  video: "Dedica o informazioni da mostrare sopra la sezione Social.",
   program: "Programma della giornata.",
   dressCode: "Indicazioni di stile per gli invitati.",
   giftInfo: "Informazioni su regalo, lista nozze o note utili."
@@ -265,10 +265,12 @@ function AddressAutocomplete({
 
 function PreviewSection({
   draft,
-  section
+  section,
+  onPreviewMedia
 }: {
   draft: InvitationDraft;
   section: InvitationSectionKey;
+  onPreviewMedia: (file: File) => void;
 }) {
   const text = draft.blockTexts[section] || defaultBlockTexts[section];
 
@@ -334,7 +336,19 @@ function PreviewSection({
         <p>{text}</p>
         <div className="phone-social-composer">
           <div className="phone-social-heading">
-            <span aria-hidden="true">＋</span>
+            <label className="phone-social-add" title="Aggiungi foto o video">
+              <span aria-hidden="true">＋</span>
+              <input
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+                aria-label="Aggiungi foto o video"
+                type="file"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) onPreviewMedia(file);
+                  event.target.value = "";
+                }}
+              />
+            </label>
             <div>
               <strong>Condividi un ricordo</strong>
               <small>Pubblica una foto o un video con la tua dedica.</small>
@@ -342,15 +356,29 @@ function PreviewSection({
           </div>
           <input aria-label="Il tuo nome" placeholder="Il tuo nome" readOnly />
           <textarea aria-label="Dedica o messaggio" placeholder="Scrivi una dedica..." readOnly />
-          <div className="phone-social-upload">Aggiungi foto o video</div>
+          <label className="phone-social-upload">
+            <span>Aggiungi foto o video</span>
+            <input
+              accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
+              aria-label="Seleziona una foto o un video"
+              type="file"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) onPreviewMedia(file);
+                event.target.value = "";
+              }}
+            />
+          </label>
           <button className="phone-preview-button" type="button">Pubblica</button>
         </div>
         {media.length > 0 ? <div className="phone-media-grid phone-social-feed">
           {media.length > 0 ? (
             media.map((item) => (
-              <div className="phone-media-card" key={item.id}>
+              <div className="phone-media-card phone-social-post" key={item.id}>
+                {item.type === "photo" && item.url ? <img alt={item.title || "Foto pubblicata"} src={item.url} /> : null}
+                {item.type === "video" && item.url ? <video controls preload="metadata" src={item.url} /> : null}
                 <span>{item.type === "photo" ? "Foto" : "Video"}</span>
-                <strong>{item.title || "Media senza titolo"}</strong>
+                <strong>{item.title || "Nuovo ricordo"}</strong>
               </div>
             ))
           ) : null}
@@ -457,20 +485,7 @@ export function BuilderClient() {
         description: ""
       }
     ],
-    media: [
-      {
-        id: "media-photo-1",
-        type: "photo",
-        title: "Foto hero",
-        url: ""
-      },
-      {
-        id: "media-video-1",
-        type: "video",
-        title: "Video invito",
-        url: ""
-      }
-    ],
+    media: [],
     theme: invitationTemplates[0].theme,
     updatedAt: new Date().toISOString()
   });
@@ -502,6 +517,13 @@ export function BuilderClient() {
     const isAdding = !draft.activeSections.includes(section);
 
     setDraft((current) => {
+      if (section === "gallery") {
+        const activeSections = isAdding
+          ? [...current.activeSections.filter((item) => item !== "video"), "gallery" as const]
+          : current.activeSections.filter((item) => item !== "gallery" && item !== "video");
+        return { ...current, activeSections };
+      }
+
       const activeSections = current.activeSections.includes(section)
         ? current.activeSections.filter((item) => item !== section)
         : [...current.activeSections, section];
@@ -526,6 +548,32 @@ export function BuilderClient() {
         });
       });
     }
+  }
+
+  function handlePreviewMedia(file: File) {
+    const isPhoto = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isPhoto && !isVideo) {
+      setSavedMessage("Seleziona una foto o un video compatibile.");
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      setSavedMessage("Il file non può superare 50 MB.");
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      media: [{
+        id: crypto.randomUUID(),
+        type: isPhoto ? "photo" : "video",
+        title: file.name.replace(/\.[^.]+$/, ""),
+        url: URL.createObjectURL(file)
+      }, ...current.media]
+    }));
+    setSavedMessage("Contenuto aggiunto all’anteprima Social.");
   }
 
   function toggleLocationBlock() {
@@ -963,7 +1011,7 @@ export function BuilderClient() {
 
         {sectionOrder
           .filter(
-            (section) => section !== "ceremony" && section !== "reception"
+            (section) => section !== "ceremony" && section !== "reception" && section !== "video"
           )
           .map((section) => {
           const isActive = draft.activeSections.includes(section);
@@ -1241,7 +1289,12 @@ export function BuilderClient() {
 
             {visibleBlocks.length > 0 ? (
               visibleBlocks.map((section) => (
-                <PreviewSection draft={draft} key={section} section={section} />
+                <PreviewSection
+                  draft={draft}
+                  key={section}
+                  onPreviewMedia={handlePreviewMedia}
+                  section={section}
+                />
               ))
             ) : (
               <div className="phone-no-slots">

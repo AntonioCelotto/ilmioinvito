@@ -323,7 +323,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           style={{ order: sectionPosition(invitation, "gallery", "video") }}
         >
           <div className="section-inner invite-section-inner">
-            <h2>Media dell'invito</h2>
             <p className="muted invite-copy">
               {sectionIsActive(invitation, "video")
                 ? blockText(invitation, "video")
