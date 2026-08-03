@@ -42,16 +42,30 @@ export async function uploadGuestMedia(
   });
   if (uploadError) return { ok: false, message: uploadError.message };
 
-  const { error } = await supabase.from("guest_media").insert({
+  const { data: publishedItem, error } = await supabase.from("guest_media").insert({
     invitation_id: invitationId,
     guest_name: guestName.trim(),
     dedication: dedication.trim() || null,
     media_type: isPhoto ? "photo" : "video",
     storage_path: path,
-    status: "pending"
-  });
+    status: "approved"
+  }).select("id, invitation_id, guest_name, dedication, media_type, storage_path, status, created_at").single();
   if (error) return { ok: false, message: error.message };
-  return { ok: true, message: "Contenuto inviato. Sarà visibile dopo l’approvazione." };
+  return {
+    ok: true,
+    message: "Pubblicato! Il tuo ricordo è ora visibile nella bacheca.",
+    item: {
+      id: publishedItem.id,
+      invitationId: publishedItem.invitation_id,
+      invitationTitle: "",
+      guestName: publishedItem.guest_name,
+      dedication: publishedItem.dedication ?? "",
+      mediaType: publishedItem.media_type,
+      url: publicUrl(publishedItem.storage_path),
+      status: publishedItem.status,
+      createdAt: publishedItem.created_at
+    } as GuestMediaItem
+  };
 }
 
 export async function loadApprovedGuestMedia(invitationId: string) {
