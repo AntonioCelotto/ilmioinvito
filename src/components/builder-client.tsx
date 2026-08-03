@@ -40,6 +40,46 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
 const sectionOrder = Object.keys(sectionLabels) as InvitationSectionKey[];
 const locationSectionKeys: InvitationSectionKey[] = ["ceremony", "reception"];
 
+function blockSection(section: InvitationSectionKey): InvitationSectionKey {
+  if (section === "reception") return "ceremony";
+  if (section === "video") return "gallery";
+  return section;
+}
+
+function orderedBlocks(sections: InvitationSectionKey[]) {
+  return sections.reduce<InvitationSectionKey[]>((blocks, section) => {
+    const block = blockSection(section);
+    return blocks.includes(block) ? blocks : [...blocks, block];
+  }, []);
+}
+
+function expandBlockOrder(
+  blocks: InvitationSectionKey[],
+  currentSections: InvitationSectionKey[]
+) {
+  return blocks.flatMap((block) => {
+    if (block === "ceremony") {
+      return currentSections.filter((section) =>
+        locationSectionKeys.includes(section)
+      );
+    }
+
+    if (block === "gallery") {
+      return currentSections.filter(
+        (section) => section === "gallery" || section === "video"
+      );
+    }
+
+    return currentSections.includes(block) ? [block] : [];
+  });
+}
+
+function blockLabel(section: InvitationSectionKey) {
+  if (section === "ceremony") return "Luoghi";
+  if (section === "gallery") return "Foto e video";
+  return sectionLabels[section];
+}
+
 const blockTextHelpers: Record<InvitationSectionKey, string> = {
   countdown: "Testo sopra il conto alla rovescia.",
   ceremony: "Indicazioni per chiesa o cerimonia.",
@@ -367,6 +407,8 @@ export function BuilderClient() {
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
   const [uploadingLocationId, setUploadingLocationId] = useState("");
+  const [draggedBlock, setDraggedBlock] =
+    useState<InvitationSectionKey | null>(null);
   const [draft, setDraft] = useState<InvitationDraft>({
     id: crypto.randomUUID(),
     slug: demoInvitation.slug,
@@ -408,6 +450,10 @@ export function BuilderClient() {
   });
 
   const publicPath = useMemo(() => `/i/${makeSlug(draft.title)}`, [draft.title]);
+  const visibleBlocks = useMemo(
+    () => orderedBlocks(draft.activeSections),
+    [draft.activeSections]
+  );
 
   useEffect(() => {
     const template = readSelectedTemplate();
@@ -432,10 +478,7 @@ export function BuilderClient() {
     setDraft((current) => {
       const activeSections = current.activeSections.includes(section)
         ? current.activeSections.filter((item) => item !== section)
-        : [...current.activeSections, section].sort(
-            (first, second) =>
-              sectionOrder.indexOf(first) - sectionOrder.indexOf(second)
-          );
+        : [...current.activeSections, section];
 
       return { ...current, activeSections };
     });
@@ -466,12 +509,7 @@ export function BuilderClient() {
 
     setDraft((current) => {
       const activeSections = isAdding
-        ? Array.from(
-            new Set([...current.activeSections, ...locationSectionKeys])
-          ).sort(
-            (first, second) =>
-              sectionOrder.indexOf(first) - sectionOrder.indexOf(second)
-          )
+        ? Array.from(new Set([...current.activeSections, ...locationSectionKeys]))
         : current.activeSections.filter(
             (section) => !locationSectionKeys.includes(section)
           );
@@ -496,6 +534,33 @@ export function BuilderClient() {
         });
       });
     }
+  }
+
+  function moveBlock(from: InvitationSectionKey, to: InvitationSectionKey) {
+    if (from === to) return;
+
+    setDraft((current) => {
+      const blocks = orderedBlocks(current.activeSections);
+      const fromIndex = blocks.indexOf(from);
+      const toIndex = blocks.indexOf(to);
+
+      if (fromIndex < 0 || toIndex < 0) return current;
+
+      const nextBlocks = [...blocks];
+      const [moved] = nextBlocks.splice(fromIndex, 1);
+      nextBlocks.splice(toIndex, 0, moved);
+
+      return {
+        ...current,
+        activeSections: expandBlockOrder(nextBlocks, current.activeSections)
+      };
+    });
+  }
+
+  function moveBlockByStep(section: InvitationSectionKey, step: -1 | 1) {
+    const currentIndex = visibleBlocks.indexOf(section);
+    const next = visibleBlocks[currentIndex + step];
+    if (next) moveBlock(section, next);
   }
 
   function updateLocation(id: string, patch: Partial<InvitationLocation>) {
@@ -682,6 +747,56 @@ export function BuilderClient() {
         </div>
 
         <h3>Testi blocchi invito</h3>
+        <div className="block-order-panel">
+          <div className="block-order-heading">
+            <div>
+              <strong>Ordine dei blocchi</strong>
+              <span>Trascina i blocchi oppure usa le frecce.</span>
+            </div>
+          </div>
+          <div className="block-order-list">
+            {visibleBlocks.map((section, index) => (
+              <div
+                className={`block-order-item${
+                  draggedBlock === section ? " dragging" : ""
+                }`}
+                draggable
+                key={section}
+                onDragEnd={() => setDraggedBlock(null)}
+                onDragOver={(event) => event.preventDefault()}
+                onDragStart={() => setDraggedBlock(section)}
+                onDrop={() => {
+                  if (draggedBlock) moveBlock(draggedBlock, section);
+                  setDraggedBlock(null);
+                }}
+              >
+                <span className="block-drag-handle" aria-hidden="true">⋮⋮</span>
+                <strong>{blockLabel(section)}</strong>
+                <div className="block-order-actions">
+                  <button
+                    aria-label={`Sposta ${blockLabel(section)} in alto`}
+                    disabled={index === 0}
+                    type="button"
+                    onClick={() => moveBlockByStep(section, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    aria-label={`Sposta ${blockLabel(section)} in basso`}
+                    disabled={index === visibleBlocks.length - 1}
+                    type="button"
+                    onClick={() => moveBlockByStep(section, 1)}
+                  >
+                    ↓
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {visibleBlocks.length === 0 ? (
+            <p className="muted">Attiva almeno un blocco per ordinarlo.</p>
+          ) : null}
+        </div>
         <div className="nested-fields block-editor location-block-editor">
           <div className="block-editor-head">
             <div>
@@ -1087,8 +1202,8 @@ export function BuilderClient() {
               </section>
             ) : null}
 
-            {draft.activeSections.length > 0 ? (
-              draft.activeSections.map((section) => (
+            {visibleBlocks.length > 0 ? (
+              visibleBlocks.map((section) => (
                 <PreviewSection draft={draft} key={section} section={section} />
               ))
             ) : (
