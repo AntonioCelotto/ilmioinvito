@@ -332,7 +332,20 @@ function PreviewSection({
     return (
       <section className="phone-slot" data-preview-section={section}>
         <p>{text}</p>
-        <div className="phone-media-grid">
+        <div className="phone-social-composer">
+          <div className="phone-social-heading">
+            <span aria-hidden="true">＋</span>
+            <div>
+              <strong>Condividi un ricordo</strong>
+              <small>Pubblica una foto o un video con la tua dedica.</small>
+            </div>
+          </div>
+          <input aria-label="Il tuo nome" placeholder="Il tuo nome" readOnly />
+          <textarea aria-label="Dedica o messaggio" placeholder="Scrivi una dedica..." readOnly />
+          <div className="phone-social-upload">Aggiungi foto o video</div>
+          <button className="phone-preview-button" type="button">Pubblica</button>
+        </div>
+        {media.length > 0 ? <div className="phone-media-grid phone-social-feed">
           {media.length > 0 ? (
             media.map((item) => (
               <div className="phone-media-card" key={item.id}>
@@ -340,10 +353,8 @@ function PreviewSection({
                 <strong>{item.title || "Media senza titolo"}</strong>
               </div>
             ))
-          ) : (
-            <div className="phone-empty-card">Gli invitati potranno caricare foto, video e dediche</div>
-          )}
-        </div>
+          ) : null}
+        </div> : <div className="phone-empty-card">Sii il primo a pubblicare un ricordo.</div>}
       </section>
     );
   }
