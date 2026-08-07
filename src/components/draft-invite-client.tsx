@@ -355,10 +355,23 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
                 {invitation.media
                   .filter((item) => item.url)
                   .map((item) => (
-                    <a className="media-item" href={item.url} key={item.id}>
-                      <strong>{item.title}</strong>
-                      <span>{item.type === "photo" ? "Foto" : "Video"}</span>
-                    </a>
+                    <article className="media-item social-owner-media" key={item.id}>
+                      {item.type === "photo" ? (
+                        <img
+                          alt={item.title || "Foto dell'invito"}
+                          loading="lazy"
+                          src={item.url}
+                        />
+                      ) : (
+                        <video controls preload="metadata" src={item.url} />
+                      )}
+                      <div>
+                        <strong>{item.title || "Ricordo"}</strong>
+                        <a href={item.url} rel="noreferrer" target="_blank">
+                          Apri originale
+                        </a>
+                      </div>
+                    </article>
                   ))}
               </div>
             ) : (
