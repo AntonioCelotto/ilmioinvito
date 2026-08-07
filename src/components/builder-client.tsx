@@ -501,9 +501,9 @@ export function BuilderClient() {
     draft.theme.textColor ??
     (draft.theme.template === "classicLight" ? "#2f2a24" : "#ffffff");
   const themeButtonColor =
-    themeButtonColor;
+    draft.theme.buttonColor ?? draft.theme.accentColor;
   const themeButtonTextColor =
-    themeButtonTextColor;
+    draft.theme.buttonTextColor ?? "#ffffff";
 
   useEffect(() => {
     const editingDraftId = new URLSearchParams(window.location.search).get("edit");
