@@ -209,7 +209,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "minimal",
       primaryColor: "#111827",
       accentColor: "#3b82f6",
-      fontStyle: "modern"
+      fontStyle: "modern",
+      backgroundImage: "/templates/custom/executive.webp"
     }
   },
   {
