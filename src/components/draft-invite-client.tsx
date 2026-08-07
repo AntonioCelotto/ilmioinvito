@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import {
   defaultBlockTexts,
@@ -53,7 +54,11 @@ const fallbackDraft: InvitationDraft = {
     template: "darkLuxury",
     primaryColor: "#151313",
     accentColor: "#b87333",
-    fontStyle: "serif"
+    fontStyle: "serif",
+    textColor: "#ffffff",
+    buttonColor: "#b87333",
+    buttonTextColor: "#ffffff",
+    fontScale: 1
   },
   updatedAt: new Date().toISOString()
 };
@@ -160,8 +165,21 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const hasCustomDraft = Boolean(draft);
   const isDemoSlug = slug === demoInvitation.slug;
 
+  const themeStyles = {
+    "--invitation-text-color": invitation.theme.textColor ?? "#ffffff",
+    "--invitation-button-color":
+      invitation.theme.buttonColor ?? invitation.theme.accentColor,
+    "--invitation-button-text":
+      invitation.theme.buttonTextColor ?? "#ffffff",
+    "--invitation-font-scale": invitation.theme.fontScale ?? 1,
+    "--invitation-accent-color": invitation.theme.accentColor
+  } as CSSProperties;
+
   return (
-    <main>
+    <main
+      className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}`}
+      style={themeStyles}
+    >
       <section
         className={`invite-hero theme-${invitation.theme.template}`}
         style={{
