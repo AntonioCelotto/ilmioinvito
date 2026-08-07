@@ -272,6 +272,54 @@ export async function uploadLocationImage(
   };
 }
 
+export async function uploadCustomTemplateImage(
+  file: File
+): Promise<UploadResult> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return { status: "error", message: "Supabase non è configurato." };
+  }
+
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    return { status: "error", message: "Carica un'immagine JPG, PNG o WebP." };
+  }
+
+  if (file.size > 8 * 1024 * 1024) {
+    return { status: "error", message: "L'immagine non può superare 8 MB." };
+  }
+
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData.user) {
+    return { status: "error", message: "Accedi prima di caricare la grafica." };
+  }
+
+  const extension = file.name
+    .split(".")
+    .pop()
+    ?.toLowerCase()
+    .replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${userData.user.id}/custom-templates/template-${Date.now()}.${extension}`;
+  const { error } = await supabase.storage
+    .from("invitation-location-images")
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+
+  if (error) {
+    return { status: "error", message: error.message };
+  }
+
+  const { data } = supabase.storage
+    .from("invitation-location-images")
+    .getPublicUrl(path);
+
+  return {
+    status: "remote",
+    url: data.publicUrl,
+    message: "Grafica caricata correttamente."
+  };
+}
+
 export async function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveResult> {
   const supabase = createClient();
 
