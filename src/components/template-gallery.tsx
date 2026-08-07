@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { uploadCustomTemplateImage } from "@/lib/supabase/drafts";
 import {
+  customTemplateStorageKey,
   invitationTemplates,
   selectedTemplateStorageKey,
   templateCategories,
@@ -51,6 +53,128 @@ function TemplateCard({
   );
 }
 
+function CustomTemplateUpload() {
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  function handleFile(selectedFile?: File) {
+    setMessage("");
+
+    if (!selectedFile) {
+      setFile(null);
+      setPreviewUrl("");
+      return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(selectedFile.type)) {
+      setMessage("Carica un'immagine JPG, PNG o WebP.");
+      return;
+    }
+
+    if (selectedFile.size > 8 * 1024 * 1024) {
+      setMessage("L'immagine non può superare 8 MB.");
+      return;
+    }
+
+    setFile(selectedFile);
+    const reader = new FileReader();
+    reader.onload = () => setPreviewUrl(String(reader.result ?? ""));
+    reader.readAsDataURL(selectedFile);
+  }
+
+  async function useCustomTemplate() {
+    if (!file) {
+      setMessage("Seleziona prima un'immagine.");
+      return;
+    }
+
+    setUploading(true);
+    setMessage("Caricamento della grafica in corso...");
+
+    const result = await uploadCustomTemplateImage(file);
+
+    if (result.status === "error") {
+      setUploading(false);
+      setMessage(result.message);
+      return;
+    }
+
+    const customTemplate: InvitationTemplate = {
+      id: "custom-upload",
+      category: "evento-privato",
+      name: "La tua grafica",
+      description: "Template creato con l'immagine caricata da te.",
+      occasionLabel: "Template personale",
+      previewTitle: "Il tuo evento",
+      previewSubtitle: "Personalizza testi, colori e contenuti",
+      theme: {
+        template: "classicLight",
+        primaryColor: "#fffaf2",
+        accentColor: "#b87333",
+        fontStyle: "serif",
+        backgroundImage: result.url
+      }
+    };
+
+    window.localStorage.setItem(
+      customTemplateStorageKey,
+      JSON.stringify(customTemplate)
+    );
+    window.localStorage.setItem(selectedTemplateStorageKey, customTemplate.id);
+    window.location.href = "/builder";
+  }
+
+  return (
+    <section className="custom-template-upload" aria-labelledby="custom-template-title">
+      <div className="custom-template-copy">
+        <p className="eyebrow">Il tuo stile</p>
+        <h2 id="custom-template-title">Carica la tua grafica</h2>
+        <p>
+          Usa un'immagine personale come sfondo del tuo invito. Per il risultato
+          migliore scegli un formato verticale 9:16.
+        </p>
+        <label className="custom-template-file">
+          <span>{file ? "Cambia immagine" : "Scegli un'immagine"}</span>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            type="file"
+            onChange={(event) => handleFile(event.target.files?.[0])}
+          />
+        </label>
+        <small>JPG, PNG o WebP, massimo 8 MB.</small>
+        {message ? (
+          <p className="custom-template-message" aria-live="polite">
+            {message}
+          </p>
+        ) : null}
+        <button
+          className="button"
+          disabled={!file || uploading}
+          type="button"
+          onClick={useCustomTemplate}
+        >
+          {uploading ? "Caricamento..." : "Usa la mia grafica"}
+        </button>
+      </div>
+
+      <div
+        className={`custom-template-preview${previewUrl ? " has-image" : ""}`}
+        style={previewUrl ? { backgroundImage: `url("${previewUrl}")` } : undefined}
+        aria-label="Anteprima della grafica personale"
+      >
+        {previewUrl ? null : (
+          <div>
+            <span aria-hidden="true">＋</span>
+            <strong>Anteprima immagine</strong>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 export function TemplateGallery() {
   const [category, setCategory] = useState<CategoryFilter>("tutti");
 
@@ -69,6 +193,8 @@ export function TemplateGallery() {
 
   return (
     <>
+      <CustomTemplateUpload />
+
       <div className="template-filters" aria-label="Categorie template">
         {templateCategories.map((item) => (
           <button
