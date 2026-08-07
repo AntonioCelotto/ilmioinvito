@@ -290,6 +290,110 @@ textarea {
   text-transform: uppercase;
 }
 
+.custom-template-upload {
+  align-items: stretch;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(184, 115, 51, 0.22), transparent 32%),
+    var(--night);
+  border-radius: 24px;
+  color: #fff;
+  display: grid;
+  gap: clamp(24px, 5vw, 56px);
+  grid-template-columns: minmax(0, 1fr) minmax(230px, 330px);
+  margin-bottom: 36px;
+  overflow: hidden;
+  padding: clamp(24px, 4vw, 48px);
+}
+
+.custom-template-copy {
+  align-content: center;
+  display: grid;
+  justify-items: start;
+}
+
+.custom-template-copy h2 {
+  color: #fff;
+  font-size: clamp(34px, 5vw, 58px);
+  margin-bottom: 16px;
+}
+
+.custom-template-copy > p:not(.eyebrow, .custom-template-message) {
+  color: rgba(255, 255, 255, 0.74);
+  line-height: 1.65;
+  max-width: 600px;
+}
+
+.custom-template-copy > small {
+  color: rgba(255, 255, 255, 0.58);
+  margin: 8px 0 18px;
+}
+
+.custom-template-file {
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  display: inline-flex;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 0 18px;
+}
+
+.custom-template-file input {
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  width: 1px;
+}
+
+.custom-template-message {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+}
+
+.custom-template-copy .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
+.custom-template-preview {
+  aspect-ratio: 9 / 16;
+  background:
+    linear-gradient(155deg, rgba(184, 115, 51, 0.24), rgba(255, 255, 255, 0.07));
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 18px;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+}
+
+.custom-template-preview.has-image {
+  background-position: center;
+  background-size: cover;
+  border-style: solid;
+}
+
+.custom-template-preview > div {
+  align-items: center;
+  color: rgba(255, 255, 255, 0.72);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  text-align: center;
+}
+
+.custom-template-preview > div span {
+  font-size: 42px;
+  font-weight: 200;
+}
+
 @media (max-width: 980px) {
   .template-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -297,6 +401,16 @@ textarea {
 }
 
 @media (max-width: 620px) {
+  .custom-template-upload {
+    grid-template-columns: 1fr;
+  }
+
+  .custom-template-preview {
+    margin: 0 auto;
+    max-width: 280px;
+    width: 100%;
+  }
+
   .template-intro {
     padding-top: 34px;
   }
