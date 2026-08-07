@@ -86,7 +86,16 @@ function rowToDraft(row: any): InvitationDraft {
     primaryColor: themeRow?.primary_color ?? displayTheme.primaryColor ?? "#151313",
     accentColor: themeRow?.accent_color ?? displayTheme.accentColor ?? "#b87333",
     fontStyle: (themeRow?.font_style ?? displayTheme.fontStyle ?? "serif") as InvitationTheme["fontStyle"],
-    backgroundImage: displayTheme.backgroundImage
+    backgroundImage: displayTheme.backgroundImage,
+    textColor: displayTheme.textColor ?? "#ffffff",
+    buttonColor:
+      displayTheme.buttonColor ??
+      themeRow?.accent_color ??
+      displayTheme.accentColor ??
+      "#b87333",
+    buttonTextColor: displayTheme.buttonTextColor ?? "#ffffff",
+    fontScale:
+      typeof displayTheme.fontScale === "number" ? displayTheme.fontScale : 1
   };
 
   const locations: InvitationLocation[] = (row.invitation_locations ?? []).map(
