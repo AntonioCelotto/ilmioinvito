@@ -1324,3 +1324,45 @@ h3 {
     padding: 12px;
   }
 }
+
+
+.draft-actions .draft-preview-button {
+  background: #fff;
+  border: 1px solid var(--accent);
+  color: var(--accent-dark);
+}
+
+.draft-actions .draft-preview-button:hover {
+  background: #fff8f0;
+}
+
+.draft-actions .draft-edit-button {
+  background: var(--night);
+  color: #fff;
+}
+
+.draft-delete-button {
+  background: #fff;
+  border: 1px solid #d9a4a4;
+  border-radius: 6px;
+  color: var(--danger);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.draft-delete-button:hover {
+  background: #fff3f3;
+}
+
+.draft-delete-button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.dashboard-action-message {
+  color: var(--success);
+  font-weight: 800;
+}

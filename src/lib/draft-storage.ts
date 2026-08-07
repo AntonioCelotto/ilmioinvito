@@ -72,6 +72,7 @@ export type InvitationDraft = {
 };
 
 export const draftStorageKey = "ilmioinvito:drafts";
+export const editingDraftStorageKey = "ilmioinvito:editing-draft";
 
 export const defaultSections: InvitationSectionKey[] = [
   "countdown",
@@ -161,4 +162,33 @@ export function saveDraft(draft: InvitationDraft) {
   window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts));
 
   return nextDrafts;
+}
+
+
+export function removeDraft(draftId: string) {
+  const nextDrafts = readDrafts().filter((draft) => draft.id !== draftId);
+  window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts));
+  return nextDrafts;
+}
+
+export function setEditingDraft(draft: InvitationDraft) {
+  window.localStorage.setItem(editingDraftStorageKey, JSON.stringify(draft));
+}
+
+export function readEditingDraft(): InvitationDraft | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.localStorage.getItem(editingDraftStorageKey);
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as InvitationDraft;
+  } catch {
+    return null;
+  }
 }

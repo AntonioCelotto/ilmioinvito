@@ -2,8 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
-import { InvitationDraft, readDrafts } from "@/lib/draft-storage";
-import { loadUserDraftsFromSupabase } from "@/lib/supabase/drafts";
+import {
+  InvitationDraft,
+  readDrafts,
+  removeDraft,
+  setEditingDraft
+} from "@/lib/draft-storage";
+import {
+  deleteDraftFromSupabase,
+  loadUserDraftsFromSupabase
+} from "@/lib/supabase/drafts";
 import {
   DashboardRsvp,
   loadDashboardRsvps
@@ -16,6 +24,8 @@ export function DashboardClient() {
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
+  const [deletingDraftId, setDeletingDraftId] = useState("");
+  const [draftActionMessage, setDraftActionMessage] = useState("");
 
   useEffect(() => {
     const localDrafts = readDrafts();
@@ -68,6 +78,42 @@ export function DashboardClient() {
           (invitation) => invitation.id === selectedInvitationId
         )?.title ?? "Invito";
 
+  function handleEdit(draft: InvitationDraft) {
+    setEditingDraft(draft);
+    window.location.href = `/builder?edit=${encodeURIComponent(draft.id)}`;
+  }
+
+  async function handleDelete(draft: InvitationDraft) {
+    const confirmed = window.confirm(
+      `Vuoi eliminare definitivamente “${draft.title}”? Questa azione non può essere annullata.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingDraftId(draft.id);
+    setDraftActionMessage("");
+
+    const result = await deleteDraftFromSupabase(draft.id);
+
+    if (result.status === "error") {
+      setDraftActionMessage(`Impossibile eliminare l'invito: ${result.message}`);
+      setDeletingDraftId("");
+      return;
+    }
+
+    removeDraft(draft.id);
+    setDrafts((current) =>
+      current.filter((item) => item.id !== draft.id)
+    );
+    setRsvps((current) =>
+      current.filter((rsvp) => rsvp.invitationId !== draft.id)
+    );
+    setDraftActionMessage(result.message);
+    setDeletingDraftId("");
+  }
+
   return (
     <>
       <div className="toolbar">
@@ -91,6 +137,11 @@ export function DashboardClient() {
           <span className="muted">{drafts.length} bozze</span>
         </div>
         {remoteMessage ? <p className="panel-note">{remoteMessage}</p> : null}
+        {draftActionMessage ? (
+          <p className="panel-note dashboard-action-message" role="status">
+            {draftActionMessage}
+          </p>
+        ) : null}
         {drafts.length === 0 ? (
           <div className="empty-state">
             <h3>Nessuna bozza salvata</h3>
@@ -119,10 +170,27 @@ export function DashboardClient() {
                   </div>
                 </div>
                 <div className="draft-actions">
-                  <span className="status pending">Bozza</span>
-                  <a className="button secondary" href={`/i/${draft.slug}`}>
+                  <span className={`status ${draft.status === "published" ? "confirmed" : "pending"}`}>
+                    {draft.status === "published" ? "Pubblicato" : "Bozza"}
+                  </span>
+                  <a className="button draft-preview-button" href={`/i/${draft.slug}`}>
                     Anteprima
                   </a>
+                  <button
+                    className="button draft-edit-button"
+                    type="button"
+                    onClick={() => handleEdit(draft)}
+                  >
+                    Modifica
+                  </button>
+                  <button
+                    className="draft-delete-button"
+                    disabled={deletingDraftId === draft.id}
+                    type="button"
+                    onClick={() => handleDelete(draft)}
+                  >
+                    {deletingDraftId === draft.id ? "Eliminazione…" : "Elimina"}
+                  </button>
                 </div>
               </article>
             ))}

@@ -506,3 +506,45 @@ export async function findDraftBySlugFromSupabase(slug: string) {
 
   return rowToDraft(data);
 }
+
+
+export async function deleteDraftFromSupabase(
+  draftId: string
+): Promise<SaveResult> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return {
+      status: "local",
+      message: "Invito eliminato dal browser."
+    };
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+
+  if (userError) {
+    return { status: "error", message: userError.message };
+  }
+
+  if (!userData.user) {
+    return {
+      status: "local",
+      message: "Invito eliminato dal browser."
+    };
+  }
+
+  const { error } = await supabase
+    .from("invitations")
+    .delete()
+    .eq("id", draftId)
+    .eq("owner_id", userData.user.id);
+
+  if (error) {
+    return { status: "error", message: error.message };
+  }
+
+  return {
+    status: "remote",
+    message: "Invito eliminato definitivamente."
+  };
+}
