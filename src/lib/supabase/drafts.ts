@@ -279,6 +279,66 @@ export async function uploadLocationImage(
   };
 }
 
+export async function uploadInvitationMedia(
+  draftId: string,
+  file: File
+): Promise<UploadResult> {
+  const supabase = createClient();
+
+  if (!supabase) {
+    return { status: "error", message: "Supabase non è configurato." };
+  }
+
+  const isPhoto = ["image/jpeg", "image/png", "image/webp"].includes(file.type);
+  const isVideo = ["video/mp4", "video/quicktime", "video/webm"].includes(
+    file.type
+  );
+
+  if (!isPhoto && !isVideo) {
+    return {
+      status: "error",
+      message: "Carica una foto JPG, PNG o WebP oppure un video compatibile."
+    };
+  }
+
+  if (file.size > 50 * 1024 * 1024) {
+    return { status: "error", message: "Il file non può superare 50 MB." };
+  }
+
+  const { data: userData } = await supabase.auth.getUser();
+
+  if (!userData.user) {
+    return {
+      status: "error",
+      message: "Accedi prima di aggiungere contenuti Social all'invito."
+    };
+  }
+
+  const extension =
+    file.name
+      .split(".")
+      .pop()
+      ?.toLowerCase()
+      .replace(/[^a-z0-9]/g, "") || (isPhoto ? "jpg" : "mp4");
+  const path = `${draftId}/owner/${crypto.randomUUID()}.${extension}`;
+  const bucket = "invitation-guest-media";
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { cacheControl: "3600", upsert: false });
+
+  if (error) {
+    return { status: "error", message: error.message };
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+
+  return {
+    status: "remote",
+    url: data.publicUrl,
+    message: "Contenuto Social caricato. Salva la bozza per pubblicarlo."
+  };
+}
+
 export async function uploadCustomTemplateImage(
   file: File
 ): Promise<UploadResult> {
