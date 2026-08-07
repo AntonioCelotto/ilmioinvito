@@ -179,7 +179,7 @@ textarea {
 }
 
 .template-card-preview {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 9 / 16;
   color: #fff;
   display: flex;
   flex-direction: column;
