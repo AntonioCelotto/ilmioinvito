@@ -165,6 +165,29 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const hasCustomDraft = Boolean(draft);
   const isDemoSlug = slug === demoInvitation.slug;
 
+  if (loaded && !hasCustomDraft && !isDemoSlug) {
+    return (
+      <main className="workspace">
+        <section className="section">
+          <div className="section-inner">
+            <div className="empty-state invitation-unavailable">
+              <p className="eyebrow">Invito non disponibile</p>
+              <h1>Questo invito è ancora in bozza.</h1>
+              <p className="muted">
+                La bozza è visibile soltanto al proprietario autenticato. Per
+                condividerla con gli invitati, apri il builder e premi
+                “Pubblica invito”.
+              </p>
+              <a className="button" href="/login">
+                Accedi
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   const themeStyles = {
     ...(invitation.theme.textColor
       ? { "--invitation-text-color": invitation.theme.textColor }
@@ -197,7 +220,11 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
       >
         <div>
           <p className="eyebrow">
-            {hasCustomDraft ? "Bozza invito" : "Invito digitale demo"}
+            {hasCustomDraft
+              ? invitation.status === "published"
+                ? "Invito ufficiale"
+                : "Anteprima bozza"
+              : "Invito digitale demo"}
           </p>
           <h1>{invitation.title}</h1>
           <p className="lead">{invitation.subtitle}</p>
@@ -208,24 +235,6 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           </div>
         </div>
       </section>
-
-      {!hasCustomDraft && loaded && !isDemoSlug ? (
-        <section className="section">
-          <div className="section-inner">
-            <div className="empty-state">
-              <h2>Bozza non trovata su questo browser.</h2>
-              <p className="muted">
-                La demo cerca prima le bozze locali e poi Supabase. Se l'invito
-                e ancora in bozza, aprilo dallo stesso browser/account con cui lo
-                hai creato.
-              </p>
-              <a className="button" href="/builder">
-                Torna al builder
-              </a>
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <section className="section invite-section">
         <div className="section-inner invite-section-inner">
