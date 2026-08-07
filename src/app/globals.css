@@ -1366,3 +1366,169 @@ h3 {
   color: var(--success);
   font-weight: 800;
 }
+
+
+.font-size-control {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 48px minmax(100px, 1fr) 48px;
+}
+
+.font-size-control button {
+  background: var(--night);
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 900;
+  min-height: 42px;
+}
+
+.font-size-control input[type="range"] {
+  accent-color: var(--accent);
+  min-height: 42px;
+  padding: 0;
+  width: 100%;
+}
+
+.theme-color-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.color-control {
+  align-items: center;
+  background: #fbf8f3;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 46px minmax(0, 1fr);
+  padding: 12px;
+}
+
+.color-control span {
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.color-control input[type="color"] {
+  border: 0;
+  cursor: pointer;
+  grid-row: 1 / span 2;
+  height: 46px;
+  padding: 0;
+  width: 46px;
+}
+
+.color-control strong {
+  color: var(--muted);
+  font-family: monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.preview-phone {
+  color: var(--invitation-text-color, #fff);
+}
+
+.preview-phone .phone-screen,
+.preview-phone .phone-slot,
+.preview-phone .phone-slot p,
+.preview-phone .phone-location span,
+.preview-phone .phone-social-heading small {
+  color: var(--invitation-text-color, #fff);
+}
+
+.preview-phone .phone-hero-preview h2 {
+  font-size: calc(30px * var(--invitation-font-scale, 1));
+}
+
+.preview-phone .phone-hero-preview p,
+.preview-phone .phone-slot p,
+.preview-phone .phone-location,
+.preview-phone .phone-meta {
+  font-size: calc(13px * var(--invitation-font-scale, 1));
+}
+
+.preview-phone .phone-map-button,
+.preview-phone .phone-preview-button,
+.preview-phone .phone-add-guest {
+  background: var(--invitation-button-color, var(--accent));
+  border-color: var(--invitation-button-color, var(--accent));
+  color: var(--invitation-button-text, #fff);
+}
+
+.invitation-custom-theme {
+  color: var(--invitation-text-color);
+}
+
+.invitation-custom-theme h1 {
+  font-size: clamp(
+    calc(42px * var(--invitation-font-scale, 1)),
+    calc(8vw * var(--invitation-font-scale, 1)),
+    calc(112px * var(--invitation-font-scale, 1))
+  );
+}
+
+.invitation-custom-theme h2 {
+  font-size: clamp(
+    calc(30px * var(--invitation-font-scale, 1)),
+    calc(5vw * var(--invitation-font-scale, 1)),
+    calc(64px * var(--invitation-font-scale, 1))
+  );
+}
+
+.invitation-custom-theme h3,
+.invitation-custom-theme p,
+.invitation-custom-theme span,
+.invitation-custom-theme label,
+.invitation-custom-theme input,
+.invitation-custom-theme textarea {
+  font-size: calc(1em * var(--invitation-font-scale, 1));
+}
+
+.invitation-custom-theme .invite-hero,
+.invitation-custom-theme .invite-hero h1,
+.invitation-custom-theme .invite-hero p,
+.invitation-custom-theme .invite-hero span,
+.invitation-custom-theme .invite-section,
+.invitation-custom-theme .invite-section h2,
+.invitation-custom-theme .invite-section p,
+.invitation-custom-theme .invite-dynamic-sections,
+.invitation-custom-theme .invite-dynamic-sections h2,
+.invitation-custom-theme .invite-dynamic-sections h3,
+.invitation-custom-theme .invite-dynamic-sections p,
+.invitation-custom-theme .invite-dynamic-sections span,
+.invitation-custom-theme .invite-dynamic-sections label {
+  color: var(--invitation-text-color);
+}
+
+.invitation-custom-theme .button,
+.invitation-custom-theme button[type="submit"],
+.invitation-custom-theme .phone-map-button {
+  background: var(--invitation-button-color, var(--accent));
+  border-color: var(--invitation-button-color, var(--accent));
+  color: var(--invitation-button-text, #fff);
+}
+
+.invitation-custom-theme .countdown-panel div,
+.invitation-custom-theme .invite-location,
+.invitation-custom-theme .gift-wish-item {
+  border-color: color-mix(
+    in srgb,
+    var(--invitation-text-color, #ffffff) 28%,
+    transparent
+  );
+}
+
+@media (max-width: 560px) {
+  .theme-color-grid {
+    grid-template-columns: 1fr;
+  }
+}

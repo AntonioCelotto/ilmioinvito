@@ -44,6 +44,10 @@ export type InvitationTheme = {
   accentColor: string;
   fontStyle: "serif" | "modern" | "script";
   backgroundImage?: string;
+  textColor?: string;
+  buttonColor?: string;
+  buttonTextColor?: string;
+  fontScale?: number;
 };
 
 export type InvitationBlockTexts = Record<InvitationSectionKey, string>;
@@ -141,7 +145,8 @@ export function readDrafts(): InvitationDraft[] {
       blockTexts: {
         ...defaultBlockTexts,
         ...(draft.blockTexts ?? {})
-      }
+      },
+      theme: draft.theme
     }));
   } catch {
     return [];
