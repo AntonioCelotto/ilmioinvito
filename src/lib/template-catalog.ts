@@ -21,6 +21,7 @@ export type InvitationTemplate = {
 };
 
 export const selectedTemplateStorageKey = "ilmioinvito:selected-template";
+export const customTemplateStorageKey = "ilmioinvito:custom-template";
 
 export const templateCategories: Array<{
   id: TemplateCategory | "tutti";
@@ -421,6 +422,18 @@ export function readSelectedTemplate() {
   }
 
   const selectedId = window.localStorage.getItem(selectedTemplateStorageKey);
+
+  if (selectedId === "custom-upload") {
+    const storedCustomTemplate = window.localStorage.getItem(customTemplateStorageKey);
+
+    if (storedCustomTemplate) {
+      try {
+        return JSON.parse(storedCustomTemplate) as InvitationTemplate;
+      } catch {
+        window.localStorage.removeItem(customTemplateStorageKey);
+      }
+    }
+  }
 
   return (
     invitationTemplates.find((template) => template.id === selectedId) ??
