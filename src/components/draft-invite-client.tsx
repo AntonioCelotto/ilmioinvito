@@ -166,12 +166,16 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const isDemoSlug = slug === demoInvitation.slug;
 
   const themeStyles = {
-    "--invitation-text-color": invitation.theme.textColor ?? "#ffffff",
+    ...(invitation.theme.textColor
+      ? { "--invitation-text-color": invitation.theme.textColor }
+      : {}),
     "--invitation-button-color":
       invitation.theme.buttonColor ?? invitation.theme.accentColor,
     "--invitation-button-text":
       invitation.theme.buttonTextColor ?? "#ffffff",
-    "--invitation-font-scale": invitation.theme.fontScale ?? 1,
+    ...(invitation.theme.fontScale
+      ? { "--invitation-font-scale": invitation.theme.fontScale }
+      : {}),
     "--invitation-accent-color": invitation.theme.accentColor
   } as CSSProperties;
 
