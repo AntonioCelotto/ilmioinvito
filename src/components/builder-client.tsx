@@ -498,9 +498,10 @@ export function BuilderClient() {
   );
 
   useEffect(() => {
-    const editingDraft = readEditingDraft();
+    const editingDraftId = new URLSearchParams(window.location.search).get("edit");
+    const editingDraft = editingDraftId ? readEditingDraft() : null;
 
-    if (editingDraft) {
+    if (editingDraft && editingDraft.id === editingDraftId) {
       const matchingTemplate = invitationTemplates.find(
         (template) =>
           template.theme.backgroundImage === editingDraft.theme.backgroundImage
