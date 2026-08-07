@@ -49,7 +49,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "darkLuxury",
       primaryColor: "#151313",
       accentColor: "#b87333",
-      fontStyle: "serif"
+      fontStyle: "serif",
+      backgroundImage: "/templates/custom/notte-di-rame.webp"
     }
   },
   {
@@ -65,7 +66,7 @@ export const invitationTemplates: InvitationTemplate[] = [
       primaryColor: "#fffaf2",
       accentColor: "#b89a62",
       fontStyle: "script",
-      backgroundImage: "/templates/wedding-promessa-elegante-v1.webp"
+      backgroundImage: "/templates/custom/promessa.webp"
     }
   },
   {
@@ -81,7 +82,7 @@ export const invitationTemplates: InvitationTemplate[] = [
       primaryColor: "#0b3a30",
       accentColor: "#d2b46c",
       fontStyle: "script",
-      backgroundImage: "/templates/wedding-giardino-segreto-v1.webp"
+      backgroundImage: "/templates/custom/giardino-segreto.webp"
     }
   },
   {
@@ -96,7 +97,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "minimal",
       primaryColor: "#7a245f",
       accentColor: "#ffbf4a",
-      fontStyle: "modern"
+      fontStyle: "modern",
+      backgroundImage: "/templates/custom/happy-party.webp"
     }
   },
   {
@@ -111,7 +113,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "darkLuxury",
       primaryColor: "#19172a",
       accentColor: "#d9a441",
-      fontStyle: "serif"
+      fontStyle: "serif",
+      backgroundImage: "/templates/custom/golden-night.webp"
     }
   },
   {
@@ -126,7 +129,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "classicLight",
       primaryColor: "#eaf4f8",
       accentColor: "#74a9bd",
-      fontStyle: "script"
+      fontStyle: "script",
+      backgroundImage: "/templates/custom/piccolo-cielo.webp"
     }
   },
   {
@@ -141,7 +145,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "botanical",
       primaryColor: "#62796b",
       accentColor: "#e6d9bd",
-      fontStyle: "serif"
+      fontStyle: "serif",
+      backgroundImage: "/templates/custom/dolce-natura.webp"
     }
   },
   {
@@ -156,7 +161,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "classicLight",
       primaryColor: "#fffaf0",
       accentColor: "#c5a663",
-      fontStyle: "serif"
+      fontStyle: "serif",
+      backgroundImage: "/templates/custom/luce.webp"
     }
   },
   {
@@ -171,7 +177,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "darkLuxury",
       primaryColor: "#2a1015",
       accentColor: "#b42035",
-      fontStyle: "serif"
+      fontStyle: "serif",
+      backgroundImage: "/templates/custom/traguardo.webp"
     }
   },
   {
@@ -186,7 +193,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "minimal",
       primaryColor: "#1d2935",
       accentColor: "#93b7be",
-      fontStyle: "modern"
+      fontStyle: "modern",
+      backgroundImage: "/templates/custom/private.webp"
     }
   },
   {
@@ -201,7 +209,8 @@ export const invitationTemplates: InvitationTemplate[] = [
       template: "minimal",
       primaryColor: "#111827",
       accentColor: "#3b82f6",
-      fontStyle: "modern"
+      fontStyle: "modern",
+      backgroundImage: "/templates/custom/executive.webp"
     }
   },
   {
@@ -332,7 +341,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     occasionLabel: "Evento aziendale",
     previewTitle: "Executive Dinner",
     previewSubtitle: "Una serata dedicata alle relazioni",
-    theme: { template: "classicLight", primaryColor: "#f2f0eb", accentColor: "#333333", fontStyle: "modern", backgroundImage: "/templates/linee-dargento.webp" }
+    theme: { template: "classicLight", primaryColor: "#f2f0eb", accentColor: "#333333", fontStyle: "modern", backgroundImage: "/templates/custom/linee-argento.webp" }
   },
   {
     id: "evento-blu-elettrico",
@@ -392,7 +401,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     occasionLabel: "Evento aziendale",
     previewTitle: "Private Preview",
     previewSubtitle: "Un appuntamento esclusivo",
-    theme: { template: "classicLight", primaryColor: "#f2f0eb", accentColor: "#202020", fontStyle: "modern", backgroundImage: "/templates/minimal-charcoal.webp" }
+    theme: { template: "classicLight", primaryColor: "#f2f0eb", accentColor: "#202020", fontStyle: "modern", backgroundImage: "/templates/custom/minimal-charcoal.webp" }
   },
   {
     id: "evento-corallo-notturno",
@@ -402,7 +411,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     occasionLabel: "Evento privato",
     previewTitle: "Save the date",
     previewSubtitle: "Una serata da ricordare",
-    theme: { template: "darkLuxury", primaryColor: "#111111", accentColor: "#e95e66", fontStyle: "serif", backgroundImage: "/templates/corallo-notturno.webp" }
+    theme: { template: "darkLuxury", primaryColor: "#111111", accentColor: "#e95e66", fontStyle: "serif", backgroundImage: "/templates/custom/corallo-notturno.webp" }
   }
 ];
 
