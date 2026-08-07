@@ -18,6 +18,7 @@ import {
 } from "@/lib/draft-storage";
 import {
   saveDraftToSupabase,
+  uploadInvitationMedia,
   uploadLocationImage
 } from "@/lib/supabase/drafts";
 import {
@@ -584,7 +585,7 @@ export function BuilderClient() {
     }
   }
 
-  function handlePreviewMedia(file: File) {
+  async function handlePreviewMedia(file: File) {
     const isPhoto = file.type.startsWith("image/");
     const isVideo = file.type.startsWith("video/");
 
@@ -598,16 +599,28 @@ export function BuilderClient() {
       return;
     }
 
+    setSavedMessage("Caricamento del contenuto Social...");
+
+    const result = await uploadInvitationMedia(draft.id, file);
+
+    if (result.status === "error") {
+      setSavedMessage(result.message);
+      return;
+    }
+
     setDraft((current) => ({
       ...current,
-      media: [{
-        id: crypto.randomUUID(),
-        type: isPhoto ? "photo" : "video",
-        title: file.name.replace(/\.[^.]+$/, ""),
-        url: URL.createObjectURL(file)
-      }, ...current.media]
+      media: [
+        {
+          id: crypto.randomUUID(),
+          type: isPhoto ? "photo" : "video",
+          title: file.name.replace(/\.[^.]+$/, ""),
+          url: result.url
+        },
+        ...current.media
+      ]
     }));
-    setSavedMessage("Contenuto aggiunto all’anteprima Social.");
+    setSavedMessage(result.message);
   }
 
   function toggleLocationBlock() {
