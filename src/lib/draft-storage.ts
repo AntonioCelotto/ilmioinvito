@@ -137,6 +137,9 @@ export function readDrafts(): InvitationDraft[] {
         time: item.time ?? "",
         description: item.description ?? ""
       })),
+      media: (draft.media ?? []).filter(
+        (item) => item.url && !item.url.startsWith("blob:")
+      ),
       giftIban: draft.giftIban ?? "",
       giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({
         id: wish.id || `wish-${index + 1}`,
