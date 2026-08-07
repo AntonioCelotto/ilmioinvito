@@ -1465,7 +1465,7 @@ h3 {
 }
 
 .invitation-custom-theme {
-  color: var(--invitation-text-color, var(--ink));
+  color: var(--invitation-text-color);
 }
 
 .invitation-custom-theme h1 {
@@ -1506,7 +1506,7 @@ h3 {
 .invitation-custom-theme .invite-dynamic-sections p,
 .invitation-custom-theme .invite-dynamic-sections span,
 .invitation-custom-theme .invite-dynamic-sections label {
-  color: var(--invitation-text-color, currentColor);
+  color: var(--invitation-text-color);
 }
 
 .invitation-custom-theme .button,
