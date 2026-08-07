@@ -836,16 +836,6 @@ export function BuilderClient() {
       return;
     }
 
-    if (
-      draft.activeSections.includes("rsvp") &&
-      !draft.whatsappNumber.trim()
-    ) {
-      setSavedMessage(
-        "Inserisci il numero WhatsApp prima di pubblicare: serve al tasto Partecipa."
-      );
-      return;
-    }
-
     setPublishing(true);
     setSavedMessage("Pubblicazione dell'invito...");
 
