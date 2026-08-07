@@ -1592,3 +1592,31 @@ h3 {
     grid-template-columns: 1fr;
   }
 }
+
+
+.builder-save-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.builder-save-actions .builder-draft-button {
+  background: #fff;
+  border: 1px solid var(--accent);
+  color: var(--accent-dark);
+}
+
+.builder-save-actions .button:disabled {
+  cursor: wait;
+  opacity: 0.58;
+}
+
+@media (max-width: 560px) {
+  .builder-save-actions {
+    display: grid;
+  }
+
+  .builder-save-actions .button {
+    width: 100%;
+  }
+}

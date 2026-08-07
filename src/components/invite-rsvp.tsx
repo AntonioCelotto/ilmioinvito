@@ -96,7 +96,7 @@ export function InviteRsvp({
           setSubmitMessage(result.message);
           setSubmitting(false);
 
-          if (whatsappLink) {
+          if (result.status === "saved" && whatsappLink) {
             window.location.href = whatsappLink;
           }
         }}
@@ -214,10 +214,14 @@ export function InviteRsvp({
 
         <button
           className="button light"
-          disabled={!recipientNumber || submitting}
+          disabled={submitting}
           type="submit"
         >
-          {submitting ? "Salvataggio..." : "Conferma e invia su WhatsApp"}
+          {submitting
+            ? "Salvataggio..."
+            : recipientNumber
+              ? "Partecipa e invia su WhatsApp"
+              : "Conferma partecipazione"}
         </button>
       </form>
     </div>
