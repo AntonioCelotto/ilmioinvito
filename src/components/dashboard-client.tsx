@@ -80,7 +80,7 @@ export function DashboardClient() {
 
   function handleEdit(draft: InvitationDraft) {
     setEditingDraft(draft);
-    window.location.href = "/builder";
+    window.location.href = `/builder?edit=${encodeURIComponent(draft.id)}`;
   }
 
   async function handleDelete(draft: InvitationDraft) {
@@ -103,9 +103,9 @@ export function DashboardClient() {
       return;
     }
 
-    const nextDrafts = removeDraft(draft.id);
+    removeDraft(draft.id);
     setDrafts((current) =>
-      current.filter((item) => item.id !== draft.id && nextDrafts.some((local) => local.id === item.id) || current.filter((item) => item.id !== draft.id))
+      current.filter((item) => item.id !== draft.id)
     );
     setRsvps((current) =>
       current.filter((rsvp) => rsvp.invitationId !== draft.id)
