@@ -1,3 +1,5 @@
+drop policy if exists "guest media files owner insert" on storage.objects;
+
 create policy "guest media files owner insert"
 on storage.objects
 for insert
