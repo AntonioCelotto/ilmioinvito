@@ -461,6 +461,7 @@ export function BuilderClient() {
   const previewScreenRef = useRef<HTMLDivElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
+  const [publishing, setPublishing] = useState(false);
   const [uploadingLocationId, setUploadingLocationId] = useState("");
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
@@ -599,28 +600,52 @@ export function BuilderClient() {
       return;
     }
 
-    setSavedMessage("Caricamento del contenuto Social...");
+    setSavedMessage("Preparazione della bozza per il caricamento Social...");
 
-    const result = await uploadInvitationMedia(draft.id, file);
+    const preparedDraft = {
+      ...draft,
+      slug: makeSlug(draft.title),
+      updatedAt: new Date().toISOString()
+    };
+    saveDraft(preparedDraft);
+    const prepareResult = await saveDraftToSupabase(preparedDraft);
+
+    if (prepareResult.status === "error") {
+      setSavedMessage(prepareResult.message);
+      return;
+    }
+
+    setSavedMessage("Caricamento del contenuto Social...");
+    const result = await uploadInvitationMedia(preparedDraft.id, file);
 
     if (result.status === "error") {
       setSavedMessage(result.message);
       return;
     }
 
-    setDraft((current) => ({
-      ...current,
+    const nextDraft = {
+      ...preparedDraft,
       media: [
         {
           id: crypto.randomUUID(),
-          type: isPhoto ? "photo" : "video",
+          type: isPhoto ? ("photo" as const) : ("video" as const),
           title: file.name.replace(/\.[^.]+$/, ""),
           url: result.url
         },
-        ...current.media
-      ]
-    }));
-    setSavedMessage(result.message);
+        ...preparedDraft.media
+      ],
+      updatedAt: new Date().toISOString()
+    };
+
+    saveDraft(nextDraft);
+    setDraft(nextDraft);
+
+    const saveResult = await saveDraftToSupabase(nextDraft);
+    setSavedMessage(
+      saveResult.status === "error"
+        ? saveResult.message
+        : "Contenuto Social caricato e salvato. Ora è visibile nel link dell'invito."
+    );
   }
 
   function toggleLocationBlock() {
@@ -803,6 +828,47 @@ export function BuilderClient() {
 
     const result = await saveDraftToSupabase(nextDraft);
     setSavedMessage(result.message);
+  }
+
+  async function handlePublish() {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.eventDate)) {
+      setSavedMessage("Inserisci una data valida per attivare il countdown.");
+      return;
+    }
+
+    if (
+      draft.activeSections.includes("rsvp") &&
+      !draft.whatsappNumber.trim()
+    ) {
+      setSavedMessage(
+        "Inserisci il numero WhatsApp prima di pubblicare: serve al tasto Partecipa."
+      );
+      return;
+    }
+
+    setPublishing(true);
+    setSavedMessage("Pubblicazione dell'invito...");
+
+    const publishedDraft = {
+      ...draft,
+      slug: makeSlug(draft.title),
+      status: "published" as const,
+      updatedAt: new Date().toISOString()
+    };
+
+    saveDraft(publishedDraft);
+    const result = await saveDraftToSupabase(publishedDraft);
+
+    if (result.status !== "error") {
+      setDraft(publishedDraft);
+      setSavedMessage(
+        `Invito pubblicato. Il link ${window.location.origin}/i/${publishedDraft.slug} è ora accessibile agli invitati.`
+      );
+    } else {
+      setSavedMessage(result.message);
+    }
+
+    setPublishing(false);
   }
 
   const locationBlockActive = locationSectionKeys.some((section) =>
@@ -1336,9 +1402,23 @@ export function BuilderClient() {
           </label>
         </div>
 
-        <button className="button" type="button" onClick={handleSave}>
-          Salva bozza
-        </button>
+        <div className="builder-save-actions">
+          <button className="button secondary builder-draft-button" type="button" onClick={handleSave}>
+            Salva bozza
+          </button>
+          <button
+            className="button"
+            disabled={publishing}
+            type="button"
+            onClick={handlePublish}
+          >
+            {publishing
+              ? "Pubblicazione..."
+              : draft.status === "published"
+                ? "Aggiorna invito pubblico"
+                : "Pubblica invito"}
+          </button>
+        </div>
         {savedMessage ? (
           <div className="success-box">
             <p>{savedMessage}</p>
