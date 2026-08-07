@@ -493,9 +493,13 @@ export async function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveR
     }
   }
 
-  if (draft.media.length > 0) {
+  const persistentMedia = draft.media.filter((item) =>
+    /^https?:\/\//.test(item.url)
+  );
+
+  if (persistentMedia.length > 0) {
     const { error } = await supabase.from("invitation_media").insert(
-      draft.media.map((item, index) => ({
+      persistentMedia.map((item, index) => ({
         invitation_id: draft.id,
         type: item.type,
         title: item.title,
