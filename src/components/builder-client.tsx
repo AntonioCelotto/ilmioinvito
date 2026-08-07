@@ -12,6 +12,7 @@ import {
   InvitationSectionKey,
   InvitationTheme,
   makeSlug,
+  readEditingDraft,
   saveDraft
 } from "@/lib/draft-storage";
 import {
@@ -497,6 +498,30 @@ export function BuilderClient() {
   );
 
   useEffect(() => {
+    const editingDraft = readEditingDraft();
+
+    if (editingDraft) {
+      const matchingTemplate = invitationTemplates.find(
+        (template) =>
+          template.theme.backgroundImage === editingDraft.theme.backgroundImage
+      );
+
+      setSelectedTemplate(
+        matchingTemplate ?? {
+          id: "invito-salvato",
+          category: "evento-privato",
+          name: "Grafica personalizzata",
+          description: "Template dell'invito salvato.",
+          occasionLabel: "Invito salvato",
+          previewTitle: editingDraft.title,
+          previewSubtitle: editingDraft.subtitle,
+          theme: editingDraft.theme
+        }
+      );
+      setDraft(editingDraft);
+      return;
+    }
+
     const template = readSelectedTemplate();
     setSelectedTemplate(template);
     setDraft((current) => ({ ...current, theme: template.theme }));
