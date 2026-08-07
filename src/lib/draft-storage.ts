@@ -146,13 +146,7 @@ export function readDrafts(): InvitationDraft[] {
         ...defaultBlockTexts,
         ...(draft.blockTexts ?? {})
       },
-      theme: {
-        ...draft.theme,
-        textColor: draft.theme.textColor ?? "#ffffff",
-        buttonColor: draft.theme.buttonColor ?? draft.theme.accentColor,
-        buttonTextColor: draft.theme.buttonTextColor ?? "#ffffff",
-        fontScale: draft.theme.fontScale ?? 1
-      }
+      theme: draft.theme
     }));
   } catch {
     return [];
