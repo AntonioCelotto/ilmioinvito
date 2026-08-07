@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { demoInvitation } from "@/lib/demo-data";
 import { AuthPanel } from "@/components/auth-panel";
 import {
@@ -764,6 +765,11 @@ export function BuilderClient() {
     }));
   }
 
+  function updateFontScale(value: number) {
+    const fontScale = Math.min(1.5, Math.max(0.75, Number(value.toFixed(2))));
+    updateTheme({ fontScale });
+  }
+
   async function handleSave() {
     const nextDraft = {
       ...draft,
@@ -1242,24 +1248,72 @@ export function BuilderClient() {
               <option value="script">Calligrafico</option>
             </select>
           </div>
-        </div>
-        <div className="field-row">
           <div className="field">
-            <label>Colore principale</label>
+            <label>Dimensione testi: {Math.round((draft.theme.fontScale ?? 1) * 100)}%</label>
+            <div className="font-size-control">
+              <button
+                aria-label="Riduci dimensione font"
+                type="button"
+                onClick={() => updateFontScale((draft.theme.fontScale ?? 1) - 0.05)}
+              >
+                A−
+              </button>
+              <input
+                aria-label="Dimensione font"
+                max="1.5"
+                min="0.75"
+                step="0.05"
+                type="range"
+                value={draft.theme.fontScale ?? 1}
+                onChange={(event) => updateFontScale(Number(event.target.value))}
+              />
+              <button
+                aria-label="Aumenta dimensione font"
+                type="button"
+                onClick={() => updateFontScale((draft.theme.fontScale ?? 1) + 0.05)}
+              >
+                A+
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="theme-color-grid">
+          <label className="color-control">
+            <span>Colore sfondo</span>
             <input
               type="color"
               value={draft.theme.primaryColor}
               onChange={(event) => updateTheme({ primaryColor: event.target.value })}
             />
-          </div>
-          <div className="field">
-            <label>Colore accento</label>
+            <strong>{draft.theme.primaryColor}</strong>
+          </label>
+          <label className="color-control">
+            <span>Colore testi</span>
             <input
               type="color"
-              value={draft.theme.accentColor}
-              onChange={(event) => updateTheme({ accentColor: event.target.value })}
+              value={draft.theme.textColor ?? "#ffffff"}
+              onChange={(event) => updateTheme({ textColor: event.target.value })}
             />
-          </div>
+            <strong>{draft.theme.textColor ?? "#ffffff"}</strong>
+          </label>
+          <label className="color-control">
+            <span>Colore tasti</span>
+            <input
+              type="color"
+              value={draft.theme.buttonColor ?? draft.theme.accentColor}
+              onChange={(event) => updateTheme({ buttonColor: event.target.value })}
+            />
+            <strong>{draft.theme.buttonColor ?? draft.theme.accentColor}</strong>
+          </label>
+          <label className="color-control">
+            <span>Testo dei tasti</span>
+            <input
+              type="color"
+              value={draft.theme.buttonTextColor ?? "#ffffff"}
+              onChange={(event) => updateTheme({ buttonTextColor: event.target.value })}
+            />
+            <strong>{draft.theme.buttonTextColor ?? "#ffffff"}</strong>
+          </label>
         </div>
 
         <button className="button" type="button" onClick={handleSave}>
@@ -1292,8 +1346,14 @@ export function BuilderClient() {
               ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${draft.theme.backgroundImage}")`
               : `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`,
             backgroundPosition: "top center",
-            backgroundSize: "cover"
-          }}
+            backgroundSize: "cover",
+            "--invitation-text-color": draft.theme.textColor ?? "#ffffff",
+            "--invitation-button-color":
+              draft.theme.buttonColor ?? draft.theme.accentColor,
+            "--invitation-button-text":
+              draft.theme.buttonTextColor ?? "#ffffff",
+            "--invitation-font-scale": draft.theme.fontScale ?? 1
+          } as CSSProperties}
         >
           <div className="phone-notch" aria-hidden="true" />
           <div className="phone-screen" ref={previewScreenRef}>
