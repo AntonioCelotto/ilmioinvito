@@ -497,6 +497,13 @@ export function BuilderClient() {
     () => orderedBlocks(draft.activeSections),
     [draft.activeSections]
   );
+  const themeTextColor =
+    draft.theme.textColor ??
+    (draft.theme.template === "classicLight" ? "#2f2a24" : "#ffffff");
+  const themeButtonColor =
+    themeButtonColor;
+  const themeButtonTextColor =
+    themeButtonTextColor;
 
   useEffect(() => {
     const editingDraftId = new URLSearchParams(window.location.search).get("edit");
@@ -1291,28 +1298,28 @@ export function BuilderClient() {
             <span>Colore testi</span>
             <input
               type="color"
-              value={draft.theme.textColor ?? "#ffffff"}
+              value={themeTextColor}
               onChange={(event) => updateTheme({ textColor: event.target.value })}
             />
-            <strong>{draft.theme.textColor ?? "#ffffff"}</strong>
+            <strong>{themeTextColor}</strong>
           </label>
           <label className="color-control">
             <span>Colore tasti</span>
             <input
               type="color"
-              value={draft.theme.buttonColor ?? draft.theme.accentColor}
+              value={themeButtonColor}
               onChange={(event) => updateTheme({ buttonColor: event.target.value })}
             />
-            <strong>{draft.theme.buttonColor ?? draft.theme.accentColor}</strong>
+            <strong>{themeButtonColor}</strong>
           </label>
           <label className="color-control">
             <span>Testo dei tasti</span>
             <input
               type="color"
-              value={draft.theme.buttonTextColor ?? "#ffffff"}
+              value={themeButtonTextColor}
               onChange={(event) => updateTheme({ buttonTextColor: event.target.value })}
             />
-            <strong>{draft.theme.buttonTextColor ?? "#ffffff"}</strong>
+            <strong>{themeButtonTextColor}</strong>
           </label>
         </div>
 
@@ -1347,11 +1354,11 @@ export function BuilderClient() {
               : `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`,
             backgroundPosition: "top center",
             backgroundSize: "cover",
-            "--invitation-text-color": draft.theme.textColor ?? "#ffffff",
+            "--invitation-text-color": themeTextColor,
             "--invitation-button-color":
-              draft.theme.buttonColor ?? draft.theme.accentColor,
+              themeButtonColor,
             "--invitation-button-text":
-              draft.theme.buttonTextColor ?? "#ffffff",
+              themeButtonTextColor,
             "--invitation-font-scale": draft.theme.fontScale ?? 1
           } as CSSProperties}
         >
