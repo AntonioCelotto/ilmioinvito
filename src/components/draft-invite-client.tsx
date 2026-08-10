@@ -141,15 +141,8 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
 
   useEffect(() => {
     const localDraft = findDraftBySlug(slug);
-
-    if (localDraft) {
-      setDraft(localDraft);
-      setLoaded(true);
-      return;
-    }
-
     findDraftBySlugFromSupabase(slug).then((remoteDraft) => {
-      setDraft(remoteDraft);
+      setDraft(remoteDraft ?? localDraft ?? null);
       setLoaded(true);
     });
   }, [slug]);
@@ -386,7 +379,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             ) : (
               <p className="muted">Nessun media caricato in questa bozza.</p>
             )}
-            <InviteGuestMedia invitationId={invitation.id} />
+            <InviteGuestMedia
+              enabled={invitation.status === "published"}
+              invitationId={invitation.id}
+            />
           </div>
         </section>
       ) : null}

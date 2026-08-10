@@ -13,6 +13,28 @@ export type GuestMediaItem = {
 };
 
 const bucket = "invitation-guest-media";
+const supportedMediaTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm"
+]);
+
+function friendlyUploadError(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes("row-level security") || normalized.includes("policy")) {
+    return "Questo invito non è ancora pubblicato. Il proprietario deve pubblicarlo prima di consentire i caricamenti.";
+  }
+
+  if (normalized.includes("mime") || normalized.includes("content type")) {
+    return "Formato non supportato. Usa JPG, PNG, WebP oppure un video MP4, MOV o WebM.";
+  }
+
+  return message;
+}
 
 function publicUrl(path: string) {
   const supabase = createClient();
@@ -31,7 +53,12 @@ export async function uploadGuestMedia(
 
   const isPhoto = file.type.startsWith("image/");
   const isVideo = file.type.startsWith("video/");
-  if (!isPhoto && !isVideo) return { ok: false, message: "Seleziona una foto o un video." };
+  if (!supportedMediaTypes.has(file.type)) {
+    return {
+      ok: false,
+      message: "Formato non supportato. Usa JPG, PNG, WebP oppure un video MP4, MOV o WebM."
+    };
+  }
   if (file.size > 50 * 1024 * 1024) return { ok: false, message: "Il file non può superare 50 MB." };
 
   const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (isPhoto ? "jpg" : "mp4");
@@ -40,7 +67,9 @@ export async function uploadGuestMedia(
     cacheControl: "3600",
     upsert: false
   });
-  if (uploadError) return { ok: false, message: uploadError.message };
+  if (uploadError) {
+    return { ok: false, message: friendlyUploadError(uploadError.message) };
+  }
 
   const { data: publishedItem, error } = await supabase.from("guest_media").insert({
     invitation_id: invitationId,
@@ -50,7 +79,7 @@ export async function uploadGuestMedia(
     storage_path: path,
     status: "approved"
   }).select("id, invitation_id, guest_name, dedication, media_type, storage_path, status, created_at").single();
-  if (error) return { ok: false, message: error.message };
+  if (error) return { ok: false, message: friendlyUploadError(error.message) };
   return {
     ok: true,
     message: "Pubblicato! Il tuo ricordo è ora visibile nella bacheca.",
