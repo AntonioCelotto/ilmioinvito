@@ -1085,13 +1085,56 @@
 }
 
 @media (max-width: 860px) {
+  .builder-wide {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .builder-wide > *,
+  .form-panel {
+    min-width: 0;
+    width: 100%;
+  }
+
   .phone-preview-column {
     position: static;
+    width: 100%;
   }
 
   .preview-phone {
-    height: 680px;
+    height: min(680px, 150vw);
+    min-height: 520px;
     margin: 0 auto;
     width: min(100%, 420px);
+  }
+}
+
+@media (max-width: 560px) {
+  .selected-template-panel,
+  .preview-link-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .selected-template-panel .button,
+  .preview-link-panel .button {
+    width: 100%;
+  }
+
+  .phone-preview-heading {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .preview-phone {
+    border-width: 7px;
+    border-radius: 28px;
+  }
+
+  .phone-screen {
+    padding-left: 16px;
+    padding-right: 16px;
   }
 }

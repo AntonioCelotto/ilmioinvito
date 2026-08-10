@@ -62,6 +62,18 @@ export function TemplateGallery() {
     [category]
   );
 
+  const groupedTemplates = useMemo(
+    () =>
+      templateCategories
+        .filter((item) => item.id !== "tutti")
+        .map((item) => ({
+          ...item,
+          templates: invitationTemplates.filter((template) => template.category === item.id)
+        }))
+        .filter((group) => group.templates.length > 0),
+    []
+  );
+
   function selectTemplate(template: InvitationTemplate) {
     window.localStorage.setItem(selectedTemplateStorageKey, template.id);
     window.location.href = "/builder";
@@ -82,11 +94,32 @@ export function TemplateGallery() {
         ))}
       </div>
 
-      <div className="template-grid">
-        {templates.map((template) => (
-          <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
-        ))}
-      </div>
+      {category === "tutti" ? (
+        <div className="template-category-list">
+          {groupedTemplates.map((group) => (
+            <section className="template-category-section" key={group.id}>
+              <div className="template-category-heading">
+                <div>
+                  <span>Categoria</span>
+                  <h2>{group.label}</h2>
+                </div>
+                <small>{group.templates.length} template</small>
+              </div>
+              <div className="template-grid">
+                {group.templates.map((template) => (
+                  <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="template-grid">
+          {templates.map((template) => (
+            <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
+          ))}
+        </div>
+      )}
     </>
   );
 }
