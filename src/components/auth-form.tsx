@@ -52,16 +52,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (isRegister) {
-      const loginResult = await loginWithEmailPassword(email, password);
-
-      if (loginResult.error) {
-        setMessage(
-          "Account creato. Se non riesci ad accedere subito, disattiva la conferma email in Supabase Auth."
-        );
-        return;
-      }
-
-      window.location.href = "/templates";
+      setMessage(
+        "Registrazione completata. Controlla la tua email e clicca sul link per attivare l'account."
+      );
       return;
     }
 

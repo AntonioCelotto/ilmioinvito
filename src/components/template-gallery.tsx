@@ -6,13 +6,8 @@ import {
   customTemplateStorageKey,
   invitationTemplates,
   selectedTemplateStorageKey,
-  templateHasStyle,
-  templateStyleFilters,
-  type InvitationTemplate,
-  type TemplateStyle
+  type InvitationTemplate
 } from "@/lib/template-catalog";
-
-type StyleFilter = TemplateStyle | "tutti";
 
 const eighteenTemplateIds = new Set([
   "compleanno-diciotto-celeste",
@@ -187,20 +182,13 @@ function CustomTemplateUpload() {
 }
 
 export function TemplateGallery() {
-  const [style, setStyle] = useState<StyleFilter>("tutti");
-
   const templates = useMemo(
-    () => {
-      const filtered = style === "tutti"
-        ? invitationTemplates
-        : invitationTemplates.filter((template) => templateHasStyle(template.id, style));
-
-      return filtered
+    () =>
+      invitationTemplates
         .map((template, index) => ({ template, index }))
         .sort((a, b) => galleryOrder(a.template) - galleryOrder(b.template) || a.index - b.index)
-        .map(({ template }) => template);
-    },
-    [style]
+        .map(({ template }) => template),
+    []
   );
 
   function selectTemplate(template: InvitationTemplate) {
@@ -210,17 +198,7 @@ export function TemplateGallery() {
 
   return (
     <>
-      <div className="template-filters" aria-label="Stili template">
-        {templateStyleFilters.map((item) => (
-          <button
-            className={style === item.id ? "active" : ""}
-            key={item.id}
-            type="button"
-            onClick={() => setStyle(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="template-gallery-actions">
         <a className="template-upload-jump" href="#carica-template">
           Carica il tuo template
           <span aria-hidden="true">↓</span>

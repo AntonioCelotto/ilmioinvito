@@ -205,7 +205,7 @@ export async function registerWithEmailPassword(
       data: {
         full_name: fullName
       },
-      emailRedirectTo: `${window.location.origin}/dashboard`
+      emailRedirectTo: `${window.location.origin}/account-attivo`
     }
   });
 }

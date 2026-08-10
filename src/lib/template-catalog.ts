@@ -61,7 +61,6 @@ export const templateStyleFilters: Array<{
 const templateStyleAssignments: Record<string, TemplateStyle[]> = {
   "matrimonio-rosa-perla": ["eleganti-lusso", "naturali-delicati"],
   "matrimonio-classico": ["eleganti-lusso", "minimal-moderni"],
-  "matrimonio-botanico": ["naturali-delicati", "illustrati-tematici"],
   "compleanno-diciotto-celeste": ["eleganti-lusso", "colorati-creativi"],
   "compleanno-diciotto-rame": ["eleganti-lusso"],
   "battesimo-promessa-fiori": ["naturali-delicati", "illustrati-tematici"],
@@ -70,7 +69,6 @@ const templateStyleAssignments: Record<string, TemplateStyle[]> = {
   "laurea-festa-colori": ["colorati-creativi", "illustrati-tematici"],
   "evento-privato-oro-assoluto": ["eleganti-lusso"],
   "evento-aziendale-notte-zaffiro": ["eleganti-lusso", "professionali-corporate"],
-  "matrimonio-limoni-amalfi": ["colorati-creativi", "illustrati-tematici"],
   "evento-armonia-astratta": ["minimal-moderni", "professionali-corporate"],
   "evento-geometria-noir": ["minimal-moderni", "professionali-corporate"],
   "compleanno-dolce-festa": ["colorati-creativi", "illustrati-tematici"],
@@ -132,22 +130,6 @@ export const invitationTemplates: InvitationTemplate[] = [
       accentColor: "#b89a62",
       fontStyle: "script",
       backgroundImage: "/templates/custom/promessa.webp"
-    }
-  },
-  {
-    id: "matrimonio-botanico",
-    category: "matrimonio",
-    name: "Giardino segreto",
-    description: "Verde naturale e dettagli floreali.",
-    occasionLabel: "Matrimonio",
-    previewTitle: "Elena & Marco",
-    previewSubtitle: "Fiorisce una nuova storia",
-    theme: {
-      template: "botanical",
-      primaryColor: "#0b3a30",
-      accentColor: "#d2b46c",
-      fontStyle: "script",
-      backgroundImage: "/templates/custom/giardino-segreto.webp"
     }
   },
   {
@@ -277,16 +259,6 @@ export const invitationTemplates: InvitationTemplate[] = [
       fontStyle: "modern",
       backgroundImage: "/templates/notte-zaffiro.webp"
     }
-  },
-  {
-    id: "matrimonio-limoni-amalfi",
-    category: "matrimonio",
-    name: "Limoni di Amalfi",
-    description: "Maioliche, limoni e fiori mediterranei.",
-    occasionLabel: "Matrimonio",
-    previewTitle: "Chiara & Luca",
-    previewSubtitle: "Un amore dal profumo mediterraneo",
-    theme: { template: "classicLight", primaryColor: "#fffdf7", accentColor: "#315f9e", fontStyle: "script", backgroundImage: "/templates/limoni-di-amalfi.webp" }
   },
   {
     id: "evento-armonia-astratta",
