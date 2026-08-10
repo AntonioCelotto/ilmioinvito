@@ -6,12 +6,25 @@ import {
   customTemplateStorageKey,
   invitationTemplates,
   selectedTemplateStorageKey,
-  templateCategories,
+  templateHasStyle,
+  templateStyleFilters,
   type InvitationTemplate,
-  type TemplateCategory
+  type TemplateStyle
 } from "@/lib/template-catalog";
 
-type CategoryFilter = TemplateCategory | "tutti";
+type StyleFilter = TemplateStyle | "tutti";
+
+const eighteenTemplateIds = new Set([
+  "compleanno-diciotto-celeste",
+  "compleanno-diciotto-rame",
+  "compleanno-diciotto-rosa",
+  "compleanno-casino-diciotto",
+  "compleanno-diciotto-ghiaccio"
+]);
+
+function galleryOrder(template: InvitationTemplate) {
+  return eighteenTemplateIds.has(template.id) ? 0 : 1;
+}
 
 function TemplateCard({
   template,
@@ -121,7 +134,11 @@ function CustomTemplateUpload() {
   }
 
   return (
-    <section className="custom-template-upload" aria-labelledby="custom-template-title">
+    <section
+      className="custom-template-upload"
+      id="carica-template"
+      aria-labelledby="custom-template-title"
+    >
       <div className="custom-template-copy">
         <p className="eyebrow">Il tuo stile</p>
         <h2 id="custom-template-title">Carica la tua grafica</h2>
@@ -170,26 +187,20 @@ function CustomTemplateUpload() {
 }
 
 export function TemplateGallery() {
-  const [category, setCategory] = useState<CategoryFilter>("tutti");
+  const [style, setStyle] = useState<StyleFilter>("tutti");
 
   const templates = useMemo(
-    () =>
-      category === "tutti"
+    () => {
+      const filtered = style === "tutti"
         ? invitationTemplates
-        : invitationTemplates.filter((template) => template.category === category),
-    [category]
-  );
+        : invitationTemplates.filter((template) => templateHasStyle(template.id, style));
 
-  const groupedTemplates = useMemo(
-    () =>
-      templateCategories
-        .filter((item) => item.id !== "tutti")
-        .map((item) => ({
-          ...item,
-          templates: invitationTemplates.filter((template) => template.category === item.id)
-        }))
-        .filter((group) => group.templates.length > 0),
-    []
+      return filtered
+        .map((template, index) => ({ template, index }))
+        .sort((a, b) => galleryOrder(a.template) - galleryOrder(b.template) || a.index - b.index)
+        .map(({ template }) => template);
+    },
+    [style]
   );
 
   function selectTemplate(template: InvitationTemplate) {
@@ -199,45 +210,28 @@ export function TemplateGallery() {
 
   return (
     <>
-      <div className="template-filters" aria-label="Categorie template">
-        {templateCategories.map((item) => (
+      <div className="template-filters" aria-label="Stili template">
+        {templateStyleFilters.map((item) => (
           <button
-            className={category === item.id ? "active" : ""}
+            className={style === item.id ? "active" : ""}
             key={item.id}
             type="button"
-            onClick={() => setCategory(item.id)}
+            onClick={() => setStyle(item.id)}
           >
             {item.label}
           </button>
         ))}
+        <a className="template-upload-jump" href="#carica-template">
+          Carica il tuo template
+          <span aria-hidden="true">↓</span>
+        </a>
       </div>
 
-      {category === "tutti" ? (
-        <div className="template-category-list">
-          {groupedTemplates.map((group) => (
-            <section className="template-category-section" key={group.id}>
-              <div className="template-category-heading">
-                <div>
-                  <span>Categoria</span>
-                  <h2>{group.label}</h2>
-                </div>
-                <small>{group.templates.length} template</small>
-              </div>
-              <div className="template-grid">
-                {group.templates.map((template) => (
-                  <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      ) : (
-        <div className="template-grid">
-          {templates.map((template) => (
-            <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
-          ))}
-        </div>
-      )}
+      <div className="template-grid">
+        {templates.map((template) => (
+          <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
+        ))}
+      </div>
 
       <CustomTemplateUpload />
     </>

@@ -37,6 +37,70 @@ export const templateCategories: Array<{
   { id: "evento-aziendale", label: "Evento aziendale" }
 ];
 
+export type TemplateStyle =
+  | "minimal-moderni"
+  | "eleganti-lusso"
+  | "naturali-delicati"
+  | "colorati-creativi"
+  | "illustrati-tematici"
+  | "professionali-corporate";
+
+export const templateStyleFilters: Array<{
+  id: TemplateStyle | "tutti";
+  label: string;
+}> = [
+  { id: "tutti", label: "Tutti" },
+  { id: "minimal-moderni", label: "Minimal & Moderni" },
+  { id: "eleganti-lusso", label: "Eleganti & Lusso" },
+  { id: "naturali-delicati", label: "Naturali & Delicati" },
+  { id: "colorati-creativi", label: "Colorati & Creativi" },
+  { id: "illustrati-tematici", label: "Illustrati & Tematici" },
+  { id: "professionali-corporate", label: "Professionali & Corporate" }
+];
+
+const templateStyleAssignments: Record<string, TemplateStyle[]> = {
+  "matrimonio-rosa-perla": ["eleganti-lusso", "naturali-delicati"],
+  "matrimonio-classico": ["eleganti-lusso", "minimal-moderni"],
+  "matrimonio-botanico": ["naturali-delicati", "illustrati-tematici"],
+  "compleanno-diciotto-celeste": ["eleganti-lusso", "colorati-creativi"],
+  "compleanno-diciotto-rame": ["eleganti-lusso"],
+  "battesimo-promessa-fiori": ["naturali-delicati", "illustrati-tematici"],
+  "battesimo-cascata-fiori": ["naturali-delicati", "illustrati-tematici"],
+  "comunione-seta-bianca": ["eleganti-lusso", "minimal-moderni"],
+  "laurea-festa-colori": ["colorati-creativi", "illustrati-tematici"],
+  "evento-privato-oro-assoluto": ["eleganti-lusso"],
+  "evento-aziendale-notte-zaffiro": ["eleganti-lusso", "professionali-corporate"],
+  "matrimonio-limoni-amalfi": ["colorati-creativi", "illustrati-tematici"],
+  "evento-armonia-astratta": ["minimal-moderni", "professionali-corporate"],
+  "evento-geometria-noir": ["minimal-moderni", "professionali-corporate"],
+  "compleanno-dolce-festa": ["colorati-creativi", "illustrati-tematici"],
+  "battesimo-orsetto-miele": ["naturali-delicati", "illustrati-tematici"],
+  "battesimo-piccolo-oceano": ["colorati-creativi", "illustrati-tematici"],
+  "compleanno-carosello-incantato": ["eleganti-lusso", "illustrati-tematici"],
+  "compleanno-piccoli-supereroi": ["colorati-creativi", "illustrati-tematici"],
+  "battesimo-ninna-nanna": ["naturali-delicati", "illustrati-tematici"],
+  "battesimo-safari-dolce": ["naturali-delicati", "illustrati-tematici"],
+  "compleanno-dinosauri-gentili": ["naturali-delicati", "illustrati-tematici"],
+  "battesimo-sogni-mongolfiera": ["naturali-delicati", "illustrati-tematici"],
+  "evento-linee-argento": ["minimal-moderni", "professionali-corporate"],
+  "evento-blu-elettrico": ["eleganti-lusso", "minimal-moderni"],
+  "compleanno-piccolo-aviatore": ["naturali-delicati", "illustrati-tematici"],
+  "compleanno-disco-crystal": ["eleganti-lusso", "colorati-creativi"],
+  "evento-anni-settanta": ["colorati-creativi", "illustrati-tematici"],
+  "evento-verde-contemporaneo": ["minimal-moderni", "professionali-corporate"],
+  "evento-minimal-charcoal": ["minimal-moderni", "professionali-corporate"],
+  "evento-corallo-notturno": ["eleganti-lusso", "colorati-creativi"],
+  "compleanno-diciotto-rosa": ["eleganti-lusso", "naturali-delicati"],
+  "compleanno-casino-diciotto": ["eleganti-lusso", "illustrati-tematici"],
+  "compleanno-diciotto-ghiaccio": ["eleganti-lusso", "colorati-creativi"],
+  "matrimonio-cielo-stellato": ["eleganti-lusso", "illustrati-tematici"],
+  "matrimonio-maiolica-fiore": ["colorati-creativi", "illustrati-tematici"]
+};
+
+export function templateHasStyle(templateId: string, style: TemplateStyle) {
+  return templateStyleAssignments[templateId]?.includes(style) ?? false;
+}
+
 export const invitationTemplates: InvitationTemplate[] = [
   {
     id: "matrimonio-rosa-perla",

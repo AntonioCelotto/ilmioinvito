@@ -174,19 +174,36 @@ textarea {
   -webkit-backdrop-filter: blur(18px);
 }
 
-.template-filters button {
+.template-filters button,
+.template-upload-jump {
+  align-items: center;
   background: transparent;
   border: 0;
   border-radius: 999px;
   color: var(--muted);
   cursor: pointer;
+  display: inline-flex;
+  gap: 7px;
   font-weight: 800;
   padding: 10px 15px;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .template-filters button.active {
   background: var(--accent);
   color: #fff;
+}
+
+.template-upload-jump {
+  background: var(--ink);
+  color: #fff;
+  margin-left: 3px;
+}
+
+.template-upload-jump span {
+  font-size: 16px;
+  line-height: 1;
 }
 
 .template-grid {
@@ -361,6 +378,7 @@ textarea {
   margin-top: 52px;
   overflow: hidden;
   padding: clamp(24px, 4vw, 48px);
+  scroll-margin-top: 100px;
 }
 
 .custom-template-copy {
@@ -1396,7 +1414,8 @@ h3 {
     display: none;
   }
 
-  .template-filters button {
+  .template-filters button,
+  .template-upload-jump {
     flex: 0 0 auto;
   }
 
