@@ -24,22 +24,16 @@ function TemplateCard({
     <article className={`template-card template-card-${template.theme.template}`}>
       <div
         className="template-card-preview"
+        aria-label={`Anteprima del template ${template.name}`}
         style={{
           backgroundColor: template.theme.primaryColor,
           backgroundImage: template.theme.backgroundImage
-            ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${template.theme.backgroundImage}")`
+            ? `url("${template.theme.backgroundImage}")`
             : `linear-gradient(155deg, ${template.theme.accentColor}, ${template.theme.primaryColor} 58%)`,
           backgroundPosition: "center",
           backgroundSize: "cover"
         }}
-      >
-        <span>{template.occasionLabel}</span>
-        <div>
-          <p>{template.previewSubtitle}</p>
-          <h2>{template.previewTitle}</h2>
-          <small>Invito digitale</small>
-        </div>
-      </div>
+      />
       <div className="template-card-body">
         <div>
           <h3>{template.name}</h3>
@@ -205,8 +199,6 @@ export function TemplateGallery() {
 
   return (
     <>
-      <CustomTemplateUpload />
-
       <div className="template-filters" aria-label="Categorie template">
         {templateCategories.map((item) => (
           <button
@@ -246,6 +238,8 @@ export function TemplateGallery() {
           ))}
         </div>
       )}
+
+      <CustomTemplateUpload />
     </>
   );
 }

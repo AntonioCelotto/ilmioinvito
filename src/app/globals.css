@@ -157,15 +157,26 @@ textarea {
 }
 
 .template-filters {
+  background: rgba(245, 245, 247, 0.86);
+  border: 1px solid rgba(210, 210, 215, 0.8);
+  border-radius: 999px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-wrap: wrap;
   gap: 9px;
   margin-bottom: 28px;
+  padding: 8px;
+  position: sticky;
+  top: 12px;
+  width: fit-content;
+  z-index: 20;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .template-filters button {
-  background: #fff;
-  border: 1px solid var(--line);
+  background: transparent;
+  border: 0;
   border-radius: 999px;
   color: var(--muted);
   cursor: pointer;
@@ -174,8 +185,7 @@ textarea {
 }
 
 .template-filters button.active {
-  background: var(--night);
-  border-color: var(--night);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -348,6 +358,7 @@ textarea {
   gap: clamp(24px, 5vw, 56px);
   grid-template-columns: minmax(0, 1fr) minmax(230px, 330px);
   margin-bottom: 36px;
+  margin-top: 52px;
   overflow: hidden;
   padding: clamp(24px, 4vw, 48px);
 }
@@ -475,9 +486,8 @@ textarea {
 
 .hero {
   background:
-    radial-gradient(circle at 78% 18%, rgba(64, 156, 255, 0.2), transparent 34%),
-    radial-gradient(circle at 12% 82%, rgba(175, 82, 222, 0.12), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f5f5f7 100%);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 38%, rgba(255, 255, 255, 0.18) 70%, transparent 100%),
+    url("/hero-inviti-digitali.webp") center / cover no-repeat;
   color: var(--ink);
   display: grid;
   min-height: 100svh;
@@ -487,7 +497,7 @@ textarea {
 }
 
 .hero::after {
-  background: radial-gradient(circle at 50% 45%, transparent 0 42%, rgba(255, 255, 255, 0.52) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(245, 245, 247, 0.18));
   content: "";
   inset: 0;
   opacity: 1;
@@ -503,7 +513,7 @@ textarea {
 }
 
 .hero-copy {
-  max-width: 680px;
+  max-width: 980px;
 }
 
 .eyebrow {
@@ -556,7 +566,14 @@ h3 {
 .hero h1 {
   font-size: clamp(58px, 8vw, 104px);
   line-height: 0.92;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+}
+
+@media (min-width: 861px) {
+  .hero h1 {
+    font-size: clamp(58px, 7vw, 104px);
+    white-space: nowrap;
+  }
 }
 
 .lead {
@@ -1366,6 +1383,23 @@ h3 {
 }
 
 @media (max-width: 560px) {
+  .template-filters {
+    border-radius: 18px;
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    width: 100%;
+  }
+
+  .template-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .template-filters button {
+    flex: 0 0 auto;
+  }
+
   .topbar {
     padding: 20px;
   }
@@ -1375,6 +1409,9 @@ h3 {
   }
 
   .hero {
+    background:
+      linear-gradient(90deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.78)),
+      url("/hero-inviti-digitali.webp") 68% center / cover no-repeat;
     min-height: 100svh;
     place-items: start center;
   }
