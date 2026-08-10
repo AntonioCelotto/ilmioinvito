@@ -19,10 +19,13 @@
 
 html {
   scroll-behavior: smooth;
+  width: 100%;
 }
 
 body {
+  max-width: 100%;
   margin: 0;
+  overflow-x: hidden;
   color: var(--ink);
   background: var(--paper);
   font-family:
@@ -168,6 +171,38 @@ textarea {
   display: grid;
   gap: 24px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.template-category-list {
+  display: grid;
+  gap: 52px;
+}
+
+.template-category-section {
+  display: grid;
+  gap: 18px;
+}
+
+.template-category-heading {
+  align-items: end;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 12px;
+}
+
+.template-category-heading span,
+.template-category-heading small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.template-category-heading h2 {
+  font-size: clamp(26px, 3vw, 38px);
+  margin: 3px 0 0;
 }
 
 .template-card {
@@ -1261,8 +1296,19 @@ h3 {
     grid-template-columns: 1fr;
   }
 
+  .app-shell {
+    display: block;
+    width: 100%;
+  }
+
   .sidebar {
     display: none;
+  }
+
+  .main {
+    min-width: 0;
+    padding: 22px 16px 40px;
+    width: 100%;
   }
 
   .metrics {
@@ -1272,6 +1318,22 @@ h3 {
   .toolbar {
     align-items: flex-start;
     flex-direction: column;
+    margin-bottom: 20px;
+    width: 100%;
+  }
+
+  .toolbar > div,
+  .toolbar .muted {
+    max-width: 100%;
+  }
+
+  .toolbar h2 {
+    font-size: clamp(36px, 12vw, 52px);
+    line-height: 0.98;
+  }
+
+  .toolbar > .button {
+    width: 100%;
   }
 }
 

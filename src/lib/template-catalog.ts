@@ -39,19 +39,19 @@ export const templateCategories: Array<{
 
 export const invitationTemplates: InvitationTemplate[] = [
   {
-    id: "matrimonio-dark-luxury",
+    id: "matrimonio-rosa-perla",
     category: "matrimonio",
-    name: "Notte di rame",
-    description: "Elegante, intenso e scenografico.",
+    name: "Rosa Perla",
+    description: "Trasparenze rosa e dettagli luminosi per un invito raffinato.",
     occasionLabel: "Matrimonio",
-    previewTitle: "Dora & Lorenzo",
-    previewSubtitle: "Il nostro giorno più bello",
+    previewTitle: "Sofia & Lorenzo",
+    previewSubtitle: "La nostra promessa d'amore",
     theme: {
-      template: "darkLuxury",
-      primaryColor: "#151313",
-      accentColor: "#b87333",
-      fontStyle: "serif",
-      backgroundImage: "/templates/custom/notte-di-rame.webp"
+      template: "classicLight",
+      primaryColor: "#f9e8e2",
+      accentColor: "#b97872",
+      fontStyle: "script",
+      backgroundImage: "/templates/rosa-perla.webp"
     }
   },
   {
@@ -60,7 +60,7 @@ export const invitationTemplates: InvitationTemplate[] = [
     name: "Promessa",
     description: "Chiaro, romantico e senza tempo.",
     occasionLabel: "Matrimonio",
-    previewTitle: "Giulia & Andrea",
+    previewTitle: "Giulia & Marco",
     previewSubtitle: "Insieme, per sempre",
     theme: {
       template: "classicLight",
@@ -87,74 +87,74 @@ export const invitationTemplates: InvitationTemplate[] = [
     }
   },
   {
-    id: "compleanno-pop",
+    id: "compleanno-diciotto-celeste",
     category: "compleanno",
-    name: "Happy Party",
-    description: "Vivace, moderno e pieno di energia.",
+    name: "Diciotto Celeste",
+    description: "Marmo azzurro e oro per celebrare i diciotto anni.",
     occasionLabel: "Compleanno",
-    previewTitle: "Dora compie 40",
-    previewSubtitle: "Festeggiamo insieme",
+    previewTitle: "I miei 18 anni",
+    previewSubtitle: "Festeggiamo insieme questo traguardo",
     theme: {
-      template: "minimal",
-      primaryColor: "#7a245f",
-      accentColor: "#ffbf4a",
-      fontStyle: "modern",
-      backgroundImage: "/templates/custom/happy-party.webp"
+      template: "classicLight",
+      primaryColor: "#eaf7fb",
+      accentColor: "#5996b7",
+      fontStyle: "serif",
+      backgroundImage: "/templates/diciotto-celeste.webp"
     }
   },
   {
-    id: "compleanno-elegante",
+    id: "compleanno-diciotto-rame",
     category: "compleanno",
-    name: "Golden Night",
-    description: "Una festa importante, in stile luxury.",
+    name: "Diciotto di Rame",
+    description: "Nero e rame per una festa elegante e scenografica.",
     occasionLabel: "Compleanno",
-    previewTitle: "Antonio 50",
+    previewTitle: "18 anni",
     previewSubtitle: "Una notte da ricordare",
     theme: {
       template: "darkLuxury",
       primaryColor: "#19172a",
-      accentColor: "#d9a441",
+      accentColor: "#c9896d",
       fontStyle: "serif",
-      backgroundImage: "/templates/custom/golden-night.webp"
+      backgroundImage: "/templates/diciotto-rame.webp"
     }
   },
   {
-    id: "battesimo-celeste",
+    id: "battesimo-promessa-fiori",
     category: "battesimo",
-    name: "Piccolo cielo",
-    description: "Delicato, luminoso e dolcissimo.",
+    name: "Promessa di Fiori",
+    description: "Una cornice floreale delicata e piena di colore.",
     occasionLabel: "Battesimo",
     previewTitle: "Il Battesimo di Lorenzo",
     previewSubtitle: "Un giorno pieno d'amore",
     theme: {
       template: "classicLight",
-      primaryColor: "#eaf4f8",
-      accentColor: "#74a9bd",
+      primaryColor: "#fffdf8",
+      accentColor: "#c77f8f",
       fontStyle: "script",
-      backgroundImage: "/templates/custom/piccolo-cielo.webp"
+      backgroundImage: "/templates/promessa-fiori.webp"
     }
   },
   {
-    id: "battesimo-botanico",
+    id: "battesimo-cascata-fiori",
     category: "battesimo",
-    name: "Dolce natura",
-    description: "Toni salvia e atmosfera naturale.",
+    name: "Cascata di Fiori",
+    description: "Fiori azzurri e rosa per un invito dolce e luminoso.",
     occasionLabel: "Battesimo",
     previewTitle: "Benvenuta Sofia",
     previewSubtitle: "Celebriamo questo giorno speciale",
     theme: {
-      template: "botanical",
-      primaryColor: "#62796b",
-      accentColor: "#e6d9bd",
-      fontStyle: "serif",
-      backgroundImage: "/templates/custom/dolce-natura.webp"
+      template: "classicLight",
+      primaryColor: "#f7fbff",
+      accentColor: "#7d9fc5",
+      fontStyle: "script",
+      backgroundImage: "/templates/cascata-fiori.webp"
     }
   },
   {
-    id: "comunione-luce",
+    id: "comunione-seta-bianca",
     category: "comunione",
-    name: "Luce",
-    description: "Essenziale, puro e raffinato.",
+    name: "Seta Bianca",
+    description: "Pura, luminosa e raffinata come una veste di seta.",
     occasionLabel: "Prima Comunione",
     previewTitle: "La Comunione di Emma",
     previewSubtitle: "Con gioia vi aspettiamo",
@@ -163,55 +163,55 @@ export const invitationTemplates: InvitationTemplate[] = [
       primaryColor: "#fffaf0",
       accentColor: "#c5a663",
       fontStyle: "serif",
-      backgroundImage: "/templates/custom/luce.webp"
+      backgroundImage: "/templates/seta-bianca.webp"
     }
   },
   {
-    id: "laurea-classica",
+    id: "laurea-festa-colori",
     category: "laurea",
-    name: "Traguardo",
-    description: "Rosso laurea, carattere e prestigio.",
+    name: "Festa di Colori",
+    description: "Acquerelli vivaci per celebrare un grande traguardo.",
     occasionLabel: "Festa di laurea",
-    previewTitle: "Finalmente Dottoressa",
+    previewTitle: "Finalmente Dottoressa!",
     previewSubtitle: "Un grande traguardo da festeggiare",
     theme: {
-      template: "darkLuxury",
-      primaryColor: "#2a1015",
-      accentColor: "#b42035",
-      fontStyle: "serif",
-      backgroundImage: "/templates/custom/traguardo.webp"
+      template: "classicLight",
+      primaryColor: "#fff8e9",
+      accentColor: "#d84c7a",
+      fontStyle: "modern",
+      backgroundImage: "/templates/festa-colori.webp"
     }
   },
   {
-    id: "evento-privato-minimal",
+    id: "evento-privato-oro-assoluto",
     category: "evento-privato",
-    name: "Private",
-    description: "Contemporaneo, pulito e versatile.",
+    name: "Oro Assoluto",
+    description: "Nero profondo e oro per una serata esclusiva.",
     occasionLabel: "Evento privato",
     previewTitle: "Save the date",
-    previewSubtitle: "Un incontro riservato",
+    previewSubtitle: "Una serata esclusiva",
     theme: {
-      template: "minimal",
-      primaryColor: "#1d2935",
-      accentColor: "#93b7be",
-      fontStyle: "modern",
-      backgroundImage: "/templates/custom/private.webp"
+      template: "darkLuxury",
+      primaryColor: "#111111",
+      accentColor: "#d8a83e",
+      fontStyle: "serif",
+      backgroundImage: "/templates/oro-assoluto.webp"
     }
   },
   {
-    id: "evento-aziendale",
+    id: "evento-aziendale-notte-zaffiro",
     category: "evento-aziendale",
-    name: "Executive",
-    description: "Professionale, autorevole e moderno.",
+    name: "Notte di Zaffiro",
+    description: "Blu profondo e cristalli per eventi di grande impatto.",
     occasionLabel: "Evento aziendale",
-    previewTitle: "Annual Meeting",
-    previewSubtitle: "Idee, persone, futuro",
+    previewTitle: "Gala Night",
+    previewSubtitle: "Un evento che lascia il segno",
     theme: {
       template: "minimal",
-      primaryColor: "#111827",
-      accentColor: "#3b82f6",
+      primaryColor: "#061737",
+      accentColor: "#7cb2ff",
       fontStyle: "modern",
-      backgroundImage: "/templates/custom/executive.webp"
+      backgroundImage: "/templates/notte-zaffiro.webp"
     }
   },
   {
@@ -413,6 +413,56 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewTitle: "Save the date",
     previewSubtitle: "Una serata da ricordare",
     theme: { template: "darkLuxury", primaryColor: "#111111", accentColor: "#e95e66", fontStyle: "serif", backgroundImage: "/templates/custom/corallo-notturno.webp" }
+  },
+  {
+    id: "compleanno-diciotto-rosa",
+    category: "compleanno",
+    name: "Diciotto Rosa",
+    description: "Marmo rosa e oro per un compleanno romantico e luminoso.",
+    occasionLabel: "Compleanno",
+    previewTitle: "I miei 18 anni",
+    previewSubtitle: "Una giornata tutta da vivere",
+    theme: { template: "classicLight", primaryColor: "#fff1f2", accentColor: "#c78088", fontStyle: "serif", backgroundImage: "/templates/diciotto-rosa.webp" }
+  },
+  {
+    id: "compleanno-casino-diciotto",
+    category: "compleanno",
+    name: "Casino 18",
+    description: "Tavolo verde, fiches e oro per una festa dal carattere deciso.",
+    occasionLabel: "Compleanno",
+    previewTitle: "18 anni",
+    previewSubtitle: "La fortuna è festeggiare insieme",
+    theme: { template: "darkLuxury", primaryColor: "#09271f", accentColor: "#d5a53d", fontStyle: "serif", backgroundImage: "/templates/casino-diciotto.webp" }
+  },
+  {
+    id: "compleanno-diciotto-ghiaccio",
+    category: "compleanno",
+    name: "Diciotto di Ghiaccio",
+    description: "Cristalli e luce artica per un diciottesimo spettacolare.",
+    occasionLabel: "Compleanno",
+    previewTitle: "18 anni",
+    previewSubtitle: "Brilliamo insieme",
+    theme: { template: "classicLight", primaryColor: "#ddecff", accentColor: "#4b82c4", fontStyle: "serif", backgroundImage: "/templates/diciotto-ghiaccio.webp" }
+  },
+  {
+    id: "matrimonio-cielo-stellato",
+    category: "matrimonio",
+    name: "Cielo Stellato",
+    description: "Blu notte, luna e costellazioni per un amore infinito.",
+    occasionLabel: "Matrimonio",
+    previewTitle: "Anna & Matteo",
+    previewSubtitle: "Scritto nelle stelle",
+    theme: { template: "darkLuxury", primaryColor: "#071a35", accentColor: "#d7b76c", fontStyle: "script", backgroundImage: "/templates/cielo-stellato.webp" }
+  },
+  {
+    id: "matrimonio-maiolica-fiore",
+    category: "matrimonio",
+    name: "Maiolica in Fiore",
+    description: "Ortensie, limoni e maioliche nei colori del Mediterraneo.",
+    occasionLabel: "Matrimonio",
+    previewTitle: "Beatrice & Andrea",
+    previewSubtitle: "Un amore mediterraneo",
+    theme: { template: "classicLight", primaryColor: "#fffdf6", accentColor: "#2c65a3", fontStyle: "script", backgroundImage: "/templates/maiolica-fiore.webp" }
   }
 ];
 
