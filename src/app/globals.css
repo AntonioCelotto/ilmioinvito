@@ -1107,6 +1107,58 @@ h3 {
   padding: 10px 16px;
 }
 
+.home-page {
+  --accent: #a66d70;
+  --accent-dark: #875457;
+  --line: #ead8d4;
+  --paper: #fff9f7;
+  background: #fff9f7;
+}
+
+.home-page .button {
+  background: #a66d70;
+}
+
+.home-page .button:hover {
+  background: #875457;
+}
+
+.home-page .button.secondary,
+.home-page .button.light {
+  background: rgba(255, 250, 248, 0.88);
+  border-color: #dfc4c0;
+  color: #875457;
+}
+
+.home-page .home-nav-cta {
+  background: #513638;
+}
+
+.home-page .home-hero {
+  background:
+    radial-gradient(circle at 78% 25%, rgba(224, 175, 170, 0.46), transparent 30%),
+    radial-gradient(circle at 18% 82%, rgba(246, 217, 211, 0.72), transparent 34%),
+    linear-gradient(135deg, #fffdfb 0%, #f9e8e4 54%, #f3d8d3 100%);
+}
+
+.home-page .home-intro,
+.home-page .home-pricing-section {
+  background: linear-gradient(180deg, #fff9f7, #f8e8e4);
+}
+
+.home-page .home-template-section,
+.home-page .home-footer {
+  background: #fffdfb;
+}
+
+.home-page .home-how-section {
+  background: linear-gradient(135deg, #513638, #7d5155);
+}
+
+.home-page .home-final-cta {
+  background: linear-gradient(135deg, #f3d8d3, #fffaf7 55%, #ead3cf);
+}
+
 .home-hero .hero-copy {
   max-width: 760px;
 }
@@ -1191,11 +1243,12 @@ h3 {
 
 .home-phone-cover h2 {
   font-family: Georgia, serif;
-  font-size: 42px;
+  font-size: 34px;
   font-style: italic;
   letter-spacing: -0.05em;
   line-height: 0.88;
   margin: 22px 0 14px;
+  white-space: nowrap;
 }
 
 .home-phone-cover p {
@@ -1262,6 +1315,78 @@ h3 {
 
 .home-phone-location strong { font-family: Georgia, serif; font-size: 15px; }
 .home-phone-location small { color: #756b6a; }
+.home-phone-location em {
+  background: #a66d70;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 9px;
+  font-style: normal;
+  font-weight: 700;
+  justify-self: center;
+  margin-top: 6px;
+  padding: 7px 13px;
+}
+
+.home-phone-social,
+.home-phone-rsvp {
+  background: #f7e9e7;
+  border-radius: 14px;
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.home-phone-social > span,
+.home-phone-rsvp > span {
+  color: #9c6568;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.home-phone-social strong,
+.home-phone-rsvp strong {
+  font-family: Georgia, serif;
+  font-size: 16px;
+}
+
+.home-phone-social p {
+  color: #756b6a;
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.home-phone-social > div {
+  border: 1px dashed #c89899;
+  border-radius: 10px;
+  color: #875457;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 9px;
+}
+
+.home-phone-rsvp > div {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.home-phone-rsvp b {
+  background: #a66d70;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 8px;
+  padding: 8px 4px;
+}
+
+.home-phone-rsvp b:last-child {
+  background: #fff;
+  border: 1px solid #d9b7b4;
+  color: #875457;
+}
 .home-phone-preview-content button {
   background: #a66d70;
   border: 0;
