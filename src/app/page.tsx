@@ -1,6 +1,6 @@
 const featuredTemplates = [
   { name: "Rosa Perla", category: "Matrimonio", image: "/templates/rosa-perla.webp" },
-  { name: "Diciotto di Rame", category: "Compleanno", image: "/templates/diciotto-rame.webp" },
+  { name: "Dolce Festa", category: "Compleanno", image: "/templates/dolce-festa.webp" },
   { name: "Promessa di Fiori", category: "Battesimo", image: "/templates/promessa-fiori.webp" },
   { name: "Seta Bianca", category: "Comunione", image: "/templates/seta-bianca.webp" },
   { name: "Festa di Colori", category: "Laurea", image: "/templates/festa-colori.webp" },
@@ -9,34 +9,10 @@ const featuredTemplates = [
 
 export default function HomePage() {
   return (
-    <main className="home-page">
+    <main>
       <header className="topbar home-topbar"><a className="brand" href="/">ilmioinvito.com</a><nav className="nav" aria-label="Navigazione principale"><a href="#come-funziona">Come funziona</a><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/login">Accedi</a><a className="home-nav-cta" href="/registrati">Crea il tuo invito</a></nav></header>
 
-      <section className="hero home-hero">
-        <div className="hero-inner home-hero-layout">
-          <div className="hero-copy">
-            <p className="eyebrow">Il tuo evento comincia dall’invito</p>
-            <h1>Un invito digitale che racconta la vostra storia.</h1>
-            <p className="lead">Scegli la grafica, personalizza ogni dettaglio e condividi un unico link con i tuoi invitati. Conferme, programma, location, foto e informazioni sempre a portata di mano.</p>
-            <div className="actions"><a className="button" href="/registrati">Crea il tuo invito</a><a className="button secondary" href="/templates">Scopri i template</a></div>
-            <div className="home-trust-row"><span>✓ Creazione gratuita</span><span>✓ Paghi solo alla pubblicazione</span><span>✓ Nessun rinnovo automatico</span></div>
-          </div>
-          <a className="home-phone-showcase" href="/templates" aria-label="Guarda il template matrimonio Rosa Perla">
-            <div className="home-phone-frame"><div className="home-phone-speaker" /><div className="home-phone-screen">
-              <section className="home-phone-cover"><span>Il nostro matrimonio</span><h2>Sofia &amp; Lorenzo</h2><p>Insieme, per sempre</p><div className="home-phone-date"><b>21</b><span>SETTEMBRE<br />2026</span></div></section>
-              <section className="home-phone-preview-content">
-                <p>Ci sposiamo!</p><h3>Condividete con noi questo giorno speciale</h3>
-                <div className="home-phone-countdown"><span><b>32</b>Giorni</span><span><b>08</b>Ore</span><span><b>24</b>Minuti</span></div>
-                <div className="home-phone-location"><span>Chiesa</span><strong>Chiesa di Santa Maria</strong><small>Ore 16:30 · Torino</small><em>Portami</em></div>
-                <div className="home-phone-location"><span>Ricevimento</span><strong>Villa delle Rose</strong><small>Ore 18:30 · Torino</small><em>Portami</em></div>
-                <div className="home-phone-social"><span>Social</span><strong>Condividi un ricordo</strong><p>Carica una foto o un video e lascia la tua dedica agli sposi.</p><div>＋ Aggiungi foto o video</div></div>
-                <div className="home-phone-rsvp"><span>Conferma partecipazione</span><strong>Ci sarai?</strong><div><b>Partecipo</b><b>Non partecipo</b></div></div>
-              </section>
-            </div></div>
-            <span className="home-phone-caption">Scorri l’invito completo nel telefono</span>
-          </a>
-        </div>
-      </section>
+      <section className="hero home-hero"><div className="hero-inner home-hero-layout"><div className="hero-copy"><p className="eyebrow">Il tuo evento comincia dall’invito</p><h1>Un invito digitale che racconta la vostra storia.</h1><p className="lead">Scegli la grafica, personalizza ogni dettaglio e condividi un unico link con i tuoi invitati. Conferme, programma, location, foto e informazioni sempre a portata di mano.</p><div className="actions"><a className="button" href="/registrati">Crea il tuo invito</a><a className="button secondary" href="/templates">Scopri i template</a></div><div className="home-trust-row"><span>✓ Creazione gratuita</span><span>✓ Paghi solo alla pubblicazione</span><span>✓ Nessun rinnovo automatico</span></div></div><a className="home-phone-showcase" href="/templates" aria-label="Guarda il template matrimonio Rosa Perla"><div className="home-phone-frame"><div className="home-phone-speaker" /><div className="home-phone-screen"><section className="home-phone-cover"><span>Il nostro matrimonio</span><h2>Sofia<br />& Lorenzo</h2><p>Insieme, per sempre</p><div className="home-phone-date"><b>21</b><span>SETTEMBRE<br />2026</span></div></section><section className="home-phone-preview-content"><p>Ci sposiamo!</p><h3>Condividete con noi questo giorno speciale</h3><div className="home-phone-countdown"><span><b>32</b>Giorni</span><span><b>08</b>Ore</span><span><b>24</b>Minuti</span></div><div className="home-phone-location"><span>La cerimonia</span><strong>Chiesa di Santa Maria</strong><small>Ore 16:30 · Torino</small></div><button type="button">Conferma la partecipazione</button></section></div></div><span className="home-phone-caption">Ecco come vedranno il tuo invito</span></a></div></section>
 
       <section className="section home-intro"><div className="section-inner home-centered-heading"><p className="eyebrow">Tutto in un solo invito</p><h2>Più elegante di un messaggio.<br />Più semplice di quanto immagini.</h2><p className="muted">ilmioinvito.com trasforma tutte le informazioni del tuo evento in un’esperienza digitale bella da vedere, facile da condividere e semplice da gestire.</p></div><div className="section-inner home-benefit-grid"><article><span>01</span><h3>Personalizzazione completa</h3><p>Scegli colori, caratteri, testi e ordine dei blocchi per creare un invito davvero tuo.</p></article><article><span>02</span><h3>Conferme organizzate</h3><p>Ricevi le partecipazioni e consulta dalla dashboard invitati, allergie e informazioni aggiuntive.</p></article><article><span>03</span><h3>Un link per tutto</h3><p>Programma, countdown, indicazioni stradali, lista desideri e ricordi degli invitati in un unico spazio.</p></article></div></section>
 
