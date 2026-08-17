@@ -1452,7 +1452,9 @@ export function BuilderClient() {
           className={`preview-phone theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
           style={{
             backgroundColor: draft.theme.primaryColor,
-            backgroundImage: draft.theme.backgroundImage
+            backgroundImage: draft.theme.backgroundVideo
+              ? "none"
+              : draft.theme.backgroundImage
               ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${draft.theme.backgroundImage}")`
               : `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`,
             backgroundPosition: "top center",
@@ -1465,29 +1467,32 @@ export function BuilderClient() {
             "--invitation-font-scale": draft.theme.fontScale ?? 1
           } as CSSProperties}
         >
-          {draft.theme.backgroundVideo ? (
-            <video
-              aria-hidden="true"
-              autoPlay
-              className="phone-background-video"
-              loop
-              muted
-              playsInline
-              poster={draft.theme.backgroundImage}
-              preload="auto"
-              src={draft.theme.backgroundVideo}
-            />
-          ) : null}
           <div className="phone-notch" aria-hidden="true" />
           <div className="phone-screen" ref={previewScreenRef}>
-            <header className="phone-hero-preview">
-              <p className="phone-kicker">Il nostro invito</p>
-              <h2>{draft.title || "Titolo invito"}</h2>
-              <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
-              <div className="phone-meta">
-                <span>{draft.eventDate || "Data"}</span>
-                <span>{draft.eventTime || "Ora"}</span>
-              </div>
+            <header className={`phone-hero-preview${draft.theme.backgroundVideo ? " phone-video-only-hero" : ""}`}>
+              {draft.theme.backgroundVideo ? (
+                <video
+                  aria-hidden="true"
+                  autoPlay
+                  className="phone-hero-video"
+                  loop
+                  muted
+                  playsInline
+                  poster={draft.theme.backgroundImage}
+                  preload="auto"
+                  src={draft.theme.backgroundVideo}
+                />
+              ) : (
+                <>
+                  <p className="phone-kicker">Il nostro invito</p>
+                  <h2>{draft.title || "Titolo invito"}</h2>
+                  <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
+                  <div className="phone-meta">
+                    <span>{draft.eventDate || "Data"}</span>
+                    <span>{draft.eventTime || "Ora"}</span>
+                  </div>
+                </>
+              )}
             </header>
 
             {draft.story ? (
