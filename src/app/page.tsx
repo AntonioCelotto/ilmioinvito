@@ -1,134 +1,30 @@
+const featuredTemplates = [
+  { name: "Rosa Perla", category: "Matrimonio", image: "/templates/rosa-perla.webp" },
+  { name: "Diciotto di Rame", category: "Compleanno", image: "/templates/diciotto-rame.webp" },
+  { name: "Promessa di Fiori", category: "Battesimo", image: "/templates/promessa-fiori.webp" },
+  { name: "Seta Bianca", category: "Comunione", image: "/templates/seta-bianca.webp" },
+  { name: "Festa di Colori", category: "Laurea", image: "/templates/festa-colori.webp" },
+  { name: "Notte Zaffiro", category: "Evento", image: "/templates/notte-zaffiro.webp" }
+];
+
 export default function HomePage() {
   return (
     <main>
-      <header className="topbar">
-        <a className="brand" href="/">
-          ilmioinvito.com
-        </a>
-        <nav className="nav" aria-label="Navigazione principale">
-          <a href="/registrati">Registrati</a>
-          <a href="/login">Accedi</a>
-          <a href="/abbonamenti">Prezzi</a>
-          <a href="/templates">Crea invito</a>
-          <a href="/dashboard">Dashboard demo</a>
-          <a href="/i/dora-lorenzo-demo">Invito demo</a>
-        </nav>
-      </header>
+      <header className="topbar home-topbar"><a className="brand" href="/">ilmioinvito.com</a><nav className="nav" aria-label="Navigazione principale"><a href="#come-funziona">Come funziona</a><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/login">Accedi</a><a className="home-nav-cta" href="/registrati">Crea il tuo invito</a></nav></header>
 
-      <section className="hero">
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <p className="eyebrow">Inviti digitali con RSVP e dashboard</p>
-            <h1>ilmioinvito.com</h1>
-            <p className="lead">
-              Una piattaforma per creare inviti eleganti, pagarli online e
-              controllare partecipanti, risposte e modifiche da un unico posto.
-            </p>
-            <div className="actions">
-              <a className="button" href="/registrati">
-                Registrati
-              </a>
-              <a className="button secondary" href="/login">
-                Accedi
-              </a>
-              <a className="button light" href="/abbonamenti">
-                Scopri prezzi e pacchetti
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section className="hero home-hero"><div className="hero-inner"><div className="hero-copy"><p className="eyebrow">Il tuo evento comincia dall’invito</p><h1>Un invito digitale che racconta la vostra storia.</h1><p className="lead">Scegli la grafica, personalizza ogni dettaglio e condividi un unico link con i tuoi invitati. Conferme, programma, location, foto e informazioni sempre a portata di mano.</p><div className="actions"><a className="button" href="/registrati">Crea il tuo invito</a><a className="button secondary" href="/templates">Scopri i template</a></div><div className="home-trust-row"><span>✓ Creazione gratuita</span><span>✓ Paghi solo alla pubblicazione</span><span>✓ Nessun rinnovo automatico</span></div></div></div></section>
 
-      <section className="section home-pricing-section">
-        <div className="section-inner">
-          <div className="home-pricing-heading">
-            <p className="eyebrow">Prezzi chiari, nessun abbonamento</p>
-            <h2>Prima scegli quanto ti serve. Paghi solo quando pubblichi.</h2>
-            <p className="muted">Puoi progettare gratuitamente il tuo invito e acquistare il pacchetto soltanto quando è pronto.</p>
-          </div>
-          <div className="home-pricing-grid">
-            <article><span>30 invitati</span><h3>Essenziale</h3><strong>€29</strong></article>
-            <article className="recommended"><span>100 invitati</span><h3>Completo</h3><strong>€59</strong><small>Più scelto</small></article>
-            <article><span>Invitati illimitati</span><h3>Premium</h3><strong>€99</strong></article>
-          </div>
-          <div className="home-pricing-footer">
-            <span>Altri 50 invitati: €5</span>
-            <a className="button" href="/abbonamenti">Vedi tutti i pacchetti</a>
-          </div>
-        </div>
-      </section>
+      <section className="section home-intro"><div className="section-inner home-centered-heading"><p className="eyebrow">Tutto in un solo invito</p><h2>Più elegante di un messaggio.<br />Più semplice di quanto immagini.</h2><p className="muted">ilmioinvito.com trasforma tutte le informazioni del tuo evento in un’esperienza digitale bella da vedere, facile da condividere e semplice da gestire.</p></div><div className="section-inner home-benefit-grid"><article><span>01</span><h3>Personalizzazione completa</h3><p>Scegli colori, caratteri, testi e ordine dei blocchi per creare un invito davvero tuo.</p></article><article><span>02</span><h3>Conferme organizzate</h3><p>Ricevi le partecipazioni e consulta dalla dashboard invitati, allergie e informazioni aggiuntive.</p></article><article><span>03</span><h3>Un link per tutto</h3><p>Programma, countdown, indicazioni stradali, lista desideri e ricordi degli invitati in un unico spazio.</p></article></div></section>
 
-      <section className="section demo-status">
-        <div className="section-inner split">
-          <div>
-            <p className="eyebrow">Demo aggiornata</p>
-            <h2>Salva una bozza e apri subito il suo link.</h2>
-            <p className="muted">
-              Il flusso ora parte dalla registrazione cliente. Dopo l'accesso
-              puoi creare la bozza, salvare i dati e aprire il link anteprima.
-            </p>
-          </div>
-          <div className="demo-steps">
-            <a className="button" href="/registrati">
-              Registrati
-            </a>
-            <a className="button light" href="/login">
-              Accedi
-            </a>
-            <span>Flusso: registrati, accedi, crea invito, salva bozza.</span>
-          </div>
-        </div>
-      </section>
+      <section className="section home-template-section"><div className="section-inner home-section-head"><div><p className="eyebrow">Una grafica per ogni occasione</p><h2>Scegli lo stile del tuo evento.</h2></div><div><p className="muted">Matrimoni, compleanni, battesimi, comunioni, lauree ed eventi privati o aziendali. Ogni template è personalizzabile nei colori e nei caratteri.</p><a href="/templates">Guarda tutti i template →</a></div></div><div className="section-inner home-template-grid">{featuredTemplates.map((template) => <a href="/templates" className="home-template-card" key={template.name}><img src={template.image} alt={`Template ${template.name} per ${template.category}`} /><div><span>{template.category}</span><strong>{template.name}</strong></div></a>)}</div></section>
 
-      <section className="section">
-        <div className="section-inner split">
-          <div>
-            <p className="eyebrow">Dal prototipo al prodotto</p>
-            <h2>Il modello Dora/Lorenzo diventa riutilizzabile.</h2>
-            <p className="muted">
-              La prima base riprende le funzioni principali dell'invito evento:
-              pagina mobile-first, countdown, racconto, location, RSVP e
-              contatto WhatsApp configurabile.
-            </p>
-          </div>
-          <ul className="feature-list">
-            <li>
-              <h3>Creazione guidata</h3>
-              <span className="muted">
-                Il cliente inserisce dati evento, testi, location e numero
-                WhatsApp.
-              </span>
-            </li>
-            <li>
-              <h3>Pagamento online</h3>
-              <span className="muted">
-                Stripe attivera l'invito dopo il checkout con carta.
-              </span>
-            </li>
-            <li>
-              <h3>Dashboard partecipanti</h3>
-              <span className="muted">
-                Risposte, invitati, presenze e modifiche essenziali in tempo
-                reale.
-              </span>
-            </li>
-          </ul>
-        </div>
-      </section>
+      <section className="section home-how-section" id="come-funziona"><div className="section-inner home-section-head"><div><p className="eyebrow">Come funziona</p><h2>Dal primo dettaglio alla condivisione.</h2></div><p className="muted">Puoi iniziare senza pagare. Costruisci e controlla l’anteprima; scegli il pacchetto soltanto quando sei pronto a pubblicare.</p></div><div className="section-inner home-steps-grid"><article><span>1</span><h3>Scegli il template</h3><p>Trova la grafica più adatta al tuo evento e personalizzala.</p></article><article><span>2</span><h3>Inserisci i contenuti</h3><p>Aggiungi data, luoghi, programma, testi, foto e tutte le informazioni utili.</p></article><article><span>3</span><h3>Scegli il pacchetto</h3><p>Seleziona il numero di invitati e completa il pagamento una tantum.</p></article><article><span>4</span><h3>Condividi l’invito</h3><p>Invia il link e segui conferme e richieste direttamente dalla dashboard.</p></article></div></section>
 
-      <section className="section dark">
-        <div className="section-inner split">
-          <div>
-            <p className="eyebrow">Stack previsto</p>
-            <h2>GitHub, Vercel, Supabase e Stripe.</h2>
-          </div>
-          <p className="muted">
-            Il progetto e strutturato per essere pubblicato su Vercel, versionato
-            su GitHub e collegato a Supabase per dati, utenti e RSVP. Stripe
-            gestira il pagamento e l'attivazione dell'invito.
-          </p>
-        </div>
-      </section>
+      <section className="section home-pricing-section"><div className="section-inner"><div className="home-pricing-heading"><p className="eyebrow">Prezzi semplici e trasparenti</p><h2>Scegli il pacchetto in base ai tuoi invitati.</h2><p className="muted">Nessun abbonamento e nessun rinnovo automatico. Crei gratuitamente e paghi una sola volta quando decidi di pubblicare.</p></div><div className="home-pricing-grid"><article><span>Fino a 30 invitati</span><h3>Essenziale</h3><strong>€29</strong><p>Perfetto per feste intime e piccoli eventi.</p></article><article className="recommended"><span>Fino a 100 invitati</span><h3>Completo</h3><strong>€59</strong><p>La scelta ideale per matrimoni ed eventi.</p><small>Più scelto</small></article><article><span>Invitati illimitati</span><h3>Premium</h3><strong>€99</strong><p>Per grandi eventi senza limiti.</p></article></div><div className="home-pricing-footer"><span>Ti servono più posti? Aggiungi 50 invitati a €5.</span><a className="button" href="/abbonamenti">Confronta i pacchetti</a></div></div></section>
+
+      <section className="section home-final-cta"><div className="section-inner"><p className="eyebrow">Il tuo invito, a modo tuo</p><h2>Inizia oggi a creare qualcosa di speciale.</h2><p>Progetta gratuitamente il tuo invito e guarda ogni modifica in tempo reale.</p><div className="actions"><a className="button" href="/registrati">Crea il tuo invito</a><a className="button light" href="/templates">Esplora i template</a></div></div></section>
+
+      <footer className="home-footer"><a className="brand" href="/">ilmioinvito.com</a><p>Inviti digitali personalizzati per i momenti che contano.</p><nav><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/login">Accedi</a><a href="/registrati">Registrati</a></nav></footer>
     </main>
   );
 }
