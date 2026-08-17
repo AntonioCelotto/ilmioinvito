@@ -8,6 +8,7 @@ export default function HomePage() {
         <nav className="nav" aria-label="Navigazione principale">
           <a href="/registrati">Registrati</a>
           <a href="/login">Accedi</a>
+          <a href="/abbonamenti">Pacchetti</a>
           <a href="/templates">Crea invito</a>
           <a href="/dashboard">Dashboard demo</a>
           <a href="/i/dora-lorenzo-demo">Invito demo</a>

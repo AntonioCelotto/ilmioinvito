@@ -11,6 +11,7 @@ export default function DashboardPage() {
           </a>
           <nav aria-label="Dashboard">
             <a href="/templates">Crea invito</a>
+            <a href="/abbonamenti">Pacchetti</a>
             <a className="active" href="/dashboard">
               Dashboard
             </a>

@@ -836,8 +836,28 @@ export function BuilderClient() {
       return;
     }
 
+    if (draft.status !== "published") {
+      setPublishing(true);
+      setSavedMessage("Salvataggio della bozza prima del pagamento...");
+      const payableDraft = {
+        ...draft,
+        slug: makeSlug(draft.title),
+        status: "draft" as const,
+        updatedAt: new Date().toISOString()
+      };
+      saveDraft(payableDraft);
+      const saved = await saveDraftToSupabase(payableDraft);
+      if (saved.status === "error") {
+        setSavedMessage(saved.message);
+        setPublishing(false);
+        return;
+      }
+      window.location.href = `/abbonamenti?invito=${encodeURIComponent(payableDraft.id)}&titolo=${encodeURIComponent(payableDraft.title)}`;
+      return;
+    }
+
     setPublishing(true);
-    setSavedMessage("Pubblicazione dell'invito...");
+    setSavedMessage("Aggiornamento dell'invito pubblico...");
 
     const publishedDraft = {
       ...draft,
@@ -1406,7 +1426,7 @@ export function BuilderClient() {
               ? "Pubblicazione..."
               : draft.status === "published"
                 ? "Aggiorna invito pubblico"
-                : "Pubblica invito"}
+                : "Pubblica e scegli pacchetto"}
           </button>
         </div>
         {savedMessage ? (
