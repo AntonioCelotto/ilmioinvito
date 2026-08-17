@@ -39,20 +39,17 @@ function TemplateCard({
         }}
       >
         {template.theme.backgroundVideo ? (
-          <>
-            <video
-              aria-hidden="true"
-              autoPlay
-              className="template-preview-video"
-              loop
-              muted
-              playsInline
-              poster={template.theme.backgroundImage}
-              preload="metadata"
-              src={template.theme.backgroundVideo}
-            />
-            <span className="template-video-badge">Video</span>
-          </>
+          <video
+            aria-hidden="true"
+            autoPlay
+            className="template-preview-video"
+            loop
+            muted
+            playsInline
+            poster={template.theme.backgroundImage}
+            preload="metadata"
+            src={template.theme.backgroundVideo}
+          />
         ) : null}
       </div>
       <div className="template-card-body">
