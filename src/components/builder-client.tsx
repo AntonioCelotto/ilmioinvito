@@ -831,11 +831,6 @@ export function BuilderClient() {
   }
 
   async function handlePublish() {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.eventDate)) {
-      setSavedMessage("Inserisci una data valida per attivare il countdown.");
-      return;
-    }
-
     if (draft.status !== "published") {
       setPublishing(true);
       setSavedMessage("Salvataggio della bozza prima del pagamento...");
@@ -850,6 +845,10 @@ export function BuilderClient() {
       if (saved.status === "error") {
         setSavedMessage(saved.message);
         setPublishing(false);
+        return;
+      }
+      if (saved.status === "local") {
+        window.location.href = `/login?ritorno=${encodeURIComponent(`/builder?edit=${payableDraft.id}`)}`;
         return;
       }
       window.location.href = `/abbonamenti?invito=${encodeURIComponent(payableDraft.id)}&titolo=${encodeURIComponent(payableDraft.title)}`;
@@ -1426,7 +1425,7 @@ export function BuilderClient() {
               ? "Pubblicazione..."
               : draft.status === "published"
                 ? "Aggiorna invito pubblico"
-                : "Pubblica e scegli pacchetto"}
+                : "Pubblica e paga"}
           </button>
         </div>
         {savedMessage ? (

@@ -8,7 +8,7 @@ export default function HomePage() {
         <nav className="nav" aria-label="Navigazione principale">
           <a href="/registrati">Registrati</a>
           <a href="/login">Accedi</a>
-          <a href="/abbonamenti">Pacchetti</a>
+          <a href="/abbonamenti">Prezzi</a>
           <a href="/templates">Crea invito</a>
           <a href="/dashboard">Dashboard demo</a>
           <a href="/i/dora-lorenzo-demo">Invito demo</a>
@@ -31,7 +31,29 @@ export default function HomePage() {
               <a className="button secondary" href="/login">
                 Accedi
               </a>
+              <a className="button light" href="/abbonamenti">
+                Scopri prezzi e pacchetti
+              </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section home-pricing-section">
+        <div className="section-inner">
+          <div className="home-pricing-heading">
+            <p className="eyebrow">Prezzi chiari, nessun abbonamento</p>
+            <h2>Prima scegli quanto ti serve. Paghi solo quando pubblichi.</h2>
+            <p className="muted">Puoi progettare gratuitamente il tuo invito e acquistare il pacchetto soltanto quando è pronto.</p>
+          </div>
+          <div className="home-pricing-grid">
+            <article><span>30 invitati</span><h3>Essenziale</h3><strong>€29</strong></article>
+            <article className="recommended"><span>100 invitati</span><h3>Completo</h3><strong>€59</strong><small>Più scelto</small></article>
+            <article><span>Invitati illimitati</span><h3>Premium</h3><strong>€99</strong></article>
+          </div>
+          <div className="home-pricing-footer">
+            <span>Altri 50 invitati: €5</span>
+            <a className="button" href="/abbonamenti">Vedi tutti i pacchetti</a>
           </div>
         </div>
       </section>
