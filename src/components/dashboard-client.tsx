@@ -83,6 +83,11 @@ export function DashboardClient() {
     window.location.href = `/builder?edit=${encodeURIComponent(draft.id)}`;
   }
 
+  function handlePublish(draft: InvitationDraft) {
+    setEditingDraft(draft);
+    window.location.href = `/abbonamenti?invito=${encodeURIComponent(draft.id)}&titolo=${encodeURIComponent(draft.title)}`;
+  }
+
   async function handleDelete(draft: InvitationDraft) {
     const confirmed = window.confirm(
       `Vuoi eliminare definitivamente “${draft.title}”? Questa azione non può essere annullata.`
@@ -183,6 +188,11 @@ export function DashboardClient() {
                   >
                     Modifica
                   </button>
+                  {draft.status !== "published" ? (
+                    <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>
+                      Pubblica e paga
+                    </button>
+                  ) : null}
                   <button
                     className="draft-delete-button"
                     disabled={deletingDraftId === draft.id}

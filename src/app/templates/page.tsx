@@ -8,7 +8,10 @@ export default function TemplatesPage() {
         <a className="brand" href="/">
           ilmioinvito
         </a>
-        <a href="/dashboard">I miei inviti</a>
+        <nav className="pricing-nav" aria-label="Navigazione template">
+          <a href="/abbonamenti">Pacchetti</a>
+          <a href="/dashboard">I miei inviti</a>
+        </nav>
       </header>
 
       <section className="template-intro">
