@@ -17,10 +17,6 @@ const eighteenTemplateIds = new Set([
   "compleanno-diciotto-ghiaccio"
 ]);
 
-function galleryOrder(template: InvitationTemplate) {
-  return eighteenTemplateIds.has(template.id) ? 0 : 1;
-}
-
 function TemplateCard({
   template,
   onSelect
@@ -185,8 +181,9 @@ export function TemplateGallery() {
   const templates = useMemo(
     () =>
       invitationTemplates
+        .filter((template) => !eighteenTemplateIds.has(template.id))
         .map((template, index) => ({ template, index }))
-        .sort((a, b) => galleryOrder(a.template) - galleryOrder(b.template) || a.index - b.index)
+        .sort((a, b) => a.index - b.index)
         .map(({ template }) => template),
     []
   );

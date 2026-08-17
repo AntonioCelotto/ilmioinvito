@@ -26,7 +26,7 @@
 
 .toggle-item {
   align-items: center;
-  background: #fbf8f3;
+  background: #fff9f7;
   border: 1px solid var(--line);
   border-radius: 6px;
   display: flex;
@@ -135,7 +135,7 @@
 }
 
 .draft-row .mini-section-list span {
-  background: #fbf8f3;
+  background: #fff9f7;
   border-color: var(--line);
 }
 
@@ -320,7 +320,7 @@
 
 .invite-dress-code-card,
 .gift-iban-card {
-  background: #fbf8f3;
+  background: #fff9f7;
   border: 1px solid var(--line);
   border-radius: 14px;
   display: grid;
@@ -344,7 +344,7 @@
 
 .gift-wish-card {
   align-items: center;
-  background: #fbf8f3;
+  background: #fff9f7;
   border: 1px solid var(--line);
   border-radius: 12px;
   display: flex;
@@ -358,7 +358,7 @@
 .gift-iban-card strong { overflow-wrap: anywhere; }
 
 .guest-media-area { display: grid; gap: 22px; width: min(100%, 860px); }
-.guest-media-form { background: #fbf8f3; border: 1px solid var(--line); border-radius: 14px; display: grid; gap: 14px; padding: 18px; text-align: left; }
+.guest-media-form { background: #fff9f7; border: 1px solid var(--line); border-radius: 14px; display: grid; gap: 14px; padding: 18px; text-align: left; }
 .guest-media-gallery,
 .moderation-grid { display: grid; gap: 14px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .guest-media-card,
@@ -425,7 +425,7 @@
 }
 
 .location-editor-card {
-  background: #fbf8f3;
+  background: #fff9f7;
   border: 1px solid var(--line);
   border-radius: 12px;
   display: grid;
@@ -499,7 +499,7 @@
 }
 
 .program-editor-item {
-  background: #fbf8f3;
+  background: #fff9f7;
   border: 1px solid var(--line);
   border-radius: 10px;
   display: grid;
@@ -635,7 +635,7 @@
 }
 
 .address-suggestions button:hover {
-  background: #fbf8f3;
+  background: #fff9f7;
 }
 
 .map-placeholder {

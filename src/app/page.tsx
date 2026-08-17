@@ -1,6 +1,6 @@
 const featuredTemplates = [
   { name: "Rosa Perla", category: "Matrimonio", image: "/templates/rosa-perla.webp" },
-  { name: "Diciotto di Rame", category: "Compleanno", image: "/templates/diciotto-rame.webp" },
+  { name: "Dolce Festa", category: "Compleanno", image: "/templates/dolce-festa.webp" },
   { name: "Promessa di Fiori", category: "Battesimo", image: "/templates/promessa-fiori.webp" },
   { name: "Seta Bianca", category: "Comunione", image: "/templates/seta-bianca.webp" },
   { name: "Festa di Colori", category: "Laurea", image: "/templates/festa-colori.webp" },
