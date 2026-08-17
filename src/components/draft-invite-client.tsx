@@ -224,22 +224,24 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             src={invitation.theme.backgroundVideo}
           />
         ) : null}
-        <div>
-          <p className="eyebrow">
-            {hasCustomDraft
-              ? invitation.status === "published"
-                ? "Invito ufficiale"
-                : "Anteprima bozza"
-              : "Invito digitale demo"}
-          </p>
-          <h1>{invitation.title}</h1>
-          <p className="lead">{invitation.subtitle}</p>
-          <div className="invite-meta">
-            <span>{invitation.eventDate}</span>
-            <span>{invitation.eventTime}</span>
-            {primaryLocation ? <span>{primaryLocation.name}</span> : null}
+        {!invitation.theme.backgroundVideo ? (
+          <div>
+            <p className="eyebrow">
+              {hasCustomDraft
+                ? invitation.status === "published"
+                  ? "Invito ufficiale"
+                  : "Anteprima bozza"
+                : "Invito digitale demo"}
+            </p>
+            <h1>{invitation.title}</h1>
+            <p className="lead">{invitation.subtitle}</p>
+            <div className="invite-meta">
+              <span>{invitation.eventDate}</span>
+              <span>{invitation.eventTime}</span>
+              {primaryLocation ? <span>{primaryLocation.name}</span> : null}
+            </div>
           </div>
-        </div>
+        ) : null}
       </section>
 
       <section className="section invite-section">
