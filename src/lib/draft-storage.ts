@@ -44,6 +44,7 @@ export type InvitationTheme = {
   accentColor: string;
   fontStyle: "serif" | "modern" | "script";
   backgroundImage?: string;
+  backgroundVideo?: string;
   textColor?: string;
   buttonColor?: string;
   buttonTextColor?: string;

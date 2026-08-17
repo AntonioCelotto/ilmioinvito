@@ -92,7 +92,14 @@ const templateStyleAssignments: Record<string, TemplateStyle[]> = {
   "compleanno-casino-diciotto": ["eleganti-lusso", "illustrati-tematici"],
   "compleanno-diciotto-ghiaccio": ["eleganti-lusso", "colorati-creativi"],
   "matrimonio-cielo-stellato": ["eleganti-lusso", "illustrati-tematici"],
-  "matrimonio-maiolica-fiore": ["colorati-creativi", "illustrati-tematici"]
+  "matrimonio-maiolica-fiore": ["colorati-creativi", "illustrati-tematici"],
+  "matrimonio-bosco-luna-video": ["eleganti-lusso", "naturali-delicati"],
+  "matrimonio-notte-desideri-video": ["eleganti-lusso", "illustrati-tematici"],
+  "evento-casino-royale-video": ["eleganti-lusso", "illustrati-tematici"],
+  "battesimo-fiore-fate-video": ["naturali-delicati", "illustrati-tematici"],
+  "matrimonio-luce-mare-video": ["eleganti-lusso", "naturali-delicati"],
+  "matrimonio-giardino-incantato": ["naturali-delicati", "eleganti-lusso"],
+  "evento-lanterna-mare": ["eleganti-lusso", "naturali-delicati"]
 };
 
 export function templateHasStyle(templateId: string, style: TemplateStyle) {
@@ -499,6 +506,34 @@ export const invitationTemplates: InvitationTemplate[] = [
     previewTitle: "Beatrice & Andrea",
     previewSubtitle: "Un amore mediterraneo",
     theme: { template: "classicLight", primaryColor: "#fffdf6", accentColor: "#2c65a3", fontStyle: "script", backgroundImage: "/templates/maiolica-fiore.webp" }
+  },
+  {
+    id: "matrimonio-bosco-luna-video", category: "matrimonio", name: "Bosco di Luna", description: "Un bosco notturno animato, illuminato dalla luna e da piccole luci.", occasionLabel: "Matrimonio", previewTitle: "Aurora & Matteo", previewSubtitle: "Il nostro amore, sotto la stessa luna",
+    theme: { template: "darkLuxury", primaryColor: "#07130f", accentColor: "#d7c38a", fontStyle: "script", backgroundImage: "/templates/video/bosco-luna.webp", backgroundVideo: "/templates/video/bosco-luna.mp4" }
+  },
+  {
+    id: "matrimonio-notte-desideri-video", category: "matrimonio", name: "Notte dei Desideri", description: "Stelle e riflessi sul lago per una promessa scritta nel cielo.", occasionLabel: "Matrimonio", previewTitle: "Elena & Marco", previewSubtitle: "Esprimi un desiderio insieme a noi",
+    theme: { template: "darkLuxury", primaryColor: "#071636", accentColor: "#e6c36a", fontStyle: "script", backgroundImage: "/templates/video/notte-desideri.webp", backgroundVideo: "/templates/video/notte-desideri.mp4" }
+  },
+  {
+    id: "evento-casino-royale-video", category: "evento-privato", name: "Casino Royale", description: "Fiches e tavolo verde in movimento per una serata esclusiva.", occasionLabel: "Evento privato", previewTitle: "Casino Night", previewSubtitle: "La fortuna è festeggiare insieme",
+    theme: { template: "darkLuxury", primaryColor: "#09271f", accentColor: "#d5a53d", fontStyle: "serif", backgroundImage: "/templates/video/casino-royale.webp", backgroundVideo: "/templates/video/casino-royale.mp4" }
+  },
+  {
+    id: "battesimo-fiore-fate-video", category: "battesimo", name: "Fiore delle Fate", description: "Una piccola luce danza nel bosco intorno a un fiore incantato.", occasionLabel: "Battesimo", previewTitle: "Il Battesimo di Emma", previewSubtitle: "Una luce nuova è arrivata",
+    theme: { template: "darkLuxury", primaryColor: "#10231d", accentColor: "#d9b86c", fontStyle: "script", backgroundImage: "/templates/video/fiore-fate.webp", backgroundVideo: "/templates/video/fiore-fate.mp4" }
+  },
+  {
+    id: "matrimonio-luce-mare-video", category: "matrimonio", name: "Luce sul Mare", description: "Una lampadina si accende al tramonto con il mare sullo sfondo.", occasionLabel: "Matrimonio", previewTitle: "Chiara & Andrea", previewSubtitle: "La nostra luce, il nostro viaggio",
+    theme: { template: "darkLuxury", primaryColor: "#123657", accentColor: "#f3c875", fontStyle: "script", backgroundImage: "/templates/video/luce-mare.webp", backgroundVideo: "/templates/video/luce-mare.mp4" }
+  },
+  {
+    id: "matrimonio-giardino-incantato", category: "matrimonio", name: "Giardino Incantato", description: "Felci, edera e lucine calde incorniciano un invito naturale.", occasionLabel: "Matrimonio", previewTitle: "Giulia & Lorenzo", previewSubtitle: "Nel nostro giardino segreto",
+    theme: { template: "classicLight", primaryColor: "#f5efe3", accentColor: "#365238", fontStyle: "script", backgroundImage: "/templates/giardino-incantato.webp" }
+  },
+  {
+    id: "evento-lanterna-mare", category: "evento-privato", name: "Lanterna sul Mare", description: "Luci sospese e una lanterna accesa nel blu della sera.", occasionLabel: "Evento privato", previewTitle: "Una sera speciale", previewSubtitle: "Accendiamo insieme la notte",
+    theme: { template: "darkLuxury", primaryColor: "#07386d", accentColor: "#f1c66f", fontStyle: "serif", backgroundImage: "/templates/lanterna-mare.webp" }
   }
 ];
 

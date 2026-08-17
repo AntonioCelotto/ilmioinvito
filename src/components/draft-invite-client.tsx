@@ -211,6 +211,19 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
           backgroundSize: "cover"
         }}
       >
+        {invitation.theme.backgroundVideo ? (
+          <video
+            aria-hidden="true"
+            autoPlay
+            className="invite-background-video"
+            loop
+            muted
+            playsInline
+            poster={invitation.theme.backgroundImage}
+            preload="auto"
+            src={invitation.theme.backgroundVideo}
+          />
+        ) : null}
         <div>
           <p className="eyebrow">
             {hasCustomDraft
