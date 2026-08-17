@@ -37,7 +37,24 @@ function TemplateCard({
           backgroundPosition: "center",
           backgroundSize: "cover"
         }}
-      />
+      >
+        {template.theme.backgroundVideo ? (
+          <>
+            <video
+              aria-hidden="true"
+              autoPlay
+              className="template-preview-video"
+              loop
+              muted
+              playsInline
+              poster={template.theme.backgroundImage}
+              preload="metadata"
+              src={template.theme.backgroundVideo}
+            />
+            <span className="template-video-badge">Video</span>
+          </>
+        ) : null}
+      </div>
       <div className="template-card-body">
         <div>
           <h3>{template.name}</h3>

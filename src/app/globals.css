@@ -698,6 +698,32 @@ textarea {
   inset: 14px;
   pointer-events: none;
   position: absolute;
+  z-index: 2;
+}
+
+.template-preview-video {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+.template-video-badge {
+  background: rgba(16, 16, 16, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  padding: 7px 10px;
+  position: absolute;
+  right: 24px;
+  text-transform: uppercase;
+  top: 24px;
+  z-index: 3;
 }
 
 .template-card-preview > span,
@@ -1987,6 +2013,31 @@ h3 {
   min-height: 100svh;
   place-items: end start;
   padding: 120px clamp(20px, 7vw, 84px) 72px;
+  overflow: hidden;
+  position: relative;
+}
+
+.invite-background-video {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+.invite-hero:has(.invite-background-video)::after {
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0.08), rgba(8, 8, 8, 0.62));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
+.invite-hero > div {
+  position: relative;
+  z-index: 2;
 }
 
 .invite-hero h1 {

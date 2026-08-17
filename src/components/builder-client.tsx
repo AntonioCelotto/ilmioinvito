@@ -514,7 +514,8 @@ export function BuilderClient() {
     if (editingDraft && editingDraft.id === editingDraftId) {
       const matchingTemplate = invitationTemplates.find(
         (template) =>
-          template.theme.backgroundImage === editingDraft.theme.backgroundImage
+          template.theme.backgroundImage === editingDraft.theme.backgroundImage &&
+          template.theme.backgroundVideo === editingDraft.theme.backgroundVideo
       );
 
       setSelectedTemplate(
@@ -1464,6 +1465,19 @@ export function BuilderClient() {
             "--invitation-font-scale": draft.theme.fontScale ?? 1
           } as CSSProperties}
         >
+          {draft.theme.backgroundVideo ? (
+            <video
+              aria-hidden="true"
+              autoPlay
+              className="phone-background-video"
+              loop
+              muted
+              playsInline
+              poster={draft.theme.backgroundImage}
+              preload="auto"
+              src={draft.theme.backgroundVideo}
+            />
+          ) : null}
           <div className="phone-notch" aria-hidden="true" />
           <div className="phone-screen" ref={previewScreenRef}>
             <header className="phone-hero-preview">

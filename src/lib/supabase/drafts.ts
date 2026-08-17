@@ -87,6 +87,7 @@ function rowToDraft(row: any): InvitationDraft {
     accentColor: themeRow?.accent_color ?? displayTheme.accentColor ?? "#b87333",
     fontStyle: (themeRow?.font_style ?? displayTheme.fontStyle ?? "serif") as InvitationTheme["fontStyle"],
     backgroundImage: displayTheme.backgroundImage,
+    backgroundVideo: displayTheme.backgroundVideo,
     textColor: displayTheme.textColor,
     buttonColor: displayTheme.buttonColor,
     buttonTextColor: displayTheme.buttonTextColor,

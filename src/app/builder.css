@@ -712,6 +712,24 @@
   text-align: center;
 }
 
+.phone-background-video {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+  z-index: 0;
+}
+
+.preview-phone:has(.phone-background-video)::after {
+  background: linear-gradient(180deg, rgba(8, 8, 8, 0.05), rgba(8, 8, 8, 0.42));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+}
+
 .phone-notch {
   background: #151515;
   border-radius: 0 0 14px 14px;
@@ -721,7 +739,7 @@
   top: 0;
   transform: translateX(-50%);
   width: 112px;
-  z-index: 2;
+  z-index: 3;
 }
 
 .phone-screen {
@@ -731,6 +749,8 @@
   padding: 58px 22px 28px;
   scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
   scrollbar-width: thin;
+  position: relative;
+  z-index: 2;
 }
 
 .phone-hero-preview {
