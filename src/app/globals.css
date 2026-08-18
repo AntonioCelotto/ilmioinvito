@@ -2019,6 +2019,17 @@ h3 {
   z-index: 2;
 }
 
+.invite-video-data {
+  backdrop-filter: blur(14px);
+  background: rgba(7, 18, 22, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 24px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.38);
+  color: #fff;
+  max-width: 760px;
+  padding: clamp(24px, 5vw, 42px);
+}
+
 .invite-hero h1 {
   max-width: 760px;
 }
