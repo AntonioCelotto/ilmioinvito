@@ -1584,25 +1584,13 @@ h3 {
 }
 
 .home-template-phone {
-  background: #111;
-  border: 4px solid #171717;
-  border-radius: 25px;
-  box-shadow: 0 14px 32px rgba(23, 16, 17, 0.2);
+  background: #242424;
+  border: 2px solid #242424;
+  border-radius: 22px;
+  box-shadow: 0 10px 24px rgba(23, 16, 17, 0.14);
   overflow: hidden;
-  padding: 4px;
+  padding: 2px;
   position: relative;
-}
-
-.home-template-notch {
-  background: #111;
-  border-radius: 0 0 10px 10px;
-  height: 15px;
-  left: 50%;
-  position: absolute;
-  top: 3px;
-  transform: translateX(-50%);
-  width: 45%;
-  z-index: 2;
 }
 
 .home-template-card img {
