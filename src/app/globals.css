@@ -1436,6 +1436,10 @@ h3 {
   width: 100%;
 }
 
+.home-phone-social-gallery img:first-child { object-position: left center; }
+.home-phone-social-gallery img:nth-child(2) { object-position: center; }
+.home-phone-social-gallery img:last-child { object-position: right center; }
+
 .home-phone-rsvp > div {
   display: grid;
   gap: 6px;
