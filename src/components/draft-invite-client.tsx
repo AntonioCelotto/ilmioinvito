@@ -224,8 +224,11 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             src={invitation.theme.backgroundVideo}
           />
         ) : null}
-        {!invitation.theme.backgroundVideo ? (
-          <div>
+        <div
+          className={
+            invitation.theme.backgroundVideo ? "invite-video-data" : undefined
+          }
+        >
             <p className="eyebrow">
               {hasCustomDraft
                 ? invitation.status === "published"
@@ -240,8 +243,7 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
               <span>{invitation.eventTime}</span>
               {primaryLocation ? <span>{primaryLocation.name}</span> : null}
             </div>
-          </div>
-        ) : null}
+        </div>
       </section>
 
       <section className="section invite-section">
