@@ -138,6 +138,7 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   const [draft, setDraft] = useState<InvitationDraft | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [ibanCopied, setIbanCopied] = useState(false);
+  const [videoFinished, setVideoFinished] = useState(false);
 
   useEffect(() => {
     const localDraft = findDraftBySlug(slug);
@@ -157,6 +158,10 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
   );
   const hasCustomDraft = Boolean(draft);
   const isDemoSlug = slug === demoInvitation.slug;
+
+  useEffect(() => {
+    setVideoFinished(false);
+  }, [invitation.theme.backgroundVideo]);
 
   if (loaded && !hasCustomDraft && !isDemoSlug) {
     return (
@@ -216,19 +221,20 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
             aria-hidden="true"
             autoPlay
             className="invite-background-video"
-            loop
             muted
+            onEnded={() => setVideoFinished(true)}
             playsInline
             poster={invitation.theme.backgroundImage}
             preload="auto"
             src={invitation.theme.backgroundVideo}
           />
         ) : null}
-        <div
-          className={
-            invitation.theme.backgroundVideo ? "invite-video-data" : undefined
-          }
-        >
+        {!invitation.theme.backgroundVideo || videoFinished ? (
+          <div
+            className={
+              invitation.theme.backgroundVideo ? "invite-video-data" : undefined
+            }
+          >
             <p className="eyebrow">
               {hasCustomDraft
                 ? invitation.status === "published"
@@ -243,7 +249,8 @@ export function DraftInviteClient({ slug }: DraftInviteClientProps) {
               <span>{invitation.eventTime}</span>
               {primaryLocation ? <span>{primaryLocation.name}</span> : null}
             </div>
-        </div>
+          </div>
+        ) : null}
       </section>
 
       <section className="section invite-section">
