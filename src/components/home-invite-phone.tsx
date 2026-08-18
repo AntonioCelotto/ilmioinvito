@@ -25,19 +25,19 @@ export function HomeInvitePhone() {
             <p>Ci sposiamo!</p><h3>Condividete con noi questo giorno speciale</h3>
             <div className="home-phone-countdown"><span><b>32</b>Giorni</span><span><b>08</b>Ore</span><span><b>24</b>Minuti</span></div>
             <div className="home-phone-location">
-              <img src="/templates/wedding-promessa-elegante-v1.webp" alt="Esempio foto della chiesa" />
+              <img src="/home-demo-chiesa.webp" alt="Esempio foto della chiesa" />
               <span>Chiesa</span><strong>Chiesa di Santa Maria</strong><small>Ore 16:30 · Torino</small><em>Portami</em>
             </div>
             <div className="home-phone-location">
-              <img src="/templates/lanterna-mare.webp" alt="Esempio foto della location" />
+              <img src="/home-demo-location.webp" alt="Esempio foto della location" />
               <span>Ricevimento</span><strong>Villa delle Rose</strong><small>Ore 18:30 · Torino</small><em>Portami</em>
             </div>
             <div className="home-phone-social">
               <span>Social</span><strong>I ricordi degli invitati</strong><p>Foto, video e dediche pubblicati durante l’evento.</p>
               <div className="home-phone-social-gallery">
-                <img src="/templates/giardino-incantato.webp" alt="Ricordo degli invitati" />
-                <img src="/templates/promessa-fiori.webp" alt="Foto condivisa dagli invitati" />
-                <img src="/templates/rosa-perla.webp" alt="Dedica fotografica degli invitati" />
+                <img src="/home-demo-social.webp" alt="Ricordo degli invitati" />
+                <img src="/home-demo-social.webp" alt="Foto condivisa dagli invitati" />
+                <img src="/home-demo-social.webp" alt="Dedica fotografica degli invitati" />
               </div>
               <div className="home-phone-social-add">＋ Aggiungi foto o video</div>
             </div>
