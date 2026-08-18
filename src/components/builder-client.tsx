@@ -463,6 +463,7 @@ export function BuilderClient() {
   const [savedMessage, setSavedMessage] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [uploadingLocationId, setUploadingLocationId] = useState("");
+  const [videoFinished, setVideoFinished] = useState(false);
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
   const [draft, setDraft] = useState<InvitationDraft>({
@@ -538,6 +539,10 @@ export function BuilderClient() {
     setSelectedTemplate(template);
     setDraft((current) => ({ ...current, theme: template.theme }));
   }, []);
+
+  useEffect(() => {
+    setVideoFinished(false);
+  }, [draft.theme.backgroundVideo]);
 
   function updateField<Key extends keyof InvitationDraft>(
     key: Key,
@@ -1476,22 +1481,24 @@ export function BuilderClient() {
                     aria-hidden="true"
                     autoPlay
                     className="phone-hero-video"
-                    loop
                     muted
+                    onEnded={() => setVideoFinished(true)}
                     playsInline
                     poster={draft.theme.backgroundImage}
                     preload="auto"
                     src={draft.theme.backgroundVideo}
                   />
-                  <div className="phone-video-data">
-                    <p className="phone-kicker">Il nostro invito</p>
-                    <h2>{draft.title || "Titolo invito"}</h2>
-                    <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
-                    <div className="phone-meta">
-                      <span>{draft.eventDate || "Data"}</span>
-                      <span>{draft.eventTime || "Ora"}</span>
+                  {videoFinished ? (
+                    <div className="phone-video-data">
+                      <p className="phone-kicker">Il nostro invito</p>
+                      <h2>{draft.title || "Titolo invito"}</h2>
+                      <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
+                      <div className="phone-meta">
+                        <span>{draft.eventDate || "Data"}</span>
+                        <span>{draft.eventTime || "Ora"}</span>
+                      </div>
                     </div>
-                  </div>
+                  ) : null}
                 </>
               ) : (
                 <>
