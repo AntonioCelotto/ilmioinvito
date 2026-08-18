@@ -1471,17 +1471,28 @@ export function BuilderClient() {
           <div className="phone-screen" ref={previewScreenRef}>
             <header className={`phone-hero-preview${draft.theme.backgroundVideo ? " phone-video-only-hero" : ""}`}>
               {draft.theme.backgroundVideo ? (
-                <video
-                  aria-hidden="true"
-                  autoPlay
-                  className="phone-hero-video"
-                  loop
-                  muted
-                  playsInline
-                  poster={draft.theme.backgroundImage}
-                  preload="auto"
-                  src={draft.theme.backgroundVideo}
-                />
+                <>
+                  <video
+                    aria-hidden="true"
+                    autoPlay
+                    className="phone-hero-video"
+                    loop
+                    muted
+                    playsInline
+                    poster={draft.theme.backgroundImage}
+                    preload="auto"
+                    src={draft.theme.backgroundVideo}
+                  />
+                  <div className="phone-video-data">
+                    <p className="phone-kicker">Il nostro invito</p>
+                    <h2>{draft.title || "Titolo invito"}</h2>
+                    <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
+                    <div className="phone-meta">
+                      <span>{draft.eventDate || "Data"}</span>
+                      <span>{draft.eventTime || "Ora"}</span>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <>
                   <p className="phone-kicker">Il nostro invito</p>
