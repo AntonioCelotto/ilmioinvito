@@ -761,6 +761,29 @@
   width: 100%;
 }
 
+.phone-video-data {
+  backdrop-filter: blur(12px);
+  background: rgba(7, 18, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  display: grid;
+  gap: 10px;
+  left: 22px;
+  padding: 24px 18px;
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.phone-video-data h2,
+.phone-video-data p {
+  color: inherit;
+}
+
 .phone-hero-preview h2 {
   color: inherit;
   font-size: clamp(30px, 5vw, 44px);
