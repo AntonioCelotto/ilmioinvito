@@ -1246,6 +1246,37 @@ h3 {
   text-align: center;
 }
 
+.home-phone-video-cover {
+  background: #0b2844;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+
+.home-phone-video-cover > video {
+  height: 100%;
+  inset: 0;
+  object-fit: cover;
+  position: absolute;
+  width: 100%;
+}
+
+.home-phone-video-copy {
+  animation: home-phone-copy-reveal 0.65s ease both;
+  color: #fff;
+  display: grid;
+  justify-items: center;
+  padding: 24px;
+  position: relative;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, 0.9);
+  z-index: 1;
+}
+
+@keyframes home-phone-copy-reveal {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .home-phone-cover > span,
 .home-phone-location > span {
   color: #9c6568;
@@ -1327,6 +1358,16 @@ h3 {
   padding: 14px;
 }
 
+.home-phone-location + .home-phone-location { margin-top: 14px; }
+
+.home-phone-location > img {
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  object-fit: cover;
+  width: 100%;
+}
+
 .home-phone-location strong { font-family: Georgia, serif; font-size: 15px; }
 .home-phone-location small { color: #756b6a; }
 .home-phone-location em {
@@ -1373,13 +1414,26 @@ h3 {
   margin: 0;
 }
 
-.home-phone-social > div {
+.home-phone-social-add {
   border: 1px dashed #c89899;
   border-radius: 10px;
   color: #875457;
   font-size: 9px;
   font-weight: 700;
   padding: 9px;
+}
+
+.home-phone-social .home-phone-social-gallery {
+  display: grid;
+  gap: 5px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.home-phone-social-gallery img {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  object-fit: cover;
+  width: 100%;
 }
 
 .home-phone-rsvp > div {
@@ -1514,7 +1568,7 @@ h3 {
 }
 
 .home-template-card {
-  background: #fff9f7;
+  background: #fff;
   border: 1px solid var(--line);
   border-radius: 20px;
   overflow: hidden;
@@ -1527,10 +1581,10 @@ h3 {
 }
 
 .home-template-card img {
-  aspect-ratio: 2 / 3;
-  background: #f8e8e4;
+  aspect-ratio: 9 / 16;
+  background: #fff;
   display: block;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
   width: 100%;
 }
