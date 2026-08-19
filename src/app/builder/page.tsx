@@ -1,4 +1,5 @@
 import { BuilderClient } from "@/components/builder-client";
+import { StoryEditor } from "@/components/story-editor";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -35,7 +36,10 @@ export default function BuilderPage() {
           </div>
 
           <AuthGate>
-            <BuilderClient />
+            <>
+              <BuilderClient />
+              <StoryEditor />
+            </>
           </AuthGate>
         </section>
       </div>
