@@ -10,6 +10,8 @@ type StoryMedia = {
   caption: string | null;
 };
 
+type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
+
 export function InviteStoryEnhancer({ slug }: { slug: string }) {
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const [title, setTitle] = useState("La nostra storia");
@@ -33,12 +35,11 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
   }, [title]);
 
   useEffect(() => {
-    const client = supabase;
-    if (!client) return;
+    if (!supabase) return;
 
     let active = true;
 
-    async function load() {
+    async function load(client: SupabaseClient) {
       const { data: invitation } = await client
         .from("invitations")
         .select("id")
@@ -66,7 +67,7 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
       setMedia((rows ?? []) as StoryMedia[]);
     }
 
-    void load();
+    void load(supabase);
     return () => {
       active = false;
     };
