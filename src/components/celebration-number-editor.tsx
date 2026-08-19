@@ -18,32 +18,45 @@ function resolveCurrentDraft(): InvitationDraft | null {
   return title ? drafts.find((draft) => draft.title.trim() === title) ?? null : null;
 }
 
-function previewOverlay(number: string) {
+function ensurePreviewBadge() {
   const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
-  if (!hero) return;
+  if (!hero) return null;
+
   let badge = hero.querySelector<HTMLElement>("[data-celebration-number-preview]");
-  if (!number) {
-    badge?.remove();
-    return;
-  }
   if (!badge) {
     badge = document.createElement("div");
     badge.dataset.celebrationNumberPreview = "true";
     badge.style.position = "absolute";
-    badge.style.inset = "18% 0 auto";
-    badge.style.zIndex = "5";
+    badge.style.left = "50%";
+    badge.style.top = "16%";
+    badge.style.transform = "translateX(-50%)";
+    badge.style.zIndex = "6";
+    badge.style.width = "88%";
     badge.style.textAlign = "center";
     badge.style.pointerEvents = "none";
-    badge.style.fontFamily = "Georgia, serif";
+    badge.style.fontFamily = "Georgia, 'Times New Roman', serif";
     badge.style.fontWeight = "700";
-    badge.style.fontSize = "clamp(72px, 24vw, 132px)";
-    badge.style.lineHeight = ".85";
-    badge.style.letterSpacing = "-.06em";
+    badge.style.fontSize = "clamp(64px, 20vw, 118px)";
+    badge.style.lineHeight = ".82";
+    badge.style.letterSpacing = "-.05em";
     badge.style.color = "#d6ad60";
-    badge.style.textShadow = "0 2px 0 #fff2b8, 0 5px 12px rgba(0,0,0,.5)";
+    badge.style.webkitTextStroke = "1px rgba(255,242,184,.45)";
+    badge.style.textShadow = "0 2px 0 rgba(255,242,184,.75), 0 6px 16px rgba(0,0,0,.48)";
     hero.style.position = "relative";
     hero.appendChild(badge);
   }
+  return badge;
+}
+
+function previewOverlay(number: string) {
+  const badge = ensurePreviewBadge();
+  if (!badge) return;
+  if (!number) {
+    badge.style.display = "none";
+    badge.textContent = "";
+    return;
+  }
+  badge.style.display = "block";
   badge.textContent = number;
 }
 
@@ -55,7 +68,11 @@ export function CelebrationNumberEditor() {
   const supabase = useMemo(() => createClient(), []);
 
   async function load(currentDraft: InvitationDraft | null, client: SupabaseClient) {
-    if (!currentDraft) return;
+    if (!currentDraft) {
+      setNumber("");
+      previewOverlay("");
+      return;
+    }
     const { data } = await client
       .from("invitation_celebration_number")
       .select("celebration_number")
@@ -70,7 +87,12 @@ export function CelebrationNumberEditor() {
     let lastId = "";
     const sync = () => {
       const eventDate = document.querySelector<HTMLInputElement>("#eventDate");
-      if (eventDate?.parentElement) setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
+      if (eventDate?.parentElement) {
+        setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
+      }
+
+      if (number) previewOverlay(number);
+
       const current = resolveCurrentDraft();
       setDraft(current);
       const id = current?.id ?? "";
@@ -79,30 +101,45 @@ export function CelebrationNumberEditor() {
         if (supabase) void load(current, supabase);
       }
     };
+
     sync();
-    const timer = window.setInterval(sync, 800);
-    return () => window.clearInterval(timer);
-  }, [supabase]);
+    const timer = window.setInterval(sync, 500);
+    window.addEventListener("focus", sync);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", sync);
+    };
+  }, [supabase, number]);
 
   async function save(value: string) {
     const clean = value.replace(/[^0-9]/g, "").slice(0, 3);
     setNumber(clean);
     previewOverlay(clean);
+
     const client = supabase;
     if (!draft || !client) {
       setMessage("Salva prima la bozza dell'invito.");
       return;
     }
-    const { data: invitation } = await client.from("invitations").select("id").eq("id", draft.id).maybeSingle();
+
+    const { data: invitation } = await client
+      .from("invitations")
+      .select("id")
+      .eq("id", draft.id)
+      .maybeSingle();
+
     if (!invitation) {
       setMessage("Salva prima la bozza dell'invito.");
       return;
     }
+
     const { error } = await client.from("invitation_celebration_number").upsert({
       invitation_id: draft.id,
       celebration_number: clean,
       updated_at: new Date().toISOString()
     });
+
     setMessage(error ? error.message : clean ? `Numero ${clean} salvato.` : "Numero rimosso.");
   }
 
@@ -120,11 +157,12 @@ export function CelebrationNumberEditor() {
         onChange={(event) => {
           const value = event.target.value.replace(/[^0-9]/g, "").slice(0, 3);
           setNumber(value);
+          setMessage("");
           previewOverlay(value);
         }}
         onBlur={() => void save(number)}
       />
-      <small>Opzionale. Se compilato, il numero viene mostrato in grande sulla grafica dell'invito.</small>
+      <small>Opzionale. Il numero compare in grande sulla copertina dell'invito e si aggiorna subito nell'anteprima telefono.</small>
       {message ? <small style={{ display: "block", marginTop: 5 }}>{message}</small> : null}
     </div>,
     target
