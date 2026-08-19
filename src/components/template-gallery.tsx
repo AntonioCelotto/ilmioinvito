@@ -6,7 +6,9 @@ import {
   customTemplateStorageKey,
   invitationTemplates,
   selectedTemplateStorageKey,
-  type InvitationTemplate
+  templateHasStyle,
+  type InvitationTemplate,
+  type TemplateStyle
 } from "@/lib/template-catalog";
 
 const eighteenTemplateIds = new Set([
@@ -17,6 +19,43 @@ const eighteenTemplateIds = new Set([
   "compleanno-diciotto-ghiaccio"
 ]);
 
+const imageStyleGroups: Array<{
+  id: TemplateStyle;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "eleganti-lusso",
+    label: "Eleganti & Lusso",
+    description: "Atmosfere raffinate, dettagli preziosi e composizioni scenografiche."
+  },
+  {
+    id: "naturali-delicati",
+    label: "Naturali & Delicati",
+    description: "Fiori, natura, tonalità morbide e ambientazioni romantiche."
+  },
+  {
+    id: "minimal-moderni",
+    label: "Minimal & Moderni",
+    description: "Linee pulite, grafica contemporanea e stile essenziale."
+  },
+  {
+    id: "colorati-creativi",
+    label: "Colorati & Creativi",
+    description: "Palette vivaci, feste e proposte dal carattere più giocoso."
+  },
+  {
+    id: "illustrati-tematici",
+    label: "Illustrati & Tematici",
+    description: "Illustrazioni e soggetti pensati per occasioni e temi specifici."
+  },
+  {
+    id: "professionali-corporate",
+    label: "Professionali & Corporate",
+    description: "Soluzioni sobrie e d'impatto per eventi aziendali e professionali."
+  }
+];
+
 function TemplateCard({
   template,
   onSelect
@@ -24,6 +63,17 @@ function TemplateCard({
   template: InvitationTemplate;
   onSelect: (template: InvitationTemplate) => void;
 }) {
+  function tryPlayVideo(video: HTMLVideoElement) {
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        // Alcuni browser bloccano il primo autoplay: il poster resta visibile
+        // e un tap/click sull'anteprima prova nuovamente ad avviare il video.
+      });
+    }
+  }
+
   return (
     <article className={`template-card template-card-${template.theme.template}`}>
       <div
@@ -40,15 +90,25 @@ function TemplateCard({
       >
         {template.theme.backgroundVideo ? (
           <video
-            aria-hidden="true"
+            aria-label={`Anteprima video ${template.name}`}
             autoPlay
             className="template-preview-video"
             loop
             muted
             playsInline
             poster={template.theme.backgroundImage}
-            preload="metadata"
+            preload="auto"
             src={template.theme.backgroundVideo}
+            onCanPlay={(event) => tryPlayVideo(event.currentTarget)}
+            onLoadedData={(event) => tryPlayVideo(event.currentTarget)}
+            onClick={(event) => {
+              const video = event.currentTarget;
+              if (video.paused) {
+                tryPlayVideo(video);
+              } else {
+                video.pause();
+              }
+            }}
           />
         ) : null}
       </div>
@@ -62,6 +122,36 @@ function TemplateCard({
         </button>
       </div>
     </article>
+  );
+}
+
+function TemplateSection({
+  title,
+  description,
+  templates,
+  onSelect
+}: {
+  title: string;
+  description?: string;
+  templates: InvitationTemplate[];
+  onSelect: (template: InvitationTemplate) => void;
+}) {
+  if (templates.length === 0) {
+    return null;
+  }
+
+  return (
+    <section style={{ marginBottom: "3.5rem" }}>
+      <div style={{ marginBottom: "1.25rem" }}>
+        <h2 style={{ marginBottom: description ? ".35rem" : 0 }}>{title}</h2>
+        {description ? <p style={{ margin: 0, maxWidth: "760px" }}>{description}</p> : null}
+      </div>
+      <div className="template-grid">
+        {templates.map((template) => (
+          <TemplateCard key={template.id} template={template} onSelect={onSelect} />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -192,15 +282,37 @@ function CustomTemplateUpload() {
 }
 
 export function TemplateGallery() {
-  const templates = useMemo(
-    () =>
-      invitationTemplates
-        .filter((template) => !eighteenTemplateIds.has(template.id))
-        .map((template, index) => ({ template, index }))
-        .sort((a, b) => a.index - b.index)
-        .map(({ template }) => template),
-    []
-  );
+  const { videoTemplates, imageGroups, ungroupedImages } = useMemo(() => {
+    const availableTemplates = invitationTemplates.filter(
+      (template) => !eighteenTemplateIds.has(template.id)
+    );
+
+    const videos = availableTemplates.filter(
+      (template) => Boolean(template.theme.backgroundVideo)
+    );
+    const images = availableTemplates.filter(
+      (template) => !template.theme.backgroundVideo
+    );
+
+    const assigned = new Set<string>();
+    const groups = imageStyleGroups.map((group) => {
+      const groupedTemplates = images.filter((template) => {
+        if (assigned.has(template.id) || !templateHasStyle(template.id, group.id)) {
+          return false;
+        }
+        assigned.add(template.id);
+        return true;
+      });
+
+      return { ...group, templates: groupedTemplates };
+    });
+
+    return {
+      videoTemplates: videos,
+      imageGroups: groups,
+      ungroupedImages: images.filter((template) => !assigned.has(template.id))
+    };
+  }, []);
 
   function selectTemplate(template: InvitationTemplate) {
     window.localStorage.setItem(selectedTemplateStorageKey, template.id);
@@ -216,11 +328,37 @@ export function TemplateGallery() {
         </a>
       </div>
 
-      <div className="template-grid">
-        {templates.map((template) => (
-          <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
-        ))}
+      <TemplateSection
+        title="Inviti video"
+        description="Template animati: le anteprime partono automaticamente senza audio. Se il browser blocca l'avvio, basta toccare il video."
+        templates={videoTemplates}
+        onSelect={selectTemplate}
+      />
+
+      <div style={{ marginBottom: "1.75rem" }}>
+        <p className="eyebrow">Galleria fotografica</p>
+        <h2 style={{ marginBottom: ".35rem" }}>Inviti grafici</h2>
+        <p style={{ margin: 0, maxWidth: "760px" }}>
+          Le proposte sono raggruppate per stile e similitudine, così è più facile confrontare le grafiche della stessa famiglia.
+        </p>
       </div>
+
+      {imageGroups.map((group) => (
+        <TemplateSection
+          key={group.id}
+          title={group.label}
+          description={group.description}
+          templates={group.templates}
+          onSelect={selectTemplate}
+        />
+      ))}
+
+      <TemplateSection
+        title="Altri stili"
+        description="Altre proposte grafiche disponibili nel catalogo."
+        templates={ungroupedImages}
+        onSelect={selectTemplate}
+      />
 
       <CustomTemplateUpload />
     </>
