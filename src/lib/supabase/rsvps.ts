@@ -6,6 +6,8 @@ export type RsvpGuestInput = {
   additionalInfo: string;
 };
 
+export type RsvpStatus = "confirmed" | "declined";
+
 export type DashboardRsvp = {
   id: string;
   invitationId: string;
@@ -14,6 +16,7 @@ export type DashboardRsvp = {
   guestName: string;
   contactPhone: string;
   additionalInfo: string;
+  status: RsvpStatus;
   createdAt: string;
 };
 
@@ -36,7 +39,8 @@ function makeGroupId() {
 export async function savePublicRsvp(
   invitationId: string,
   phone: string,
-  guests: RsvpGuestInput[]
+  guests: RsvpGuestInput[],
+  rsvpStatus: RsvpStatus = "confirmed"
 ): Promise<SaveRsvpResult> {
   const supabase = createClient();
 
@@ -50,8 +54,8 @@ export async function savePublicRsvp(
       invitation_id: invitationId,
       response_group_id: responseGroupId,
       guest_name: `${guest.name} ${guest.surname}`.trim(),
-      status: "confirmed",
-      party_size: 1,
+      status: rsvpStatus,
+      party_size: rsvpStatus === "confirmed" ? 1 : 0,
       contact_phone: phone.trim(),
       additional_info: guest.additionalInfo.trim() || null
     }))
@@ -60,13 +64,17 @@ export async function savePublicRsvp(
   if (error) {
     return {
       status: "error",
-      message: "Non è stato possibile salvare la conferma nella dashboard."
+      message: rsvpStatus === "confirmed"
+        ? "Non è stato possibile salvare la conferma nella dashboard."
+        : "Non è stato possibile salvare la mancata partecipazione nella dashboard."
     };
   }
 
   return {
     status: "saved",
-    message: "Conferma salvata correttamente nella dashboard."
+    message: rsvpStatus === "confirmed"
+      ? "Conferma salvata correttamente nella dashboard."
+      : "Risposta salvata: non parteciperai all'evento."
   };
 }
 
@@ -89,7 +97,7 @@ export async function loadDashboardRsvps(): Promise<{
   const { data, error } = await supabase
     .from("rsvps")
     .select(
-      "id, invitation_id, response_group_id, guest_name, contact_phone, additional_info, created_at, invitations!inner(title)"
+      "id, invitation_id, response_group_id, guest_name, contact_phone, additional_info, status, created_at, invitations!inner(title)"
     )
     .order("created_at", { ascending: false });
 
@@ -108,6 +116,7 @@ export async function loadDashboardRsvps(): Promise<{
       guestName: row.guest_name,
       contactPhone: row.contact_phone ?? "",
       additionalInfo: row.additional_info ?? "",
+      status: row.status === "declined" ? "declined" : "confirmed",
       createdAt: row.created_at
     })),
     message: ""
