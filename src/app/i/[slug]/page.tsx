@@ -1,4 +1,5 @@
 import { DraftInviteClient } from "@/components/draft-invite-client";
+import { InviteStoryEnhancer } from "@/components/invite-story-enhancer";
 
 type InvitePageProps = {
   params: Promise<{
@@ -9,5 +10,10 @@ type InvitePageProps = {
 export default async function InvitePage({ params }: InvitePageProps) {
   const { slug } = await params;
 
-  return <DraftInviteClient slug={slug} />;
+  return (
+    <>
+      <DraftInviteClient slug={slug} />
+      <InviteStoryEnhancer slug={slug} />
+    </>
+  );
 }
