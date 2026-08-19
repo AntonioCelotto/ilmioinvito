@@ -10,6 +10,8 @@ type StoryMedia = {
   sort_order: number;
 };
 
+type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
+
 export function InviteStoryGallery({ invitationId }: { invitationId: string }) {
   const [title, setTitle] = useState("La nostra storia");
   const [media, setMedia] = useState<StoryMedia[]>([]);
@@ -20,14 +22,14 @@ export function InviteStoryGallery({ invitationId }: { invitationId: string }) {
 
     let active = true;
 
-    async function load() {
+    async function load(client: SupabaseClient) {
       const [{ data: content }, { data: rows }] = await Promise.all([
-        supabase
+        client
           .from("invitation_content")
           .select("story_title")
           .eq("invitation_id", invitationId)
           .maybeSingle(),
-        supabase
+        client
           .from("invitation_story_media")
           .select("id, image_url, caption, sort_order")
           .eq("invitation_id", invitationId)
@@ -40,7 +42,7 @@ export function InviteStoryGallery({ invitationId }: { invitationId: string }) {
       setMedia((rows ?? []) as StoryMedia[]);
     }
 
-    void load();
+    void load(supabase);
     return () => { active = false; };
   }, [invitationId, supabase]);
 
