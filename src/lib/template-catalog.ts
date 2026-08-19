@@ -534,6 +534,54 @@ export const invitationTemplates: InvitationTemplate[] = [
   {
     id: "evento-lanterna-mare", category: "evento-privato", name: "Lanterna sul Mare", description: "Luci sospese e una lanterna accesa nel blu della sera.", occasionLabel: "Evento privato", previewTitle: "Una sera speciale", previewSubtitle: "Accendiamo insieme la notte",
     theme: { template: "darkLuxury", primaryColor: "#07386d", accentColor: "#f1c66f", fontStyle: "serif", backgroundImage: "/templates/lanterna-mare.webp" }
+  },
+  {
+    id: "matrimonio-tramonto-toscana", category: "matrimonio", name: "Tramonto in Toscana", description: "Vigneti e colline toscane illuminate dal tramonto.", occasionLabel: "Matrimonio", previewTitle: "Giulia & Francesco", previewSubtitle: "Il nostro sì tra le colline",
+    theme: { template: "classicLight", primaryColor: "#fbf2e3", accentColor: "#a56f4b", fontStyle: "script", backgroundImage: "/templates/tramonto-toscana.webp" }
+  },
+  {
+    id: "matrimonio-borgo-mare", category: "matrimonio", name: "Borgo sul Mare", description: "Un borgo italiano affacciato sul mare in stile acquerello.", occasionLabel: "Matrimonio", previewTitle: "Claudia & Luca", previewSubtitle: "Un amore color Mediterraneo",
+    theme: { template: "classicLight", primaryColor: "#fff8e8", accentColor: "#45859a", fontStyle: "script", backgroundImage: "/templates/borgo-sul-mare.webp" }
+  },
+  {
+    id: "matrimonio-baia-dorata", category: "matrimonio", name: "Baia Dorata", description: "Una baia mediterranea avvolta dalla luce calda del tramonto.", occasionLabel: "Matrimonio", previewTitle: "Sara & Davide", previewSubtitle: "Il nostro giorno sul mare",
+    theme: { template: "classicLight", primaryColor: "#fff6e7", accentColor: "#bd8d58", fontStyle: "script", backgroundImage: "/templates/baia-dorata.webp" }
+  },
+  {
+    id: "matrimonio-giardino-smeraldo", category: "matrimonio", name: "Giardino di Smeraldo", description: "Foglie, fiori bianchi e piccoli riflessi dorati su verde profondo.", occasionLabel: "Matrimonio", previewTitle: "Elisa & Marco", previewSubtitle: "Per sempre, nel nostro giardino",
+    theme: { template: "darkLuxury", primaryColor: "#073a30", accentColor: "#d8bd78", fontStyle: "script", backgroundImage: "/templates/giardino-smeraldo.webp" }
+  },
+  {
+    id: "matrimonio-rose-avorio", category: "matrimonio", name: "Rose d'Avorio", description: "Rose cipria, gelsomino e dettagli dorati dall'eleganza senza tempo.", occasionLabel: "Matrimonio", previewTitle: "Alessia & Matteo", previewSubtitle: "La nostra promessa più bella",
+    theme: { template: "classicLight", primaryColor: "#fffaf0", accentColor: "#c59a72", fontStyle: "script", backgroundImage: "/templates/rose-avorio.webp" }
+  },
+  {
+    id: "evento-paradiso-tropicale", category: "evento-privato", name: "Paradiso Tropicale", description: "Orchidee, monstera e fiori esotici per una festa luminosa.", occasionLabel: "Evento privato", previewTitle: "Tropical Party", previewSubtitle: "Una festa tutta da vivere",
+    theme: { template: "classicLight", primaryColor: "#fff8e8", accentColor: "#3f754c", fontStyle: "modern", backgroundImage: "/templates/paradiso-tropicale.webp" }
+  },
+  {
+    id: "compleanno-bouganville", category: "compleanno", name: "Bouganville in Festa", description: "Bouganville rosa e corallo per un compleanno pieno di colore.", occasionLabel: "Compleanno", previewTitle: "Buon compleanno Sofia", previewSubtitle: "Festeggiamo insieme",
+    theme: { template: "classicLight", primaryColor: "#fff9eb", accentColor: "#d94976", fontStyle: "script", backgroundImage: "/templates/bouganville-in-festa.webp" }
+  },
+  {
+    id: "battesimo-sogno-lavanda", category: "battesimo", name: "Sogno di Lavanda", description: "Peonie e fiori lilla per un invito dolce e raffinato.", occasionLabel: "Battesimo", previewTitle: "Il Battesimo di Viola", previewSubtitle: "Un giorno pieno di dolcezza",
+    theme: { template: "classicLight", primaryColor: "#f8f4ff", accentColor: "#8973ad", fontStyle: "script", backgroundImage: "/templates/sogno-lavanda.webp" }
+  },
+  {
+    id: "evento-neon-notte-video", category: "evento-privato", name: "Neon Night", description: "Una cornice al neon si accende e si riflette nella notte.", occasionLabel: "Evento privato", previewTitle: "Neon Party", previewSubtitle: "Accendi la notte insieme a noi",
+    theme: { template: "darkLuxury", primaryColor: "#080f18", accentColor: "#e549dc", fontStyle: "modern", backgroundImage: "/templates/video/neon-notte.webp", backgroundVideo: "/templates/video/neon-notte.mp4" }
+  },
+  {
+    id: "evento-whisky-affumicato-video", category: "evento-privato", name: "Whisky Affumicato", description: "Un bicchiere si svela tra il fumo in una raffinata atmosfera da cocktail bar.", occasionLabel: "Evento privato", previewTitle: "Private Cocktail", previewSubtitle: "Una serata dal gusto speciale",
+    theme: { template: "darkLuxury", primaryColor: "#21170f", accentColor: "#d29a4b", fontStyle: "serif", backgroundImage: "/templates/video/whisky-affumicato.webp", backgroundVideo: "/templates/video/whisky-affumicato.mp4" }
+  },
+  {
+    id: "matrimonio-cena-ulivi-video", category: "matrimonio", name: "Cena tra gli Ulivi", description: "Una tavola illuminata dalle candele prende vita tra gli ulivi.", occasionLabel: "Matrimonio", previewTitle: "Federica & Andrea", previewSubtitle: "Una cena sotto le stelle",
+    theme: { template: "darkLuxury", primaryColor: "#18241c", accentColor: "#e0c98d", fontStyle: "script", backgroundImage: "/templates/video/cena-ulivi.webp", backgroundVideo: "/templates/video/cena-ulivi.mp4" }
+  },
+  {
+    id: "evento-serra-luce-video", category: "evento-privato", name: "Serra di Luce", description: "Lampadine sospese e piante tropicali si accendono in una serra suggestiva.", occasionLabel: "Evento privato", previewTitle: "Garden Night", previewSubtitle: "Una serata immersa nella luce",
+    theme: { template: "darkLuxury", primaryColor: "#14211d", accentColor: "#e6bd70", fontStyle: "serif", backgroundImage: "/templates/video/serra-luce.webp", backgroundVideo: "/templates/video/serra-luce.mp4" }
   }
 ];
 
