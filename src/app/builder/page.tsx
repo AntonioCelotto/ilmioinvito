@@ -7,7 +7,16 @@ export default function BuilderPage() {
   return (
     <main className="workspace">
       <div className="app-shell">
-        <aside className="sidebar">
+        <aside
+          className="sidebar"
+          style={{
+            position: "sticky",
+            top: 0,
+            alignSelf: "start",
+            height: "100vh",
+            overflowY: "auto"
+          }}
+        >
           <a className="brand" href="/">
             ilmioinvito
           </a>
