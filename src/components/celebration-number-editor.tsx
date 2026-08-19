@@ -86,7 +86,7 @@ export function CelebrationNumberEditor() {
   useEffect(() => {
     let lastId = "";
     const sync = () => {
-      const eventDate = document.querySelector<HTMLInputElement>("#eventDate");
+      const eventDate = document.querySelector<HTMLInputElement>("#date");
       if (eventDate?.parentElement) {
         setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
       }
