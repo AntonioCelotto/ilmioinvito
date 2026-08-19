@@ -6,9 +6,7 @@ import {
   customTemplateStorageKey,
   invitationTemplates,
   selectedTemplateStorageKey,
-  templateHasStyle,
-  type InvitationTemplate,
-  type TemplateStyle
+  type InvitationTemplate
 } from "@/lib/template-catalog";
 
 const eighteenTemplateIds = new Set([
@@ -19,18 +17,16 @@ const eighteenTemplateIds = new Set([
   "compleanno-diciotto-ghiaccio"
 ]);
 
-const imageStyleGroups: Array<{
-  id: TemplateStyle;
-  label: string;
-  description: string;
-}> = [
-  { id: "eleganti-lusso", label: "Eleganti & Lusso", description: "Atmosfere raffinate, dettagli preziosi e composizioni scenografiche." },
-  { id: "naturali-delicati", label: "Naturali & Delicati", description: "Fiori, natura, tonalità morbide e ambientazioni romantiche." },
-  { id: "minimal-moderni", label: "Minimal & Moderni", description: "Linee pulite, grafica contemporanea e stile essenziale." },
-  { id: "colorati-creativi", label: "Colorati & Creativi", description: "Palette vivaci, feste e proposte dal carattere più giocoso." },
-  { id: "illustrati-tematici", label: "Illustrati & Tematici", description: "Illustrazioni e soggetti pensati per occasioni e temi specifici." },
-  { id: "professionali-corporate", label: "Professionali & Corporate", description: "Soluzioni sobrie e d'impatto per eventi aziendali e professionali." }
-];
+function colorBrightness(hexColor: string) {
+  const hex = hexColor.replace("#", "").trim();
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return 0;
+
+  const red = parseInt(hex.slice(0, 2), 16);
+  const green = parseInt(hex.slice(2, 4), 16);
+  const blue = parseInt(hex.slice(4, 6), 16);
+
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
 
 function TemplateCard({ template, onSelect }: { template: InvitationTemplate; onSelect: (template: InvitationTemplate) => void; }) {
   function tryPlayVideo(video: HTMLVideoElement) {
@@ -160,20 +156,14 @@ function CustomTemplateUpload() {
 }
 
 export function TemplateGallery() {
-  const { videoTemplates, imageGroups, ungroupedImages } = useMemo(() => {
+  const { videoTemplates, imageTemplates } = useMemo(() => {
     const availableTemplates = invitationTemplates.filter((template) => !eighteenTemplateIds.has(template.id));
     const videos = availableTemplates.filter((template) => Boolean(template.theme.backgroundVideo));
-    const images = availableTemplates.filter((template) => !template.theme.backgroundVideo);
-    const assigned = new Set<string>();
-    const groups = imageStyleGroups.map((group) => {
-      const groupedTemplates = images.filter((template) => {
-        if (assigned.has(template.id) || !templateHasStyle(template.id, group.id)) return false;
-        assigned.add(template.id);
-        return true;
-      });
-      return { ...group, templates: groupedTemplates };
-    });
-    return { videoTemplates: videos, imageGroups: groups, ungroupedImages: images.filter((template) => !assigned.has(template.id)) };
+    const images = availableTemplates
+      .filter((template) => !template.theme.backgroundVideo)
+      .sort((a, b) => colorBrightness(b.theme.primaryColor) - colorBrightness(a.theme.primaryColor));
+
+    return { videoTemplates: videos, imageTemplates: images };
   }, []);
 
   function selectTemplate(template: InvitationTemplate) {
@@ -194,11 +184,14 @@ export function TemplateGallery() {
         onSelect={selectTemplate}
       />
 
-      {imageGroups.map((group) => (
-        <TemplateSection key={group.id} title={group.label} description={group.description} templates={group.templates} onSelect={selectTemplate} />
-      ))}
+      <section style={{ marginBottom: "3.5rem" }}>
+        <div className="template-grid">
+          {imageTemplates.map((template) => (
+            <TemplateCard key={template.id} template={template} onSelect={selectTemplate} />
+          ))}
+        </div>
+      </section>
 
-      <TemplateSection title="Altri stili" description="Altre proposte grafiche disponibili nel catalogo." templates={ungroupedImages} onSelect={selectTemplate} />
       <CustomTemplateUpload />
     </>
   );
