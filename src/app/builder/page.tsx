@@ -1,5 +1,6 @@
 import { BuilderClient } from "@/components/builder-client";
 import { StoryEditor } from "@/components/story-editor";
+import { CelebrationNumberEditor } from "@/components/celebration-number-editor";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -38,6 +39,7 @@ export default function BuilderPage() {
           <AuthGate>
             <>
               <BuilderClient />
+              <CelebrationNumberEditor />
               <StoryEditor />
             </>
           </AuthGate>
