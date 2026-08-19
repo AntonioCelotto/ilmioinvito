@@ -1,14 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase/client";
-import {
-  readDrafts,
-  readEditingDraft,
-  saveDraft,
-  setEditingDraft,
-  type InvitationDraft
-} from "@/lib/draft-storage";
+import { readDrafts, readEditingDraft, type InvitationDraft } from "@/lib/draft-storage";
 
 type StoryMedia = {
   id: string;
@@ -18,7 +13,7 @@ type StoryMedia = {
   sort_order: number;
 };
 
-const panelStyle: React.CSSProperties = {
+const panelStyle: CSSProperties = {
   marginTop: "28px",
   padding: "24px",
   borderRadius: "24px",
@@ -27,12 +22,17 @@ const panelStyle: React.CSSProperties = {
   boxShadow: "0 12px 40px rgba(63,41,42,.06)"
 };
 
-const gridStyle: React.CSSProperties = {
+const gridStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))",
   gap: "14px",
   marginTop: "16px"
 };
+
+function currentBuilderTitle() {
+  if (typeof document === "undefined") return "";
+  return document.querySelector<HTMLInputElement>("#title")?.value.trim() ?? "";
+}
 
 function resolveCurrentDraft(): InvitationDraft | null {
   if (typeof window === "undefined") return null;
@@ -40,25 +40,23 @@ function resolveCurrentDraft(): InvitationDraft | null {
   const editingId = new URLSearchParams(window.location.search).get("edit");
   const editingDraft = readEditingDraft();
 
-  if (editingId && editingDraft?.id === editingId) {
-    return editingDraft;
-  }
+  if (editingId && editingDraft?.id === editingId) return editingDraft;
 
   const drafts = readDrafts();
-  if (editingId) {
-    return drafts.find((draft) => draft.id === editingId) ?? drafts[0] ?? null;
-  }
+  if (editingId) return drafts.find((draft) => draft.id === editingId) ?? null;
 
-  return drafts[0] ?? null;
+  const title = currentBuilderTitle();
+  if (!title) return null;
+
+  return drafts.find((draft) => draft.title.trim() === title) ?? null;
 }
 
 export function StoryEditor() {
-  const [draft, setDraftState] = useState<InvitationDraft | null>(null);
+  const [draft, setDraft] = useState<InvitationDraft | null>(null);
   const [storyTitle, setStoryTitle] = useState("La nostra storia");
   const [media, setMedia] = useState<StoryMedia[]>([]);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
-
   const supabase = useMemo(() => createClient(), []);
 
   async function loadStory(currentDraft: InvitationDraft | null) {
@@ -74,50 +72,52 @@ export function StoryEditor() {
       .maybeSingle();
 
     if (!invitation) {
-      setMessage("Salva prima la bozza dell'invito, poi potrai aggiungere le foto della storia.");
       setMedia([]);
+      setMessage("Salva prima la bozza dell'invito. Dopo il salvataggio potrai aggiungere titolo e foto alla storia.");
       return;
     }
 
-    const { data: content } = await supabase
-      .from("invitation_content")
-      .select("story_title")
-      .eq("invitation_id", currentDraft.id)
-      .maybeSingle();
-
-    if (content?.story_title) {
-      setStoryTitle(content.story_title);
-    }
-
-    const { data: rows, error } = await supabase
-      .from("invitation_story_media")
-      .select("id, invitation_id, image_url, caption, sort_order")
-      .eq("invitation_id", currentDraft.id)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
+    const [{ data: content }, { data: rows, error }] = await Promise.all([
+      supabase
+        .from("invitation_content")
+        .select("story_title")
+        .eq("invitation_id", currentDraft.id)
+        .maybeSingle(),
+      supabase
+        .from("invitation_story_media")
+        .select("id, invitation_id, image_url, caption, sort_order")
+        .eq("invitation_id", currentDraft.id)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true })
+    ]);
 
     if (error) {
       setMessage(error.message);
       return;
     }
 
+    setStoryTitle(content?.story_title || "La nostra storia");
     setMedia((rows ?? []) as StoryMedia[]);
     setMessage("");
   }
 
   useEffect(() => {
+    const label = document.querySelector<HTMLLabelElement>('label[for="story"]');
+    if (label) label.textContent = "La nostra storia / La mia storia";
+
+    let lastDraftId = "";
     const sync = () => {
-      const currentDraft = resolveCurrentDraft();
-      setDraftState((previous) => {
-        if (previous?.id !== currentDraft?.id) {
-          void loadStory(currentDraft);
-        }
-        return currentDraft;
-      });
+      const current = resolveCurrentDraft();
+      setDraft(current);
+      const nextId = current?.id ?? "";
+      if (nextId !== lastDraftId) {
+        lastDraftId = nextId;
+        void loadStory(current);
+      }
     };
 
     sync();
-    const timer = window.setInterval(sync, 1500);
+    const timer = window.setInterval(sync, 1000);
     window.addEventListener("focus", sync);
 
     return () => {
@@ -126,25 +126,30 @@ export function StoryEditor() {
     };
   }, []);
 
-  useEffect(() => {
-    const label = document.querySelector<HTMLLabelElement>('label[for="story"]');
-    if (label) label.textContent = "La nostra storia / La mia storia";
-  }, [draft?.id]);
-
-  async function saveTitle() {
+  async function saveTitle(value = storyTitle) {
     if (!draft || !supabase) {
-      setMessage("Salva prima l'invito.");
+      setMessage("Prima premi Salva bozza nel builder.");
+      return;
+    }
+
+    const cleanTitle = value.trim() || "La nostra storia";
+    const { data: invitation } = await supabase
+      .from("invitations")
+      .select("id")
+      .eq("id", draft.id)
+      .maybeSingle();
+
+    if (!invitation) {
+      setMessage("Prima premi Salva bozza nel builder.");
       return;
     }
 
     const { error } = await supabase
       .from("invitation_content")
-      .upsert({
-        invitation_id: draft.id,
-        story_title: storyTitle.trim() || "La nostra storia",
-        updated_at: new Date().toISOString()
-      });
+      .update({ story_title: cleanTitle, updated_at: new Date().toISOString() })
+      .eq("invitation_id", draft.id);
 
+    setStoryTitle(cleanTitle);
     setMessage(error ? error.message : "Titolo della storia salvato.");
   }
 
@@ -155,7 +160,6 @@ export function StoryEditor() {
       setMessage("Carica una foto JPG, PNG o WebP.");
       return;
     }
-
     if (file.size > 8 * 1024 * 1024) {
       setMessage("La foto non può superare 8 MB.");
       return;
@@ -179,13 +183,12 @@ export function StoryEditor() {
 
     if (!invitation) {
       setUploading(false);
-      setMessage("Salva prima la bozza dell'invito.");
+      setMessage("Prima premi Salva bozza nel builder.");
       return;
     }
 
     const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
     const path = `${userData.user.id}/${draft.id}/${crypto.randomUUID()}.${extension}`;
-
     const { error: uploadError } = await supabase.storage
       .from("invitation-story-images")
       .upload(path, file, { cacheControl: "3600", upsert: false });
@@ -210,7 +213,6 @@ export function StoryEditor() {
       });
 
     setUploading(false);
-
     if (insertError) {
       setMessage(insertError.message);
       return;
@@ -222,56 +224,35 @@ export function StoryEditor() {
 
   async function updateCaption(item: StoryMedia, caption: string) {
     if (!supabase) return;
-
-    setMedia((current) =>
-      current.map((row) => (row.id === item.id ? { ...row, caption } : row))
-    );
-
+    setMedia((current) => current.map((row) => row.id === item.id ? { ...row, caption } : row));
     const { error } = await supabase
       .from("invitation_story_media")
       .update({ caption, updated_at: new Date().toISOString() })
       .eq("id", item.id);
-
     if (error) setMessage(error.message);
   }
 
   async function removePhoto(item: StoryMedia) {
     if (!supabase || !draft) return;
-
-    const { error } = await supabase
-      .from("invitation_story_media")
-      .delete()
-      .eq("id", item.id);
-
+    const { error } = await supabase.from("invitation_story_media").delete().eq("id", item.id);
     if (error) {
       setMessage(error.message);
       return;
     }
-
     setMessage("Foto rimossa dalla storia.");
     await loadStory(draft);
-  }
-
-  function syncStoryTextToLocalDraft(value: string) {
-    if (!draft) return;
-    const nextDraft = { ...draft, story: value, updatedAt: new Date().toISOString() };
-    saveDraft(nextDraft);
-    setEditingDraft(nextDraft);
-    setDraftState(nextDraft);
   }
 
   return (
     <section style={panelStyle} aria-labelledby="story-editor-title">
       <p className="eyebrow">Sezione personale</p>
-      <h3 id="story-editor-title" style={{ marginTop: 4 }}>
-        La nostra storia / La mia storia
-      </h3>
+      <h3 id="story-editor-title" style={{ marginTop: 4 }}>La nostra storia / La mia storia</h3>
       <p className="muted" style={{ marginTop: 0 }}>
-        Scrivi il racconto nel campo dedicato del builder e aggiungi qui titolo e fotografie.
+        Scrivi il racconto nel campo “La nostra storia / La mia storia” sopra. Salva la bozza, poi aggiungi qui il titolo e le fotografie.
       </p>
 
       {!draft ? (
-        <p className="muted">Salva una bozza per attivare questa sezione.</p>
+        <p className="muted">Dopo il primo salvataggio della bozza compariranno qui i controlli della storia.</p>
       ) : (
         <>
           <div className="field" style={{ marginTop: 18 }}>
@@ -280,29 +261,18 @@ export function StoryEditor() {
               id="story-title-custom"
               value={storyTitle}
               onChange={(event) => setStoryTitle(event.target.value)}
-              onBlur={saveTitle}
+              onBlur={() => void saveTitle()}
             />
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-              <button className="button light" type="button" onClick={() => setStoryTitle("La nostra storia")}>La nostra storia</button>
-              <button className="button light" type="button" onClick={() => setStoryTitle("La mia storia")}>La mia storia</button>
-              <button className="button light" type="button" onClick={saveTitle}>Salva titolo</button>
+              <button className="button light" type="button" onClick={() => void saveTitle("La nostra storia")}>La nostra storia</button>
+              <button className="button light" type="button" onClick={() => void saveTitle("La mia storia")}>La mia storia</button>
+              <button className="button light" type="button" onClick={() => void saveTitle()}>Salva titolo</button>
             </div>
-          </div>
-
-          <div className="field" style={{ marginTop: 18 }}>
-            <label htmlFor="story-text-mirror">Testo della storia</label>
-            <textarea
-              id="story-text-mirror"
-              value={draft.story ?? ""}
-              onChange={(event) => syncStoryTextToLocalDraft(event.target.value)}
-              placeholder="Racconta come vi siete conosciuti, un ricordo speciale o la storia del festeggiato..."
-            />
-            <small>Il testo viene sincronizzato con il campo storia del builder.</small>
           </div>
 
           <div style={{ marginTop: 20 }}>
             <strong>Fotografie della storia</strong>
-            <p className="muted" style={{ marginTop: 4 }}>Puoi aggiungere più foto e una breve didascalia per ciascuna.</p>
+            <p className="muted" style={{ marginTop: 4 }}>Aggiungi più foto e, se vuoi, una breve didascalia per ciascuna.</p>
             <label className="button light" style={{ cursor: uploading ? "wait" : "pointer" }}>
               {uploading ? "Caricamento..." : "+ Aggiungi foto"}
               <input
@@ -330,9 +300,7 @@ export function StoryEditor() {
                       value={item.caption ?? ""}
                       onChange={(event) => void updateCaption(item, event.target.value)}
                     />
-                    <button className="editor-remove-button" type="button" style={{ marginTop: 10 }} onClick={() => void removePhoto(item)}>
-                      Rimuovi foto
-                    </button>
+                    <button className="editor-remove-button" type="button" style={{ marginTop: 10 }} onClick={() => void removePhoto(item)}>Rimuovi foto</button>
                   </div>
                 </article>
               ))}
