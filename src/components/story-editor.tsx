@@ -54,10 +54,12 @@ function resolveCurrentDraft(): InvitationDraft | null {
 export function StoryEditor() {
   const [draft, setDraft] = useState<InvitationDraft | null>(null);
   const [storyTitle, setStoryTitle] = useState("La nostra storia");
+  const [storyText, setStoryText] = useState("");
   const [media, setMedia] = useState<StoryMedia[]>([]);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
   const [target, setTarget] = useState<HTMLElement | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<HTMLElement | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
   async function loadStory(currentDraft: InvitationDraft | null) {
@@ -111,7 +113,21 @@ export function StoryEditor() {
       const label = document.querySelector<HTMLLabelElement>('label[for="story"]');
 
       if (label) label.textContent = "La nostra storia / La mia storia";
-      if (storyTextarea?.parentElement) setTarget(storyTextarea.parentElement);
+      if (storyTextarea?.parentElement) {
+        setTarget(storyTextarea.parentElement);
+        setStoryText(storyTextarea.value);
+      }
+
+      const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
+      if (hero?.parentElement) {
+        let mount = hero.parentElement.querySelector<HTMLElement>("[data-story-preview-mount]");
+        if (!mount) {
+          mount = document.createElement("div");
+          mount.dataset.storyPreviewMount = "true";
+          hero.insertAdjacentElement("afterend", mount);
+        }
+        setPreviewTarget(mount);
+      }
 
       const current = resolveCurrentDraft();
       setDraft(current);
@@ -123,7 +139,7 @@ export function StoryEditor() {
     };
 
     sync();
-    const timer = window.setInterval(sync, 800);
+    const timer = window.setInterval(sync, 500);
     window.addEventListener("focus", sync);
 
     return () => {
@@ -259,7 +275,7 @@ export function StoryEditor() {
 
   if (!target) return null;
 
-  return createPortal(
+  const editor = (
     <section style={panelStyle} aria-labelledby="story-editor-title">
       <h3 id="story-editor-title" style={{ margin: "0 0 6px", fontSize: "18px" }}>Personalizza la storia</h3>
       <p className="muted" style={{ margin: "0 0 14px" }}>
@@ -305,11 +321,12 @@ export function StoryEditor() {
             <article key={item.id} style={{ border: "1px solid rgba(63,41,42,.12)", borderRadius: 16, overflow: "hidden", background: "#fff" }}>
               <img src={item.image_url} alt={item.caption || "Foto della storia"} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", display: "block" }} />
               <div style={{ padding: 10 }}>
-                <input
+                <textarea
                   aria-label="Didascalia foto"
-                  placeholder="Didascalia opzionale"
+                  placeholder="Scrivi qui un ricordo, una frase o una breve descrizione della foto..."
                   value={item.caption ?? ""}
                   onChange={(event) => void updateCaption(item, event.target.value)}
+                  style={{ width: "100%", minHeight: 92, resize: "vertical" }}
                 />
                 <button className="editor-remove-button" type="button" style={{ marginTop: 8 }} onClick={() => void removePhoto(item)}>Rimuovi foto</button>
               </div>
@@ -323,7 +340,37 @@ export function StoryEditor() {
       ) : null}
 
       {message ? <p className="muted" style={{ margin: "12px 0 0" }}>{message}</p> : null}
+    </section>
+  );
+
+  const preview = previewTarget ? createPortal(
+    <section className="phone-slot" data-preview-section="story" style={{ textAlign: "center" }}>
+      <strong className="phone-featured-text" style={{ display: "block", marginBottom: 8 }}>{storyTitle}</strong>
+      {storyText ? <p style={{ whiteSpace: "pre-wrap" }}>{storyText}</p> : null}
+      {media.length > 0 ? (
+        <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+          {media.map((item) => (
+            <figure key={item.id} style={{ margin: 0 }}>
+              <img
+                src={item.image_url}
+                alt={item.caption || "Foto della storia"}
+                style={{ width: "100%", borderRadius: 14, display: "block", objectFit: "cover" }}
+              />
+              {item.caption ? (
+                <figcaption style={{ marginTop: 6, fontSize: 12, lineHeight: 1.4 }}>{item.caption}</figcaption>
+              ) : null}
+            </figure>
+          ))}
+        </div>
+      ) : null}
     </section>,
-    target
+    previewTarget
+  ) : null;
+
+  return (
+    <>
+      {createPortal(editor, target)}
+      {preview}
+    </>
   );
 }
