@@ -29,7 +29,7 @@ function ensurePreviewBadge() {
     badge.dataset.celebrationNumberPreview = "true";
     badge.style.position = "absolute";
     badge.style.left = "50%";
-    badge.style.top = "2.5%";
+    badge.style.top = "-3%";
     badge.style.transform = "translateX(-50%)";
     badge.style.zIndex = "6";
     badge.style.width = "88%";
@@ -51,6 +51,7 @@ function ensurePreviewBadge() {
 function previewOverlay(number: string, color: string) {
   const badge = ensurePreviewBadge();
   if (!badge) return;
+  badge.style.top = "-3%";
   badge.style.color = color || DEFAULT_COLOR;
   if (!number) {
     badge.style.display = "none";
