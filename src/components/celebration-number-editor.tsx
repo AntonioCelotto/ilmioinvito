@@ -28,7 +28,7 @@ function ensurePreviewBadge() {
     badge.dataset.celebrationNumberPreview = "true";
     badge.style.position = "absolute";
     badge.style.left = "50%";
-    badge.style.top = "16%";
+    badge.style.top = "7%";
     badge.style.transform = "translateX(-50%)";
     badge.style.zIndex = "6";
     badge.style.width = "88%";
@@ -36,7 +36,7 @@ function ensurePreviewBadge() {
     badge.style.pointerEvents = "none";
     badge.style.fontFamily = "Georgia, 'Times New Roman', serif";
     badge.style.fontWeight = "700";
-    badge.style.fontSize = "clamp(64px, 20vw, 118px)";
+    badge.style.fontSize = "clamp(58px, 18vw, 108px)";
     badge.style.lineHeight = ".82";
     badge.style.letterSpacing = "-.05em";
     badge.style.color = "#d6ad60";
@@ -73,11 +73,13 @@ export function CelebrationNumberEditor() {
       previewOverlay("");
       return;
     }
+
     const { data } = await client
       .from("invitation_celebration_number")
       .select("celebration_number")
       .eq("invitation_id", currentDraft.id)
       .maybeSingle();
+
     const value = data?.celebration_number ?? "";
     setNumber(value);
     previewOverlay(value);
@@ -85,17 +87,17 @@ export function CelebrationNumberEditor() {
 
   useEffect(() => {
     let lastId = "";
+
     const sync = () => {
       const eventDate = document.querySelector<HTMLInputElement>("#date");
       if (eventDate?.parentElement) {
         setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
       }
 
-      if (number) previewOverlay(number);
-
       const current = resolveCurrentDraft();
       setDraft(current);
       const id = current?.id ?? "";
+
       if (id !== lastId) {
         lastId = id;
         if (supabase) void load(current, supabase);
@@ -110,7 +112,11 @@ export function CelebrationNumberEditor() {
       window.clearInterval(timer);
       window.removeEventListener("focus", sync);
     };
-  }, [supabase, number]);
+  }, [supabase]);
+
+  useEffect(() => {
+    previewOverlay(number);
+  }, [number]);
 
   async function save(value: string) {
     const clean = value.replace(/[^0-9]/g, "").slice(0, 3);
@@ -158,7 +164,6 @@ export function CelebrationNumberEditor() {
           const value = event.target.value.replace(/[^0-9]/g, "").slice(0, 3);
           setNumber(value);
           setMessage("");
-          previewOverlay(value);
         }}
         onBlur={() => void save(number)}
       />
