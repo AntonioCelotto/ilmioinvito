@@ -33,11 +33,13 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
   }, [title]);
 
   useEffect(() => {
-    if (!supabase) return;
+    const client = supabase;
+    if (!client) return;
+
     let active = true;
 
     async function load() {
-      const { data: invitation } = await supabase
+      const { data: invitation } = await client
         .from("invitations")
         .select("id")
         .eq("slug", slug)
@@ -46,12 +48,12 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
       if (!invitation || !active) return;
 
       const [{ data: content }, { data: rows }] = await Promise.all([
-        supabase
+        client
           .from("invitation_content")
           .select("story_title")
           .eq("invitation_id", invitation.id)
           .maybeSingle(),
-        supabase
+        client
           .from("invitation_story_media")
           .select("id, image_url, caption")
           .eq("invitation_id", invitation.id)
@@ -65,7 +67,9 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
     }
 
     void load();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [slug, supabase]);
 
   if (!target || media.length === 0) return null;
@@ -83,13 +87,23 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
       {media.map((item) => (
         <figure
           key={item.id}
-          style={{ margin: 0, overflow: "hidden", borderRadius: "20px", background: "rgba(255,255,255,.72)" }}
+          style={{
+            margin: 0,
+            overflow: "hidden",
+            borderRadius: "20px",
+            background: "rgba(255,255,255,.72)"
+          }}
         >
           <img
             loading="lazy"
             src={item.image_url}
             alt={item.caption || title}
-            style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", display: "block" }}
+            style={{
+              width: "100%",
+              aspectRatio: "4 / 3",
+              objectFit: "cover",
+              display: "block"
+            }}
           />
           {item.caption ? (
             <figcaption style={{ padding: "10px 12px", fontSize: ".92rem" }}>
