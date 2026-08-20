@@ -41,6 +41,10 @@ function resolveCurrentDraft(): InvitationDraft | null {
   const editingDraft = readEditingDraft();
 
   if (editingId && editingDraft?.id === editingId) return editingDraft;
+  if (!editingId && editingDraft) {
+    const currentTitle = currentBuilderTitle();
+    if (!currentTitle || editingDraft.title.trim() === currentTitle) return editingDraft;
+  }
 
   const drafts = readDrafts();
   if (editingId) return drafts.find((draft) => draft.id === editingId) ?? null;
@@ -62,37 +66,46 @@ export function StoryEditor() {
   const [previewTarget, setPreviewTarget] = useState<HTMLElement | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
+  async function findInvitationId(currentDraft: InvitationDraft | null) {
+    const client = supabase;
+    if (!client) return null;
+
+    if (currentDraft?.id) {
+      const { data } = await client.from("invitations").select("id").eq("id", currentDraft.id).maybeSingle();
+      if (data?.id) return data.id as string;
+    }
+
+    const title = currentBuilderTitle();
+    if (!title) return null;
+
+    const { data } = await client
+      .from("invitations")
+      .select("id")
+      .eq("title", title)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    return (data?.id as string | undefined) ?? null;
+  }
+
   async function loadStory(currentDraft: InvitationDraft | null) {
     const client = supabase;
-    if (!currentDraft || !client) {
+    if (!client) {
       setMedia([]);
       return;
     }
 
-    const { data: invitation } = await client
-      .from("invitations")
-      .select("id")
-      .eq("id", currentDraft.id)
-      .maybeSingle();
-
-    if (!invitation) {
+    const invitationId = await findInvitationId(currentDraft);
+    if (!invitationId) {
       setMedia([]);
       setMessage("Salva prima la bozza dell'invito. Dopo il salvataggio potrai aggiungere titolo e foto alla storia.");
       return;
     }
 
     const [{ data: content }, { data: rows, error }] = await Promise.all([
-      client
-        .from("invitation_content")
-        .select("story_title")
-        .eq("invitation_id", currentDraft.id)
-        .maybeSingle(),
-      client
-        .from("invitation_story_media")
-        .select("id, invitation_id, image_url, caption, sort_order")
-        .eq("invitation_id", currentDraft.id)
-        .order("sort_order", { ascending: true })
-        .order("created_at", { ascending: true })
+      client.from("invitation_content").select("story_title").eq("invitation_id", invitationId).maybeSingle(),
+      client.from("invitation_story_media").select("id, invitation_id, image_url, caption, sort_order").eq("invitation_id", invitationId).order("sort_order", { ascending: true }).order("created_at", { ascending: true })
     ]);
 
     if (error) {
@@ -131,7 +144,7 @@ export function StoryEditor() {
 
       const current = resolveCurrentDraft();
       setDraft(current);
-      const nextId = current?.id ?? "";
+      const nextId = current?.id ?? currentBuilderTitle();
       if (nextId !== lastDraftId) {
         lastDraftId = nextId;
         void loadStory(current);
@@ -150,27 +163,19 @@ export function StoryEditor() {
 
   async function saveTitle(value = storyTitle) {
     const client = supabase;
-    if (!draft || !client) {
+    if (!client) {
+      setMessage("Servizio di salvataggio non disponibile.");
+      return;
+    }
+
+    const invitationId = await findInvitationId(draft);
+    if (!invitationId) {
       setMessage("Prima premi Salva bozza nel builder.");
       return;
     }
 
     const cleanTitle = value.trim() || "La nostra storia";
-    const { data: invitation } = await client
-      .from("invitations")
-      .select("id")
-      .eq("id", draft.id)
-      .maybeSingle();
-
-    if (!invitation) {
-      setMessage("Prima premi Salva bozza nel builder.");
-      return;
-    }
-
-    const { error } = await client
-      .from("invitation_content")
-      .update({ story_title: cleanTitle, updated_at: new Date().toISOString() })
-      .eq("invitation_id", draft.id);
+    const { error } = await client.from("invitation_content").update({ story_title: cleanTitle, updated_at: new Date().toISOString() }).eq("invitation_id", invitationId);
 
     setStoryTitle(cleanTitle);
     setMessage(error ? error.message : "Titolo della storia salvato.");
@@ -178,10 +183,18 @@ export function StoryEditor() {
 
   async function uploadPhoto(file?: File) {
     const client = supabase;
-    if (!file || !draft || !client) return;
 
-    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setMessage("Carica una foto JPG, PNG o WebP.");
+    if (!file) {
+      setMessage("Nessuna foto selezionata.");
+      return;
+    }
+    if (!client) {
+      setMessage("Servizio di caricamento non disponibile.");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Seleziona un file immagine.");
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
@@ -192,58 +205,54 @@ export function StoryEditor() {
     setUploading(true);
     setMessage("Caricamento foto della storia...");
 
-    const { data: userData } = await client.auth.getUser();
-    if (!userData.user) {
-      setUploading(false);
-      setMessage("Accedi prima di caricare le foto.");
-      return;
-    }
+    try {
+      const { data: userData } = await client.auth.getUser();
+      if (!userData.user) {
+        setMessage("Accedi prima di caricare le foto.");
+        return;
+      }
 
-    const { data: invitation } = await client
-      .from("invitations")
-      .select("id")
-      .eq("id", draft.id)
-      .maybeSingle();
+      const invitationId = await findInvitationId(draft);
+      if (!invitationId) {
+        setMessage("Prima premi Salva bozza nel builder, poi riprova ad aggiungere la foto.");
+        return;
+      }
 
-    if (!invitation) {
-      setUploading(false);
-      setMessage("Prima premi Salva bozza nel builder.");
-      return;
-    }
+      const rawExtension = file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+      const extension = rawExtension?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `${userData.user.id}/${invitationId}/${crypto.randomUUID()}.${extension}`;
 
-    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = `${userData.user.id}/${draft.id}/${crypto.randomUUID()}.${extension}`;
-    const { error: uploadError } = await client.storage
-      .from("invitation-story-images")
-      .upload(path, file, { cacheControl: "3600", upsert: false });
+      const { error: uploadError } = await client.storage
+        .from("invitation-story-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type || undefined });
 
-    if (uploadError) {
-      setUploading(false);
-      setMessage(uploadError.message);
-      return;
-    }
+      if (uploadError) {
+        setMessage(`Errore caricamento foto: ${uploadError.message}`);
+        return;
+      }
 
-    const { data: publicUrl } = client.storage
-      .from("invitation-story-images")
-      .getPublicUrl(path);
+      const { data: publicUrl } = client.storage.from("invitation-story-images").getPublicUrl(path);
 
-    const { error: insertError } = await client
-      .from("invitation_story_media")
-      .insert({
-        invitation_id: draft.id,
+      const { error: insertError } = await client.from("invitation_story_media").insert({
+        invitation_id: invitationId,
         image_url: publicUrl.publicUrl,
         caption: "",
         sort_order: media.length
       });
 
-    setUploading(false);
-    if (insertError) {
-      setMessage(insertError.message);
-      return;
-    }
+      if (insertError) {
+        await client.storage.from("invitation-story-images").remove([path]);
+        setMessage(`Errore salvataggio foto: ${insertError.message}`);
+        return;
+      }
 
-    setMessage("Foto aggiunta alla storia.");
-    await loadStory(draft);
+      setMessage("Foto aggiunta alla storia.");
+      await loadStory(draft);
+    } catch (error) {
+      setMessage(error instanceof Error ? `Errore caricamento: ${error.message}` : "Errore imprevisto durante il caricamento della foto.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function updateCaption(item: StoryMedia, caption: string) {
@@ -251,17 +260,13 @@ export function StoryEditor() {
     if (!client) return;
 
     setMedia((current) => current.map((row) => row.id === item.id ? { ...row, caption } : row));
-    const { error } = await client
-      .from("invitation_story_media")
-      .update({ caption, updated_at: new Date().toISOString() })
-      .eq("id", item.id);
-
+    const { error } = await client.from("invitation_story_media").update({ caption, updated_at: new Date().toISOString() }).eq("id", item.id);
     if (error) setMessage(error.message);
   }
 
   async function removePhoto(item: StoryMedia) {
     const client = supabase;
-    if (!client || !draft) return;
+    if (!client) return;
 
     const { error } = await client.from("invitation_story_media").delete().eq("id", item.id);
     if (error) {
@@ -278,18 +283,11 @@ export function StoryEditor() {
   const editor = (
     <section style={panelStyle} aria-labelledby="story-editor-title">
       <h3 id="story-editor-title" style={{ margin: "0 0 6px", fontSize: "18px" }}>Personalizza la storia</h3>
-      <p className="muted" style={{ margin: "0 0 14px" }}>
-        Scegli il titolo della sezione e aggiungi le fotografie che accompagneranno il racconto.
-      </p>
+      <p className="muted" style={{ margin: "0 0 14px" }}>Scegli il titolo della sezione e aggiungi le fotografie che accompagneranno il racconto.</p>
 
       <div className="field">
         <label htmlFor="story-title-custom">Titolo della sezione</label>
-        <input
-          id="story-title-custom"
-          value={storyTitle}
-          onChange={(event) => setStoryTitle(event.target.value)}
-          onBlur={() => void saveTitle()}
-        />
+        <input id="story-title-custom" value={storyTitle} onChange={(event) => setStoryTitle(event.target.value)} onBlur={() => void saveTitle()} />
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
           <button className="button light" type="button" onClick={() => void saveTitle("La nostra storia")}>La nostra storia</button>
           <button className="button light" type="button" onClick={() => void saveTitle("La mia storia")}>La mia storia</button>
@@ -299,17 +297,18 @@ export function StoryEditor() {
 
       <div style={{ marginTop: 16 }}>
         <strong>Fotografie della storia</strong>
-        <p className="muted" style={{ margin: "4px 0 10px" }}>JPG, PNG o WebP. Puoi aggiungere più immagini e una didascalia per ciascuna.</p>
+        <p className="muted" style={{ margin: "4px 0 10px" }}>Puoi aggiungere immagini fino a 8 MB e una didascalia per ciascuna.</p>
         <label className="button light" style={{ cursor: uploading ? "wait" : "pointer" }}>
           {uploading ? "Caricamento..." : "+ Aggiungi foto"}
           <input
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             disabled={uploading}
             type="file"
             style={{ display: "none" }}
             onChange={(event) => {
-              void uploadPhoto(event.target.files?.[0]);
-              event.target.value = "";
+              const selectedFile = event.currentTarget.files?.[0];
+              void uploadPhoto(selectedFile);
+              event.currentTarget.value = "";
             }}
           />
         </label>
@@ -321,22 +320,12 @@ export function StoryEditor() {
             <article key={item.id} style={{ border: "1px solid rgba(63,41,42,.12)", borderRadius: 16, overflow: "hidden", background: "#fff" }}>
               <img src={item.image_url} alt={item.caption || "Foto della storia"} style={{ width: "100%", aspectRatio: "4 / 3", objectFit: "cover", display: "block" }} />
               <div style={{ padding: 10 }}>
-                <textarea
-                  aria-label="Didascalia foto"
-                  placeholder="Scrivi qui un ricordo, una frase o una breve descrizione della foto..."
-                  value={item.caption ?? ""}
-                  onChange={(event) => void updateCaption(item, event.target.value)}
-                  style={{ width: "100%", minHeight: 92, resize: "vertical" }}
-                />
+                <textarea aria-label="Didascalia foto" placeholder="Scrivi qui un ricordo, una frase o una breve descrizione della foto..." value={item.caption ?? ""} onChange={(event) => void updateCaption(item, event.target.value)} style={{ width: "100%", minHeight: 92, resize: "vertical" }} />
                 <button className="editor-remove-button" type="button" style={{ marginTop: 8 }} onClick={() => void removePhoto(item)}>Rimuovi foto</button>
               </div>
             </article>
           ))}
         </div>
-      ) : null}
-
-      {!draft ? (
-        <p className="muted" style={{ margin: "12px 0 0" }}>Premi prima “Salva bozza” per attivare titolo e caricamento foto.</p>
       ) : null}
 
       {message ? <p className="muted" style={{ margin: "12px 0 0" }}>{message}</p> : null}
@@ -351,14 +340,8 @@ export function StoryEditor() {
         <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
           {media.map((item) => (
             <figure key={item.id} style={{ margin: 0 }}>
-              <img
-                src={item.image_url}
-                alt={item.caption || "Foto della storia"}
-                style={{ width: "100%", borderRadius: 14, display: "block", objectFit: "cover" }}
-              />
-              {item.caption ? (
-                <figcaption style={{ marginTop: 6, fontSize: 12, lineHeight: 1.4 }}>{item.caption}</figcaption>
-              ) : null}
+              <img src={item.image_url} alt={item.caption || "Foto della storia"} style={{ width: "100%", borderRadius: 14, display: "block", objectFit: "cover" }} />
+              {item.caption ? <figcaption style={{ marginTop: 6, fontSize: 12, lineHeight: 1.4 }}>{item.caption}</figcaption> : null}
             </figure>
           ))}
         </div>
@@ -367,10 +350,5 @@ export function StoryEditor() {
     previewTarget
   ) : null;
 
-  return (
-    <>
-      {createPortal(editor, target)}
-      {preview}
-    </>
-  );
+  return <>{createPortal(editor, target)}{preview}</>;
 }
