@@ -36,7 +36,19 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const invitation=draft??fallbackDraft;const primaryLocation=useMemo(()=>invitation.locations.find(l=>["reception","main","church","ceremony"].includes(l.type)),[invitation.locations]);const hasCustomDraft=Boolean(draft),isDemoSlug=slug===demoInvitation.slug;
  useEffect(()=>setVideoFinished(false),[invitation.theme.backgroundVideo]);
  if(loaded&&!hasCustomDraft&&!isDemoSlug)return <main className="workspace"><section className="section"><div className="section-inner"><div className="empty-state invitation-unavailable"><p className="eyebrow">Invito non disponibile</p><h1>Questo invito è ancora in bozza.</h1><p className="muted">La bozza è visibile soltanto al proprietario autenticato. Per condividerla con gli invitati, apri il builder e premi “Pubblica invito”.</p><a className="button" href="/login">Accedi</a></div></div></section></main>;
- const themeStyles={"--invitation-text-color":invitation.theme.textColor??"#3f292a","--invitation-button-color":invitation.theme.buttonColor??invitation.theme.accentColor,"--invitation-button-text":invitation.theme.buttonTextColor??"#ffffff","--invitation-font-scale":invitation.theme.fontScale??1,"--invitation-accent-color":invitation.theme.accentColor,"--invitation-primary-color":invitation.theme.primaryColor,"--invitation-background-image":invitation.theme.backgroundImage?`url("${invitation.theme.backgroundImage}")`:"none",backgroundColor:invitation.theme.primaryColor} as CSSProperties;
+
+ const contentBackgroundImage = invitation.theme.backgroundVideo ? "none" : invitation.theme.backgroundImage ? `url("${invitation.theme.backgroundImage}")` : "none";
+ const themeStyles={
+   "--invitation-text-color":invitation.theme.textColor??"#3f292a",
+   "--invitation-button-color":invitation.theme.buttonColor??invitation.theme.accentColor,
+   "--invitation-button-text":invitation.theme.buttonTextColor??"#ffffff",
+   "--invitation-font-scale":invitation.theme.fontScale??1,
+   "--invitation-accent-color":invitation.theme.accentColor,
+   "--invitation-primary-color":invitation.theme.primaryColor,
+   "--invitation-background-image":contentBackgroundImage,
+   backgroundColor:invitation.theme.primaryColor
+ } as CSSProperties;
+
  return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}`} style={themeStyles}>
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
    {invitation.theme.backgroundVideo?<video aria-hidden="true" autoPlay className="invite-background-video" muted onEnded={()=>setVideoFinished(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>:null}
