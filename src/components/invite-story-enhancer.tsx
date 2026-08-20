@@ -92,7 +92,10 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
             margin: 0,
             overflow: "hidden",
             borderRadius: "20px",
-            background: "rgba(255,255,255,.72)"
+            background: "color-mix(in srgb, var(--invitation-primary-color) 36%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--invitation-text-color) 18%, transparent)",
+            color: "var(--invitation-text-color)",
+            backdropFilter: "blur(4px)"
           }}
         >
           <img
@@ -107,7 +110,13 @@ export function InviteStoryEnhancer({ slug }: { slug: string }) {
             }}
           />
           {item.caption ? (
-            <figcaption style={{ padding: "10px 12px", fontSize: ".92rem" }}>
+            <figcaption
+              style={{
+                padding: "10px 12px",
+                fontSize: ".92rem",
+                color: "var(--invitation-text-color)"
+              }}
+            >
               {item.caption}
             </figcaption>
           ) : null}
