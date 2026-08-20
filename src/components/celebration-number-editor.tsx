@@ -29,7 +29,6 @@ function ensurePreviewBadge() {
     badge.dataset.celebrationNumberPreview = "true";
     badge.style.position = "absolute";
     badge.style.left = "50%";
-    badge.style.top = "-3%";
     badge.style.transform = "translateX(-50%)";
     badge.style.zIndex = "6";
     badge.style.width = "88%";
@@ -49,15 +48,20 @@ function ensurePreviewBadge() {
 }
 
 function previewOverlay(number: string, color: string) {
+  const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
   const badge = ensurePreviewBadge();
-  if (!badge) return;
-  badge.style.top = "-3%";
+  if (!badge || !hero) return;
+
+  const hasVideo = Boolean(hero.querySelector("video"));
+  badge.style.top = hasVideo ? "6%" : "-3%";
   badge.style.color = color || DEFAULT_COLOR;
+
   if (!number) {
     badge.style.display = "none";
     badge.textContent = "";
     return;
   }
+
   badge.style.display = "block";
   badge.textContent = number;
 }
@@ -101,6 +105,7 @@ export function CelebrationNumberEditor() {
         lastId = id;
         if (supabase) void load(current, supabase);
       }
+      previewOverlay(number, color);
     };
     sync();
     const timer = window.setInterval(sync, 500);
@@ -109,7 +114,7 @@ export function CelebrationNumberEditor() {
       window.clearInterval(timer);
       window.removeEventListener("focus", sync);
     };
-  }, [supabase]);
+  }, [supabase, number, color]);
 
   useEffect(() => {
     previewOverlay(number, color);
