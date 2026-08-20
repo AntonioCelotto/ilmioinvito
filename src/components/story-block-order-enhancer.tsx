@@ -23,13 +23,18 @@ function resolveCurrentDraft(): InvitationDraft | null {
 
 export function StoryBlockOrderEnhancer() {
   const supabase = useMemo(() => createClient(), []);
-  const [orderMount, setOrderMount] = useState<HTMLElement | null>(null);
+  const [mount, setMount] = useState<HTMLElement | null>(null);
   const [editorMount, setEditorMount] = useState<HTMLElement | null>(null);
   const [invitationId, setInvitationId] = useState("");
   const [position, setPosition] = useState(0);
   const [enabled, setEnabled] = useState(true);
   const [blockCount, setBlockCount] = useState(0);
-  const draggingStory = useRef(false);
+  const loadedIdRef = useRef("");
+  const positionRef = useRef(0);
+  const enabledRef = useRef(true);
+
+  useEffect(() => { positionRef.current = position; }, [position]);
+  useEffect(() => { enabledRef.current = enabled; }, [enabled]);
 
   async function resolveInvitationId() {
     if (!supabase) return "";
@@ -40,13 +45,7 @@ export function StoryBlockOrderEnhancer() {
     }
     const title = currentBuilderTitle();
     if (!title) return "";
-    const { data } = await supabase
-      .from("invitations")
-      .select("id")
-      .eq("title", title)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data } = await supabase.from("invitations").select("id").eq("title", title).order("updated_at", { ascending: false }).limit(1).maybeSingle();
     return (data?.id as string | undefined) ?? "";
   }
 
@@ -54,204 +53,143 @@ export function StoryBlockOrderEnhancer() {
     if (!supabase || !id) return;
     const [{ data: content }, { data: story }] = await Promise.all([
       supabase.from("invitation_content").select("story_position").eq("invitation_id", id).maybeSingle(),
-      supabase.from("invitation_sections").select("enabled").eq("invitation_id", id).eq("type", "story").maybeSingle()
+      supabase.from("invitation_sections").select("enabled, sort_order").eq("invitation_id", id).eq("type", "story").maybeSingle()
     ]);
-    const stored = Number(content?.story_position ?? 0);
-    setPosition(Number.isFinite(stored) ? Math.max(0, stored) : 0);
+    const stored = Number(content?.story_position ?? story?.sort_order ?? 0);
+    const safe = Number.isFinite(stored) ? Math.max(0, stored) : 0;
+    positionRef.current = safe;
+    enabledRef.current = story?.enabled ?? true;
+    setPosition(safe);
     setEnabled(story?.enabled ?? true);
-  }
-
-  function placeOrderMount(nextPosition: number) {
-    const list = document.querySelector<HTMLElement>(".block-order-list");
-    const target = list?.querySelector<HTMLElement>("[data-story-order-mount]");
-    if (!list || !target) return;
-
-    const nativeItems = Array.from(list.children).filter(
-      (child) => !(child as HTMLElement).dataset.storyOrderMount
-    ) as HTMLElement[];
-    const safe = Math.max(0, Math.min(nextPosition, nativeItems.length));
-    const before = nativeItems[safe] ?? null;
-    list.insertBefore(target, before);
   }
 
   async function persistPosition(next: number) {
     const safe = Math.max(0, Math.min(blockCount, next));
+    positionRef.current = safe;
     setPosition(safe);
-    placeOrderMount(safe);
     if (!supabase || !invitationId) return;
     await Promise.all([
-      supabase
-        .from("invitation_content")
-        .update({ story_position: safe, updated_at: new Date().toISOString() })
-        .eq("invitation_id", invitationId),
-      supabase
-        .from("invitation_sections")
-        .update({ sort_order: safe })
-        .eq("invitation_id", invitationId)
-        .eq("type", "story")
+      supabase.from("invitation_content").update({ story_position: safe, updated_at: new Date().toISOString() }).eq("invitation_id", invitationId),
+      supabase.from("invitation_sections").update({ sort_order: safe }).eq("invitation_id", invitationId).eq("type", "story")
     ]);
   }
 
   async function persistEnabled(next: boolean) {
+    enabledRef.current = next;
     setEnabled(next);
-    const previewStory = document.querySelector<HTMLElement>('[data-preview-section="story"]');
-    if (previewStory) previewStory.style.display = next ? "" : "none";
     if (!supabase || !invitationId) return;
-    await supabase
-      .from("invitation_sections")
-      .update({ enabled: next })
-      .eq("invitation_id", invitationId)
-      .eq("type", "story");
+    await supabase.from("invitation_sections").update({ enabled: next }).eq("invitation_id", invitationId).eq("type", "story");
   }
 
   useEffect(() => {
     let active = true;
-    let lastId = "";
 
     const sync = async () => {
       const list = document.querySelector<HTMLElement>(".block-order-list");
-      const panel = document.querySelector<HTMLElement>(".block-order-panel");
-      if (!list || !panel) return;
+      if (list) {
+        let target = list.querySelector<HTMLElement>("[data-story-order-mount]");
+        if (!target) {
+          target = document.createElement("div");
+          target.dataset.storyOrderMount = "true";
+          target.style.display = "contents";
+        }
 
-      let target = list.querySelector<HTMLElement>("[data-story-order-mount]");
-      if (!target) {
-        target = document.createElement("div");
-        target.dataset.storyOrderMount = "true";
+        const nativeItems = Array.from(list.children).filter(
+          (child) => !(child as HTMLElement).dataset.storyOrderMount
+        ) as HTMLElement[];
+        const count = nativeItems.length;
+        setBlockCount(count);
+        const safePosition = Math.max(0, Math.min(positionRef.current, count));
+        const before = nativeItems[safePosition] ?? null;
+        if (target.parentElement !== list || target.nextElementSibling !== before) {
+          list.insertBefore(target, before);
+        }
+        setMount(target);
       }
 
-      const nativeItems = Array.from(list.children).filter(
-        (child) => !(child as HTMLElement).dataset.storyOrderMount
-      ) as HTMLElement[];
-      setBlockCount(nativeItems.length);
-      const safePosition = Math.max(0, Math.min(position, nativeItems.length));
-      const before = nativeItems[safePosition] ?? null;
-      if (target.parentElement !== list || target.nextElementSibling !== before) {
-        list.insertBefore(target, before);
-      }
-      setOrderMount(target);
+      const fixedLegacyStory = document.querySelector<HTMLElement>(".phone-story-slot");
+      if (fixedLegacyStory) fixedLegacyStory.style.display = "none";
 
-      let editorTarget = document.querySelector<HTMLElement>("[data-story-block-editor-mount]");
-      if (!editorTarget) {
-        editorTarget = document.createElement("div");
-        editorTarget.dataset.storyBlockEditorMount = "true";
-        panel.insertAdjacentElement("afterend", editorTarget);
+      const phoneScreen = document.querySelector<HTMLElement>(".phone-screen");
+      const storyPreviewMount = phoneScreen?.querySelector<HTMLElement>("[data-story-preview-mount]");
+      if (phoneScreen && storyPreviewMount) {
+        const previewBlocks = Array.from(phoneScreen.children).filter((child) => {
+          const element = child as HTMLElement;
+          return element.classList.contains("phone-slot") &&
+            !element.classList.contains("phone-story-slot") &&
+            element !== storyPreviewMount;
+        }) as HTMLElement[];
+        const safePosition = Math.max(0, Math.min(positionRef.current, previewBlocks.length));
+        const before = previewBlocks[safePosition] ?? phoneScreen.querySelector<HTMLElement>(".phone-preview-footer");
+        if (storyPreviewMount.nextElementSibling !== before || storyPreviewMount.parentElement !== phoneScreen) {
+          phoneScreen.insertBefore(storyPreviewMount, before ?? null);
+        }
+        storyPreviewMount.style.display = enabledRef.current ? "" : "none";
       }
-      setEditorMount(editorTarget);
 
-      const previewStory = document.querySelector<HTMLElement>('[data-preview-section="story"]');
-      if (previewStory) previewStory.style.display = enabled ? "" : "none";
+      const storyTitleMount = document.querySelector<HTMLElement>("[data-story-title-mount]");
+      if (storyTitleMount?.parentElement) {
+        let control = storyTitleMount.parentElement.querySelector<HTMLElement>("[data-story-editor-toggle-mount]");
+        if (!control) {
+          control = document.createElement("div");
+          control.dataset.storyEditorToggleMount = "true";
+          storyTitleMount.insertAdjacentElement("afterend", control);
+        }
+        setEditorMount(control);
+      }
 
       const id = await resolveInvitationId();
-      if (!active || !id || id === lastId) return;
-      lastId = id;
+      if (!active || !id) return;
       setInvitationId(id);
-      await loadState(id);
+      if (loadedIdRef.current !== id) {
+        loadedIdRef.current = id;
+        await loadState(id);
+      }
     };
 
     void sync();
-    const timer = window.setInterval(() => void sync(), 400);
+    const timer = window.setInterval(() => void sync(), 300);
     return () => {
       active = false;
       window.clearInterval(timer);
     };
-  }, [supabase, position, enabled]);
+  }, [supabase]);
 
-  useEffect(() => {
-    const list = document.querySelector<HTMLElement>(".block-order-list");
-    if (!list) return;
+  const orderControl = mount ? createPortal(
+    <div
+      className="block-order-item"
+      draggable
+      data-story-order-control
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", "story");
+      }}
+    >
+      <span className="block-drag-handle" aria-hidden="true">⋮⋮</span>
+      <strong>La nostra storia</strong>
+      <div className="block-order-actions">
+        <button aria-label="Sposta La nostra storia in alto" disabled={position <= 0} type="button" onClick={() => void persistPosition(position - 1)}>↑</button>
+        <button aria-label="Sposta La nostra storia in basso" disabled={position >= blockCount} type="button" onClick={() => void persistPosition(position + 1)}>↓</button>
+      </div>
+    </div>,
+    mount
+  ) : null;
 
-    const prevent = (event: DragEvent) => {
-      if (!draggingStory.current) return;
-      event.preventDefault();
-    };
-
-    const drop = (event: DragEvent) => {
-      if (!draggingStory.current) return;
-      event.preventDefault();
-      draggingStory.current = false;
-
-      const item = (event.target as HTMLElement | null)?.closest<HTMLElement>(".block-order-item");
-      if (!item) return;
-      const wrapper = item.parentElement;
-      if (!wrapper || wrapper.dataset.storyOrderMount === "true") return;
-
-      const nativeWrappers = Array.from(list.children).filter(
-        (child) => !(child as HTMLElement).dataset.storyOrderMount
-      );
-      const targetIndex = nativeWrappers.indexOf(wrapper);
-      if (targetIndex >= 0) void persistPosition(targetIndex);
-    };
-
-    list.addEventListener("dragover", prevent);
-    list.addEventListener("drop", drop);
-    return () => {
-      list.removeEventListener("dragover", prevent);
-      list.removeEventListener("drop", drop);
-    };
-  }, [invitationId, blockCount]);
-
-  const orderControl = orderMount
-    ? createPortal(
-        <div
-          className="block-order-item"
-          data-story-order-control
-          draggable
-          onDragEnd={() => {
-            draggingStory.current = false;
-          }}
-          onDragStart={() => {
-            draggingStory.current = true;
-          }}
-        >
-          <span className="block-drag-handle" aria-hidden="true">⋮⋮</span>
+  const activeControl = editorMount ? createPortal(
+    <div className="nested-fields block-editor" style={{ marginTop: 14 }}>
+      <div className="block-editor-head">
+        <div>
+          <span>{enabled ? "Visibile nel link" : "Nascosto dal link"}</span>
           <strong>La nostra storia</strong>
-          <div className="block-order-actions">
-            <button
-              aria-label="Sposta La nostra storia in alto"
-              disabled={position <= 0}
-              type="button"
-              onClick={() => void persistPosition(position - 1)}
-            >
-              ↑
-            </button>
-            <button
-              aria-label="Sposta La nostra storia in basso"
-              disabled={position >= blockCount}
-              type="button"
-              onClick={() => void persistPosition(position + 1)}
-            >
-              ↓
-            </button>
-          </div>
-        </div>,
-        orderMount
-      )
-    : null;
+        </div>
+        <label className="toggle-item compact">
+          <input checked={enabled} type="checkbox" onChange={(event) => void persistEnabled(event.target.checked)} />
+          <span>Attivo</span>
+        </label>
+      </div>
+    </div>,
+    editorMount
+  ) : null;
 
-  const blockEditor = editorMount
-    ? createPortal(
-        <div className="nested-fields block-editor">
-          <div className="block-editor-head">
-            <div>
-              <span>{enabled ? "Visibile nel link" : "Nascosto dal link"}</span>
-              <strong>La nostra storia</strong>
-            </div>
-            <label className="toggle-item compact">
-              <input
-                checked={enabled}
-                type="checkbox"
-                onChange={(event) => void persistEnabled(event.target.checked)}
-              />
-              <span>Attivo</span>
-            </label>
-          </div>
-          <p className="muted" style={{ margin: 0 }}>
-            Titolo, racconto, fotografie e didascalie si modificano nella sezione “Personalizza la storia” qui sopra.
-          </p>
-        </div>,
-        editorMount
-      )
-    : null;
-
-  return <>{orderControl}{blockEditor}</>;
+  return <>{orderControl}{activeControl}</>;
 }
