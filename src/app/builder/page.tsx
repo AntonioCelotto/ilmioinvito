@@ -1,6 +1,7 @@
 import { BuilderClient } from "@/components/builder-client";
 import { StoryEditor } from "@/components/story-editor";
 import { CelebrationNumberEditor } from "@/components/celebration-number-editor";
+import { HeroCenterEnhancer } from "@/components/hero-center-enhancer";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -50,6 +51,7 @@ export default function BuilderPage() {
               <BuilderClient />
               <CelebrationNumberEditor />
               <StoryEditor />
+              <HeroCenterEnhancer />
             </>
           </AuthGate>
         </section>
