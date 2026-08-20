@@ -3,6 +3,7 @@ import { StoryEditor } from "@/components/story-editor";
 import { StoryBlockOrderEnhancer } from "@/components/story-block-order-enhancer";
 import { CelebrationNumberEditor } from "@/components/celebration-number-editor";
 import { HeroCenterEnhancer } from "@/components/hero-center-enhancer";
+import { HeroKickerEditor } from "@/components/hero-kicker-editor";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -50,6 +51,7 @@ export default function BuilderPage() {
           <AuthGate>
             <>
               <BuilderClient />
+              <HeroKickerEditor />
               <StoryBlockOrderEnhancer />
               <CelebrationNumberEditor />
               <StoryEditor />
