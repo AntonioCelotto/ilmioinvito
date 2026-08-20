@@ -1,6 +1,7 @@
 import { DraftInviteClient } from "@/components/draft-invite-client";
 import { InviteStoryEnhancer } from "@/components/invite-story-enhancer";
 import { InviteCelebrationNumber } from "@/components/invite-celebration-number";
+import { InviteHeroKicker } from "@/components/invite-hero-kicker";
 import styles from "@/components/public-invite.module.css";
 
 type InvitePageProps = {
@@ -15,6 +16,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
   return (
     <div className={styles.publicInvite}>
       <DraftInviteClient slug={slug} />
+      <InviteHeroKicker slug={slug} />
       <InviteStoryEnhancer slug={slug} />
       <InviteCelebrationNumber slug={slug} />
     </div>
