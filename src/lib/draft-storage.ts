@@ -1,5 +1,4 @@
 export type InvitationSectionKey =
-  | "story"
   | "countdown"
   | "ceremony"
   | "reception"
@@ -81,7 +80,6 @@ export const draftStorageKey = "ilmioinvito:drafts";
 export const editingDraftStorageKey = "ilmioinvito:editing-draft";
 
 export const defaultSections: InvitationSectionKey[] = [
-  "story",
   "countdown",
   "ceremony",
   "reception",
@@ -91,7 +89,6 @@ export const defaultSections: InvitationSectionKey[] = [
 ];
 
 export const defaultBlockTexts: InvitationBlockTexts = {
-  story: "Raccontate qui la vostra storia.",
   countdown: "Il conto alla rovescia e iniziato: manca sempre meno al grande giorno.",
   ceremony: "La cerimonia sara il primo momento da vivere insieme, con tutte le persone piu importanti.",
   reception: "Dopo la cerimonia continueremo a festeggiare nella location scelta per il ricevimento.",
@@ -114,48 +111,47 @@ export function makeSlug(value: string) {
   return slug || "nuovo-invito";
 }
 
-function normalizeDraft(draft: InvitationDraft): InvitationDraft {
-  const activeSections = (draft.activeSections ?? []) as InvitationSectionKey[];
-  const withStory = activeSections.includes("story")
-    ? activeSections
-    : (["story", ...activeSections] as InvitationSectionKey[]);
-
-  return {
-    ...draft,
-    activeSections: withStory,
-    locations: (draft.locations ?? []).map((location) => ({
-      ...location,
-      description: location.description ?? "",
-      enabled: location.enabled ?? true,
-      imageUrl: location.imageUrl ?? ""
-    })),
-    program: (draft.program ?? []).map((item, index) => ({
-      id: item.id || `program-${index + 1}`,
-      time: item.time ?? "",
-      description: item.description ?? ""
-    })),
-    media: (draft.media ?? []).filter(
-      (item) => item.url && !item.url.startsWith("blob:")
-    ),
-    giftIban: draft.giftIban ?? "",
-    giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({
-      id: wish.id || `wish-${index + 1}`,
-      title: wish.title ?? ""
-    })),
-    blockTexts: {
-      ...defaultBlockTexts,
-      ...(draft.blockTexts ?? {})
-    },
-    theme: draft.theme
-  };
-}
-
 export function readDrafts(): InvitationDraft[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") {
+    return [];
+  }
+
   const raw = window.localStorage.getItem(draftStorageKey);
-  if (!raw) return [];
+
+  if (!raw) {
+    return [];
+  }
+
   try {
-    return (JSON.parse(raw) as InvitationDraft[]).map(normalizeDraft);
+    const drafts = JSON.parse(raw) as InvitationDraft[];
+
+    return drafts.map((draft) => ({
+      ...draft,
+      locations: (draft.locations ?? []).map((location) => ({
+        ...location,
+        description: location.description ?? "",
+        enabled: location.enabled ?? true,
+        imageUrl: location.imageUrl ?? ""
+      })),
+      program: (draft.program ?? []).map((item, index) => ({
+        id: item.id || `program-${index + 1}`,
+        time: item.time ?? "",
+        description: item.description ?? ""
+      })),
+      media: (draft.media ?? []).filter(
+        (item) => item.url && !item.url.startsWith("blob:")
+      ),
+      giftIban: draft.giftIban ?? "",
+      giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({
+        id: wish.id || `wish-${index + 1}`,
+        title: wish.title ?? ""
+      })),
+      blockTexts: {
+        ...defaultBlockTexts,
+        ...(draft.blockTexts ?? {})
+      },
+      theme: draft.theme
+    }));
   } catch {
     return [];
   }
@@ -167,10 +163,16 @@ export function findDraftBySlug(slug: string) {
 
 export function saveDraft(draft: InvitationDraft) {
   const drafts = readDrafts();
-  const nextDrafts = [draft, ...drafts.filter((item) => item.id !== draft.id)];
+  const nextDrafts = [
+    draft,
+    ...drafts.filter((item) => item.id !== draft.id)
+  ];
+
   window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts));
+
   return nextDrafts;
 }
+
 
 export function removeDraft(draftId: string) {
   const nextDrafts = readDrafts().filter((draft) => draft.id !== draftId);
@@ -183,11 +185,18 @@ export function setEditingDraft(draft: InvitationDraft) {
 }
 
 export function readEditingDraft(): InvitationDraft | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") {
+    return null;
+  }
+
   const raw = window.localStorage.getItem(editingDraftStorageKey);
-  if (!raw) return null;
+
+  if (!raw) {
+    return null;
+  }
+
   try {
-    return normalizeDraft(JSON.parse(raw) as InvitationDraft);
+    return JSON.parse(raw) as InvitationDraft;
   } catch {
     return null;
   }
