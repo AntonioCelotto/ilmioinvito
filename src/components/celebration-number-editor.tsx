@@ -9,144 +9,134 @@ type SupabaseClient = NonNullable<ReturnType<typeof createClient>>;
 const DEFAULT_COLOR = "#d6ad60";
 const COLOR_PRESETS = ["#d6ad60", "#ffffff", "#111111", "#c7c7c7", "#b76e79", "#7d2235", "#1f5f99", "#2f6b4f"];
 
+function currentBuilderTitle() {
+  if (typeof document === "undefined") return "";
+  return document.querySelector<HTMLInputElement>("#title")?.value.trim() ?? "";
+}
+
 function resolveCurrentDraft(): InvitationDraft | null {
   if (typeof window === "undefined") return null;
   const editingId = new URLSearchParams(window.location.search).get("edit");
   const editingDraft = readEditingDraft();
+
   if (editingId && editingDraft?.id === editingId) return editingDraft;
+  if (!editingId && editingDraft) {
+    const title = currentBuilderTitle();
+    if (!title || editingDraft.title.trim() === title) return editingDraft;
+  }
+
   const drafts = readDrafts();
   if (editingId) return drafts.find((draft) => draft.id === editingId) ?? null;
-  const title = document.querySelector<HTMLInputElement>("#title")?.value.trim() ?? "";
+  const title = currentBuilderTitle();
   return title ? drafts.find((draft) => draft.title.trim() === title) ?? null : null;
-}
-
-function ensurePreviewBadge() {
-  const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
-  if (!hero) return null;
-  let badge = hero.querySelector<HTMLElement>("[data-celebration-number-preview]");
-  if (!badge) {
-    badge = document.createElement("div");
-    badge.dataset.celebrationNumberPreview = "true";
-    badge.style.position = "absolute";
-    badge.style.left = "50%";
-    badge.style.transform = "translateX(-50%)";
-    badge.style.zIndex = "6";
-    badge.style.width = "88%";
-    badge.style.textAlign = "center";
-    badge.style.pointerEvents = "none";
-    badge.style.fontFamily = "Georgia, 'Times New Roman', serif";
-    badge.style.fontWeight = "700";
-    badge.style.fontSize = "clamp(54px, 17vw, 100px)";
-    badge.style.lineHeight = ".82";
-    badge.style.letterSpacing = "-.05em";
-    badge.style.webkitTextStroke = "1px rgba(255,255,255,.28)";
-    badge.style.textShadow = "0 2px 2px rgba(0,0,0,.22), 0 6px 16px rgba(0,0,0,.30)";
-    hero.style.position = "relative";
-    hero.appendChild(badge);
-  }
-  return badge;
-}
-
-function previewOverlay(number: string, color: string) {
-  const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
-  const badge = ensurePreviewBadge();
-  if (!badge || !hero) return;
-
-  const hasVideo = Boolean(hero.querySelector("video"));
-  badge.style.top = hasVideo ? "6%" : "-3%";
-  badge.style.color = color || DEFAULT_COLOR;
-
-  if (!number) {
-    badge.style.display = "none";
-    badge.textContent = "";
-    return;
-  }
-
-  badge.style.display = "block";
-  badge.textContent = number;
 }
 
 export function CelebrationNumberEditor() {
   const [target, setTarget] = useState<HTMLElement | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<HTMLElement | null>(null);
+  const [hasVideo, setHasVideo] = useState(false);
   const [draft, setDraft] = useState<InvitationDraft | null>(null);
   const [number, setNumber] = useState("");
   const [color, setColor] = useState(DEFAULT_COLOR);
   const [message, setMessage] = useState("");
   const supabase = useMemo(() => createClient(), []);
 
-  async function load(currentDraft: InvitationDraft | null, client: SupabaseClient) {
-    if (!currentDraft) {
-      setNumber("");
-      setColor(DEFAULT_COLOR);
-      previewOverlay("", DEFAULT_COLOR);
-      return;
+  async function findInvitationId(currentDraft: InvitationDraft | null, client: SupabaseClient) {
+    if (currentDraft?.id) {
+      const { data } = await client.from("invitations").select("id").eq("id", currentDraft.id).maybeSingle();
+      if (data?.id) return data.id as string;
     }
+
+    const title = currentBuilderTitle();
+    if (!title) return null;
+    const { data } = await client
+      .from("invitations")
+      .select("id")
+      .eq("title", title)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return (data?.id as string | undefined) ?? null;
+  }
+
+  async function load(currentDraft: InvitationDraft | null, client: SupabaseClient) {
+    const invitationId = await findInvitationId(currentDraft, client);
+    if (!invitationId) return;
+
     const { data } = await client
       .from("invitation_celebration_number")
       .select("celebration_number, celebration_color")
-      .eq("invitation_id", currentDraft.id)
+      .eq("invitation_id", invitationId)
       .maybeSingle();
-    const value = data?.celebration_number ?? "";
-    const savedColor = data?.celebration_color ?? DEFAULT_COLOR;
-    setNumber(value);
-    setColor(savedColor);
-    previewOverlay(value, savedColor);
+
+    setNumber(data?.celebration_number ?? "");
+    setColor(data?.celebration_color ?? DEFAULT_COLOR);
   }
 
   useEffect(() => {
     let lastId = "";
+
     const sync = () => {
       const eventDate = document.querySelector<HTMLInputElement>("#date");
-      if (eventDate?.parentElement) setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
+      if (eventDate?.parentElement) {
+        setTarget(eventDate.parentElement.parentElement ?? eventDate.parentElement);
+      }
+
+      const hero = document.querySelector<HTMLElement>(".phone-hero-preview");
+      if (hero) {
+        hero.style.position = "relative";
+        setPreviewTarget(hero);
+        setHasVideo(Boolean(hero.querySelector("video")));
+      }
+
       const current = resolveCurrentDraft();
       setDraft(current);
-      const id = current?.id ?? "";
+      const id = current?.id ?? currentBuilderTitle();
       if (id !== lastId) {
         lastId = id;
         if (supabase) void load(current, supabase);
       }
-      previewOverlay(number, color);
     };
+
     sync();
-    const timer = window.setInterval(sync, 500);
+    const timer = window.setInterval(sync, 400);
     window.addEventListener("focus", sync);
     return () => {
       window.clearInterval(timer);
       window.removeEventListener("focus", sync);
     };
-  }, [supabase, number, color]);
-
-  useEffect(() => {
-    previewOverlay(number, color);
-  }, [number, color]);
+  }, [supabase]);
 
   async function save(nextNumber = number, nextColor = color) {
     const clean = nextNumber.replace(/[^0-9]/g, "").slice(0, 3);
     setNumber(clean);
     setColor(nextColor);
-    previewOverlay(clean, nextColor);
+
     const client = supabase;
-    if (!draft || !client) {
+    if (!client) {
+      setMessage("Servizio di salvataggio non disponibile.");
+      return;
+    }
+
+    const invitationId = await findInvitationId(draft, client);
+    if (!invitationId) {
       setMessage("Salva prima la bozza dell'invito.");
       return;
     }
-    const { data: invitation } = await client.from("invitations").select("id").eq("id", draft.id).maybeSingle();
-    if (!invitation) {
-      setMessage("Salva prima la bozza dell'invito.");
-      return;
-    }
+
     const { error } = await client.from("invitation_celebration_number").upsert({
-      invitation_id: draft.id,
+      invitation_id: invitationId,
       celebration_number: clean,
       celebration_color: nextColor,
       updated_at: new Date().toISOString()
     });
+
     setMessage(error ? error.message : clean ? "Numero e colore salvati." : "Numero rimosso.");
   }
 
   if (!target) return null;
 
-  return createPortal(
+  const editor = createPortal(
     <div className="field" style={{ marginTop: 12 }}>
       <label htmlFor="celebration-number">Età / Numero compleanno</label>
       <input
@@ -206,4 +196,33 @@ export function CelebrationNumberEditor() {
     </div>,
     target
   );
+
+  const preview = previewTarget && number ? createPortal(
+    <div
+      data-celebration-number-preview="true"
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: hasVideo ? "6%" : "-3%",
+        transform: "translateX(-50%)",
+        zIndex: 20,
+        width: "88%",
+        textAlign: "center",
+        pointerEvents: "none",
+        fontFamily: "Georgia, 'Times New Roman', serif",
+        fontWeight: 700,
+        fontSize: "clamp(54px, 17vw, 100px)",
+        lineHeight: ".82",
+        letterSpacing: "-.05em",
+        color,
+        WebkitTextStroke: "1px rgba(255,255,255,.28)",
+        textShadow: "0 2px 2px rgba(0,0,0,.22), 0 6px 16px rgba(0,0,0,.30)"
+      }}
+    >
+      {number}
+    </div>,
+    previewTarget
+  ) : null;
+
+  return <>{editor}{preview}</>;
 }
