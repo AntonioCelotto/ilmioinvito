@@ -30,7 +30,19 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
+  color: var(--invitation-text-color);
   background: color-mix(in srgb, var(--invitation-primary-color) 18%, transparent);
+}
+
+.publicInvite :global(.invite-section h1),
+.publicInvite :global(.invite-section h2),
+.publicInvite :global(.invite-section h3),
+.publicInvite :global(.invite-section p),
+.publicInvite :global(.invite-section .muted),
+.publicInvite :global(.invite-section label),
+.publicInvite :global(.invite-section strong),
+.publicInvite :global(.invite-section small) {
+  color: var(--invitation-text-color);
 }
 
 .publicInvite :global(.invite-section-inner),
@@ -68,6 +80,97 @@
   background: color-mix(in srgb, var(--invitation-button-color) 18%, white);
   border: 1px solid var(--invitation-button-color);
   color: var(--invitation-text-color);
+}
+
+.publicInvite :global(.social-composer) {
+  width: min(760px, 100%);
+  margin: 34px auto 0;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid color-mix(in srgb, var(--invitation-text-color) 24%, transparent);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--invitation-primary-color) 78%, #ffffff 22%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
+}
+
+.publicInvite :global(.social-composer-heading) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.publicInvite :global(.social-composer-heading > span) {
+  display: grid;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--invitation-button-color);
+  color: var(--invitation-button-text) !important;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.publicInvite :global(.social-composer-heading strong) {
+  display: block;
+  font-size: 1.15rem;
+}
+
+.publicInvite :global(.social-composer-heading small) {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.82;
+}
+
+.publicInvite :global(.social-composer input),
+.publicInvite :global(.social-composer textarea) {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid color-mix(in srgb, var(--invitation-text-color) 22%, transparent);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #2b2424;
+}
+
+.publicInvite :global(.social-composer textarea) {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.publicInvite :global(.social-composer .field) {
+  margin-top: 16px;
+}
+
+.publicInvite :global(.social-composer .field label) {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: 700;
+}
+
+.publicInvite :global(.social-composer .field small) {
+  display: block;
+  margin-top: 6px;
+  opacity: 0.75;
+}
+
+.publicInvite :global(.social-publish-button) {
+  width: 100%;
+  margin-top: 20px;
+  background: var(--invitation-button-color);
+  color: var(--invitation-button-text);
+}
+
+.publicInvite :global(.social-preview-note),
+.publicInvite :global(.social-upload-message) {
+  padding: 11px 13px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--invitation-button-color) 15%, transparent);
+}
+
+.publicInvite :global(.social-feed) {
+  width: min(920px, 100%);
+  margin: 30px auto 0;
 }
 
 @media (max-width: 560px) {
@@ -130,5 +233,14 @@
 
   .publicInvite :global(.invite-rsvp-section) {
     overflow: hidden;
+  }
+
+  .publicInvite :global(.social-composer) {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .publicInvite :global(.social-composer-heading) {
+    align-items: flex-start;
   }
 }
