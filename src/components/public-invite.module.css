@@ -65,6 +65,14 @@
   backdrop-filter: blur(4px);
 }
 
+.publicInvite :global(.invite-program) {
+  border-color: var(--invitation-button-color);
+}
+
+.publicInvite :global(.invite-program-item time) {
+  color: var(--invitation-button-color) !important;
+}
+
 .publicInvite :global(input),
 .publicInvite :global(textarea) {
   max-width: 100%;
