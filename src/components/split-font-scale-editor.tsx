@@ -23,7 +23,6 @@ function currentDraft(): InvitationDraft | null {
   const editId = new URLSearchParams(window.location.search).get("edit");
   const editing = readEditingDraft();
   if (editId && editing?.id === editId) return editing;
-
   const title = document.querySelector<HTMLInputElement>("#title")?.value.trim();
   if (!title) return editing;
   return readDrafts().find((draft) => draft.title.trim() === title) ?? editing;
@@ -56,18 +55,11 @@ export function SplitFontScaleEditor() {
   async function persist(title: number, text: number) {
     const draft = currentDraft();
     if (!draft) return;
-
     const nextDraft = {
       ...draft,
-      theme: {
-        ...draft.theme,
-        fontScale: 1,
-        titleFontScale: title,
-        textFontScale: text
-      },
+      theme: { ...draft.theme, fontScale: 1, titleFontScale: title, textFontScale: text },
       updatedAt: new Date().toISOString()
     } as InvitationDraft;
-
     saveDraft(nextDraft);
     setEditingDraft(nextDraft);
     await saveDraftToSupabase(nextDraft);
@@ -93,11 +85,9 @@ export function SplitFontScaleEditor() {
       const oldLabel = labels.find((label) => label.textContent?.includes("Dimensione testi:"));
       const field = oldLabel?.closest<HTMLElement>(".field") ?? null;
       if (!field) return;
-
       field.style.display = "none";
       const row = field.parentElement;
       if (row) setTarget(row);
-
       const scales = readScales(currentDraft());
       setTitleScale(scales.title);
       setTextScale(scales.text);
@@ -106,7 +96,6 @@ export function SplitFontScaleEditor() {
 
     findTarget();
     const timer = window.setTimeout(findTarget, 350);
-
     const style = document.createElement("style");
     style.dataset.splitFontScale = "true";
     style.textContent = `
@@ -114,33 +103,37 @@ export function SplitFontScaleEditor() {
       .preview-phone .phone-featured-text,
       .preview-phone .phone-location strong,
       .preview-phone .phone-program-item strong,
-      .preview-phone .phone-social-heading strong {
-        font-size: calc(30px * var(--invitation-title-scale, 1)) !important;
-      }
+      .preview-phone .phone-social-heading strong { font-size: calc(30px * var(--invitation-title-scale, 1)) !important; }
       .preview-phone .phone-hero-preview p,
       .preview-phone .phone-slot p,
       .preview-phone .phone-location,
       .preview-phone .phone-meta,
       .preview-phone .phone-program-item span,
-      .preview-phone .phone-social-heading small {
-        font-size: calc(13px * var(--invitation-text-scale, 1)) !important;
-      }
+      .preview-phone .phone-social-heading small { font-size: calc(13px * var(--invitation-text-scale, 1)) !important; }
       .split-font-scale-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
         gap: 14px;
         width: 100%;
+        min-width: 0;
       }
       .split-font-scale-card {
         display: grid;
         gap: 8px;
+        width: 100%;
+        min-width: 0;
       }
-      .split-font-scale-card > label {
-        font-weight: 650;
+      .split-font-scale-card > label { font-weight: 650; }
+      .split-font-scale-card .font-size-control {
+        display: grid;
+        grid-template-columns: 52px minmax(120px, 1fr) 52px;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-width: 0;
       }
-      @media (max-width: 760px) {
-        .split-font-scale-grid { grid-template-columns: 1fr; }
-      }
+      .split-font-scale-card .font-size-control input[type="range"] { width: 100%; min-width: 0; }
+      .split-font-scale-card .font-size-control button { width: 52px; min-width: 52px; }
     `;
     document.head.appendChild(style);
 
@@ -152,7 +145,6 @@ export function SplitFontScaleEditor() {
       window.setTimeout(() => void persist(titleScale, textScale), 1200);
     };
     document.addEventListener("click", onClick);
-
     return () => {
       window.clearTimeout(timer);
       document.removeEventListener("click", onClick);
