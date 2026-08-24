@@ -6,6 +6,7 @@ import { HeroCenterEnhancer } from "@/components/hero-center-enhancer";
 import { HeroKickerEditor } from "@/components/hero-kicker-editor";
 import { BuilderTemplateLinkEnhancer } from "@/components/builder-template-link-enhancer";
 import { BackgroundColorEnhancer } from "@/components/background-color-enhancer";
+import { TemplateRemoteSync } from "@/components/template-remote-sync";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -22,13 +23,9 @@ export default function BuilderPage() {
             overflowY: "auto"
           }}
         >
-          <a className="brand" href="/">
-            ilmioinvito
-          </a>
+          <a className="brand" href="/">ilmioinvito</a>
           <nav aria-label="Builder">
-            <a className="active" href="/builder">
-              Crea invito
-            </a>
+            <a className="active" href="/builder">Crea invito</a>
             <a href="/templates">Scegli template</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/i/dora-lorenzo-demo">Anteprima pubblica</a>
@@ -40,19 +37,15 @@ export default function BuilderPage() {
             <div>
               <p className="eyebrow">Builder MVP</p>
               <h2>Crea il tuo invito</h2>
-              <p className="muted">
-                Inserisci i dati, scegli sezioni e personalizza il template.
-                Per usare il builder devi prima registrarti e accedere.
-              </p>
+              <p className="muted">Inserisci i dati, scegli sezioni e personalizza il template. Per usare il builder devi prima registrarti e accedere.</p>
             </div>
-            <a className="button" href="/dashboard">
-              Vai alla dashboard
-            </a>
+            <a className="button" href="/dashboard">Vai alla dashboard</a>
           </div>
 
           <AuthGate>
             <>
               <BuilderClient />
+              <TemplateRemoteSync />
               <BuilderTemplateLinkEnhancer />
               <HeroKickerEditor />
               <StoryBlockOrderEnhancer />
