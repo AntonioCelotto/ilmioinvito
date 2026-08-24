@@ -52,7 +52,16 @@ export function HeroMetaStyleEditor() {
     const setup = () => {
       const date = document.querySelector<HTMLInputElement>("#date");
       const row = date?.closest<HTMLElement>(".field-row") ?? null;
-      if (row?.parentElement) setTarget(row.parentElement);
+      if (row) {
+        let mount = row.parentElement?.querySelector<HTMLElement>("[data-hero-meta-style-mount]") ?? null;
+        if (!mount) {
+          mount = document.createElement("div");
+          mount.dataset.heroMetaStyleMount = "true";
+          row.insertAdjacentElement("afterend", mount);
+        }
+        setTarget(mount);
+      }
+
       const saved = currentDraft()?.theme.heroMetaStyle ?? "pills";
       setStyle(saved);
       apply(saved);
@@ -64,6 +73,7 @@ export function HeroMetaStyleEditor() {
     const css = document.createElement("style");
     css.dataset.heroMetaStyle = "true";
     css.textContent = `
+      [data-hero-meta-style-mount]{width:100%;}
       .hero-meta-style-editor{display:grid;gap:9px;margin:10px 0 16px;padding-top:4px}.hero-meta-style-editor>strong{font-weight:700}.hero-meta-style-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.hero-meta-style-options button{padding:11px 12px;border:1px solid rgba(166,109,112,.32);border-radius:14px;background:#fff;color:#5c383a;font-weight:700;cursor:pointer}.hero-meta-style-options button.active{background:#a66d70;color:#fff;border-color:#a66d70}
       .preview-phone .phone-meta[data-meta-style="minimal"] span{border:0!important;background:transparent!important;border-radius:0!important;padding:3px 8px!important;border-bottom:1px solid currentColor!important}
       .preview-phone .phone-meta[data-meta-style="cards"]{gap:9px!important}.preview-phone .phone-meta[data-meta-style="cards"] span{border:0!important;border-radius:12px!important;padding:10px 13px!important;background:rgba(255,255,255,.78)!important;box-shadow:0 5px 18px rgba(0,0,0,.10)!important}
@@ -71,7 +81,11 @@ export function HeroMetaStyleEditor() {
       @media(max-width:760px){.hero-meta-style-options{grid-template-columns:1fr}}
     `;
     document.head.appendChild(css);
-    return () => { window.clearInterval(timer); css.remove(); };
+
+    return () => {
+      window.clearInterval(timer);
+      css.remove();
+    };
   }, []);
 
   async function choose(value: MetaStyle) {
@@ -79,7 +93,11 @@ export function HeroMetaStyleEditor() {
     apply(value);
     const draft = currentDraft();
     if (!draft) return;
-    const next: InvitationDraft = {...draft,theme:{...draft.theme,heroMetaStyle:value},updatedAt:new Date().toISOString()};
+    const next: InvitationDraft = {
+      ...draft,
+      theme: { ...draft.theme, heroMetaStyle: value },
+      updatedAt: new Date().toISOString()
+    };
     saveDraft(next);
     setEditingDraft(next);
     await saveDraftToSupabase(next);
@@ -87,10 +105,22 @@ export function HeroMetaStyleEditor() {
 
   if (!target) return null;
 
-  const dateRow = target.querySelector(".field-row");
-  const anchor = dateRow?.nextSibling;
-  const editor = <div className="hero-meta-style-editor"><strong>Grafica data</strong><div className="hero-meta-style-options">{options.map((option)=><button className={style===option.value?"active":""} key={option.value} type="button" onClick={()=>void choose(option.value)}>{option.label}</button>)}</div></div>;
-
-  if (anchor instanceof HTMLElement) return createPortal(editor, target);
-  return createPortal(editor, target);
+  return createPortal(
+    <div className="hero-meta-style-editor">
+      <strong>Grafica data</strong>
+      <div className="hero-meta-style-options">
+        {options.map((option) => (
+          <button
+            className={style === option.value ? "active" : ""}
+            key={option.value}
+            type="button"
+            onClick={() => void choose(option.value)}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>,
+    target
+  );
 }
