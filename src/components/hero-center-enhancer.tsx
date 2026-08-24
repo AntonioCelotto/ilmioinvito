@@ -12,6 +12,8 @@ export function HeroCenterEnhancer() {
       if (video) {
         hero.style.removeProperty("text-align");
         hero.style.removeProperty("min-height");
+        hero.style.removeProperty("place-content");
+        hero.style.removeProperty("align-content");
         return;
       }
 
@@ -25,6 +27,8 @@ export function HeroCenterEnhancer() {
 
       hero.style.position = "relative";
       hero.style.textAlign = "center";
+      hero.style.placeContent = "center";
+      hero.style.alignContent = "center";
 
       const title = hero.querySelector<HTMLElement>("h2");
       const kicker = hero.querySelector<HTMLElement>(".phone-kicker");
@@ -36,7 +40,7 @@ export function HeroCenterEnhancer() {
       [kicker, title, subtitle, meta].forEach((element) => {
         if (!element) return;
         element.style.position = "relative";
-        element.style.top = "58px";
+        element.style.top = "0";
         element.style.width = "100%";
         element.style.maxWidth = "100%";
         element.style.boxSizing = "border-box";
