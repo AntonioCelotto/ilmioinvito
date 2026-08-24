@@ -8,6 +8,7 @@ import { BuilderTemplateLinkEnhancer } from "@/components/builder-template-link-
 import { BackgroundColorEnhancer } from "@/components/background-color-enhancer";
 import { TemplateRemoteSync } from "@/components/template-remote-sync";
 import { SplitFontScaleEditor } from "@/components/split-font-scale-editor";
+import { CountdownStyleEditor } from "@/components/countdown-style-editor";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -55,6 +56,7 @@ export default function BuilderPage() {
               <HeroCenterEnhancer />
               <BackgroundColorEnhancer />
               <SplitFontScaleEditor />
+              <CountdownStyleEditor />
             </>
           </AuthGate>
         </section>
