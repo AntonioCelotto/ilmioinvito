@@ -14,6 +14,10 @@ export function HeroCenterEnhancer() {
         hero.style.removeProperty("min-height");
         hero.style.removeProperty("place-content");
         hero.style.removeProperty("align-content");
+        hero.style.removeProperty("width");
+        hero.style.removeProperty("margin-left");
+        hero.style.removeProperty("margin-right");
+        hero.style.removeProperty("margin-top");
         return;
       }
 
@@ -21,8 +25,14 @@ export function HeroCenterEnhancer() {
       if (phoneScreen) {
         const styles = window.getComputedStyle(phoneScreen);
         const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
-        const firstViewportHeight = Math.max(330, phoneScreen.clientHeight - paddingTop);
-        hero.style.minHeight = `${firstViewportHeight}px`;
+        const paddingLeft = Number.parseFloat(styles.paddingLeft) || 0;
+        const paddingRight = Number.parseFloat(styles.paddingRight) || 0;
+
+        hero.style.minHeight = `${Math.max(330, phoneScreen.clientHeight)}px`;
+        hero.style.width = `calc(100% + ${paddingLeft + paddingRight}px)`;
+        hero.style.marginLeft = `${-paddingLeft}px`;
+        hero.style.marginRight = `${-paddingRight}px`;
+        hero.style.marginTop = `${-paddingTop}px`;
       }
 
       hero.style.position = "relative";
@@ -57,12 +67,8 @@ export function HeroCenterEnhancer() {
     };
 
     sync();
-    const timer = window.setInterval(sync, 400);
     window.addEventListener("resize", sync);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener("resize", sync);
-    };
+    return () => window.removeEventListener("resize", sync);
   }, []);
 
   return null;
