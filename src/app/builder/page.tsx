@@ -7,6 +7,7 @@ import { HeroKickerEditor } from "@/components/hero-kicker-editor";
 import { BuilderTemplateLinkEnhancer } from "@/components/builder-template-link-enhancer";
 import { BackgroundColorEnhancer } from "@/components/background-color-enhancer";
 import { TemplateRemoteSync } from "@/components/template-remote-sync";
+import { SplitFontScaleEditor } from "@/components/split-font-scale-editor";
 import { AuthGate } from "@/components/auth-gate";
 
 export default function BuilderPage() {
@@ -53,6 +54,7 @@ export default function BuilderPage() {
               <StoryEditor />
               <HeroCenterEnhancer />
               <BackgroundColorEnhancer />
+              <SplitFontScaleEditor />
             </>
           </AuthGate>
         </section>
