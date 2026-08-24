@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
-function extractUrl(backgroundImage: string) {
-  const match = backgroundImage.match(/url\(["']?(.*?)["']?\)/);
-  return match?.[1] ?? "";
-}
+import { readSelectedTemplate } from "@/lib/template-catalog";
 
 export function BackgroundColorEnhancer() {
   useEffect(() => {
@@ -22,12 +18,19 @@ export function BackgroundColorEnhancer() {
       return;
     }
 
-    const originalImageUrl = extractUrl(preview.style.backgroundImage);
-    if (originalImageUrl) {
-      hero.style.backgroundImage = `url("${originalImageUrl}")`;
+    // Per i template immagine usiamo direttamente il template selezionato,
+    // invece di leggere lo sfondo precedente del contenitore. In questo modo
+    // il cambio immagine segue sempre la scelta effettuata nella galleria.
+    const selectedTemplate = readSelectedTemplate();
+    const selectedImage = selectedTemplate.theme.backgroundImage;
+
+    if (selectedImage) {
+      hero.style.backgroundImage = `url("${selectedImage}")`;
       hero.style.backgroundPosition = "center center";
       hero.style.backgroundSize = "cover";
       hero.style.backgroundRepeat = "no-repeat";
+    } else {
+      hero.style.backgroundImage = "none";
     }
 
     const applyColor = () => {
@@ -36,18 +39,16 @@ export function BackgroundColorEnhancer() {
       );
       const colorInput = colorControl?.querySelector<HTMLInputElement>('input[type="color"]');
       if (!colorInput) return;
+
       preview.style.backgroundImage = "none";
       preview.style.backgroundColor = colorInput.value;
     };
 
     applyColor();
-    const observer = new MutationObserver(applyColor);
-    observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["value"] });
     document.addEventListener("input", applyColor);
     document.addEventListener("change", applyColor);
 
     return () => {
-      observer.disconnect();
       document.removeEventListener("input", applyColor);
       document.removeEventListener("change", applyColor);
     };
