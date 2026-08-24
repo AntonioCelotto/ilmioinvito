@@ -9,9 +9,12 @@ function extractUrl(backgroundImage: string) {
 
 export function BackgroundColorEnhancer() {
   useEffect(() => {
+    let lastImageUrl = "";
+
     const sync = () => {
       const preview = document.querySelector<HTMLElement>(".preview-phone");
-      if (!preview) return;
+      const hero = preview?.querySelector<HTMLElement>(".phone-hero-preview");
+      if (!preview || !hero) return;
 
       const video = preview.querySelector<HTMLVideoElement>(".phone-hero-video");
       if (video) {
@@ -22,6 +25,9 @@ export function BackgroundColorEnhancer() {
         return;
       }
 
+      const currentImageUrl = extractUrl(preview.style.backgroundImage);
+      if (currentImageUrl) lastImageUrl = currentImageUrl;
+
       const colorControl = Array.from(document.querySelectorAll<HTMLElement>(".color-control")).find(
         (node) => node.textContent?.includes("Colore sfondo")
       );
@@ -29,12 +35,18 @@ export function BackgroundColorEnhancer() {
       if (!colorInput) return;
 
       const color = colorInput.value;
-      const imageUrl = extractUrl(preview.style.backgroundImage);
-      preview.style.backgroundColor = color;
 
-      if (imageUrl) {
-        preview.style.backgroundImage = `linear-gradient(color-mix(in srgb, ${color} 42%, transparent), color-mix(in srgb, ${color} 42%, transparent)), url("${imageUrl}")`;
+      // La grafica scelta resta intatta esclusivamente nella prima schermata.
+      if (lastImageUrl) {
+        hero.style.backgroundImage = `url("${lastImageUrl}")`;
+        hero.style.backgroundPosition = "center center";
+        hero.style.backgroundSize = "cover";
+        hero.style.backgroundRepeat = "no-repeat";
       }
+
+      // Dopo la copertina si usa solo la palette scelta, come nei template video.
+      preview.style.backgroundImage = "none";
+      preview.style.backgroundColor = color;
     };
 
     sync();
