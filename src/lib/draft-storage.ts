@@ -54,6 +54,7 @@ export type InvitationTheme = {
   coverElement?: "number" | "logo";
   coverLogoUrl?: string;
   coverLogoScale?: number;
+  countdownStyle?: "classic" | "cards" | "minimal" | "circles";
 };
 
 export type InvitationBlockTexts = Record<InvitationSectionKey, string>;
