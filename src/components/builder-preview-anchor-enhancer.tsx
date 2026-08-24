@@ -31,12 +31,18 @@ function arrangeBuilderSections() {
 
   if (!blocksHeading) return;
 
+  // Porta il pannello "Ordine dei blocchi" immediatamente sotto il suo titolo
+  // "Testi blocchi invito".
+  const orderList = form.querySelector<HTMLElement>(".block-order-list");
+  const orderPanel = orderList?.parentElement as HTMLElement | null;
+  if (orderPanel && blocksHeading.nextElementSibling !== orderPanel) {
+    blocksHeading.insertAdjacentElement("afterend", orderPanel);
+  }
+
   const storyTextarea = form.querySelector<HTMLTextAreaElement>("#story");
   const storyField = storyTextarea?.closest<HTMLElement>(".field");
   if (!storyField) return;
 
-  // Sposta tutto il blocco storia: Visibile nel link, Personalizza la storia,
-  // Racconto della storia e Fotografie della storia.
   let storyBlock = storyField;
   const previous = storyField.previousElementSibling as HTMLElement | null;
   if (previous?.classList.contains("block-editor") && previous.textContent?.includes("La nostra storia")) {
@@ -47,8 +53,8 @@ function arrangeBuilderSections() {
   if (storyBlock !== storyField) storyNodes.push(storyBlock);
   storyNodes.push(storyField);
 
-  // Inserisce l'intero gruppo immediatamente sotto il titolo Testi blocchi invito.
-  let anchor = blocksHeading.nextElementSibling;
+  // La storia viene subito dopo il pannello Ordine dei blocchi.
+  let anchor = orderPanel?.nextElementSibling ?? blocksHeading.nextElementSibling;
   storyNodes.forEach((node) => {
     form.insertBefore(node, anchor);
     anchor = node.nextElementSibling;
