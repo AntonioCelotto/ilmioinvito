@@ -24,14 +24,17 @@ function moveTemplateCustomizationUp() {
   );
 
   if (!customizationHeading || !blocksHeading) return;
-  if (customizationHeading.compareDocumentPosition(blocksHeading) & Node.DOCUMENT_POSITION_FOLLOWING) {
-    const nodes: Element[] = [customizationHeading];
-    let next = customizationHeading.nextElementSibling;
-    while (next && next !== blocksHeading && !next.matches("h3")) {
-      nodes.push(next);
-      next = next.nextElementSibling;
-    }
 
+  // Raccoglie tutto il gruppo "Personalizza il template" fino al titolo successivo.
+  const nodes: Element[] = [customizationHeading];
+  let next = customizationHeading.nextElementSibling;
+  while (next && !next.matches("h3")) {
+    nodes.push(next);
+    next = next.nextElementSibling;
+  }
+
+  // Deve stare esattamente prima di "Testi blocchi invito", cioe subito dopo Dati invito.
+  if (customizationHeading.nextElementSibling !== blocksHeading) {
     nodes.forEach((node) => form.insertBefore(node, blocksHeading));
   }
 }
@@ -67,6 +70,7 @@ function scrollPreviewTo(section: string) {
 export function BuilderPreviewAnchorEnhancer() {
   useEffect(() => {
     moveTemplateCustomizationUp();
+    const delayedMove = window.setTimeout(moveTemplateCustomizationUp, 500);
 
     const style = document.createElement("style");
     style.dataset.builderPreviewAnchor = "true";
@@ -94,12 +98,8 @@ export function BuilderPreviewAnchorEnhancer() {
     document.addEventListener("focusin", handleInteraction);
     document.addEventListener("click", handleInteraction);
 
-    const observer = new MutationObserver(() => moveTemplateCustomizationUp());
-    const form = document.querySelector<HTMLElement>(".form-panel");
-    if (form) observer.observe(form, { childList: true });
-
     return () => {
-      observer.disconnect();
+      window.clearTimeout(delayedMove);
       document.removeEventListener("focusin", handleInteraction);
       document.removeEventListener("click", handleInteraction);
       style.remove();
