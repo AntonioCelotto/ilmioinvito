@@ -102,12 +102,12 @@ export function SplitFontScaleEditor() {
       .preview-phone .phone-hero-preview h2,
       .preview-phone .phone-featured-text,
       .preview-phone .phone-location strong,
-      .preview-phone .phone-program-item strong,
       .preview-phone .phone-social-heading strong { font-size: calc(30px * var(--invitation-title-scale, 1)) !important; }
       .preview-phone .phone-hero-preview p,
       .preview-phone .phone-slot p,
       .preview-phone .phone-location,
       .preview-phone .phone-meta,
+      .preview-phone .phone-program-item strong,
       .preview-phone .phone-program-item span,
       .preview-phone .phone-social-heading small { font-size: calc(13px * var(--invitation-text-scale, 1)) !important; }
       .split-font-scale-grid {
