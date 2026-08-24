@@ -49,6 +49,11 @@ export type InvitationTheme = {
   buttonColor?: string;
   buttonTextColor?: string;
   fontScale?: number;
+  titleFontScale?: number;
+  textFontScale?: number;
+  coverElement?: "number" | "logo";
+  coverLogoUrl?: string;
+  coverLogoScale?: number;
 };
 
 export type InvitationBlockTexts = Record<InvitationSectionKey, string>;
@@ -112,44 +117,19 @@ export function makeSlug(value: string) {
 }
 
 export function readDrafts(): InvitationDraft[] {
-  if (typeof window === "undefined") {
-    return [];
-  }
-
+  if (typeof window === "undefined") return [];
   const raw = window.localStorage.getItem(draftStorageKey);
-
-  if (!raw) {
-    return [];
-  }
-
+  if (!raw) return [];
   try {
     const drafts = JSON.parse(raw) as InvitationDraft[];
-
     return drafts.map((draft) => ({
       ...draft,
-      locations: (draft.locations ?? []).map((location) => ({
-        ...location,
-        description: location.description ?? "",
-        enabled: location.enabled ?? true,
-        imageUrl: location.imageUrl ?? ""
-      })),
-      program: (draft.program ?? []).map((item, index) => ({
-        id: item.id || `program-${index + 1}`,
-        time: item.time ?? "",
-        description: item.description ?? ""
-      })),
-      media: (draft.media ?? []).filter(
-        (item) => item.url && !item.url.startsWith("blob:")
-      ),
+      locations: (draft.locations ?? []).map((location) => ({ ...location, description: location.description ?? "", enabled: location.enabled ?? true, imageUrl: location.imageUrl ?? "" })),
+      program: (draft.program ?? []).map((item, index) => ({ id: item.id || `program-${index + 1}`, time: item.time ?? "", description: item.description ?? "" })),
+      media: (draft.media ?? []).filter((item) => item.url && !item.url.startsWith("blob:")),
       giftIban: draft.giftIban ?? "",
-      giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({
-        id: wish.id || `wish-${index + 1}`,
-        title: wish.title ?? ""
-      })),
-      blockTexts: {
-        ...defaultBlockTexts,
-        ...(draft.blockTexts ?? {})
-      },
+      giftWishes: (draft.giftWishes ?? []).map((wish, index) => ({ id: wish.id || `wish-${index + 1}`, title: wish.title ?? "" })),
+      blockTexts: { ...defaultBlockTexts, ...(draft.blockTexts ?? {}) },
       theme: draft.theme
     }));
   } catch {
@@ -157,47 +137,8 @@ export function readDrafts(): InvitationDraft[] {
   }
 }
 
-export function findDraftBySlug(slug: string) {
-  return readDrafts().find((draft) => draft.slug === slug);
-}
-
-export function saveDraft(draft: InvitationDraft) {
-  const drafts = readDrafts();
-  const nextDrafts = [
-    draft,
-    ...drafts.filter((item) => item.id !== draft.id)
-  ];
-
-  window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts));
-
-  return nextDrafts;
-}
-
-
-export function removeDraft(draftId: string) {
-  const nextDrafts = readDrafts().filter((draft) => draft.id !== draftId);
-  window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts));
-  return nextDrafts;
-}
-
-export function setEditingDraft(draft: InvitationDraft) {
-  window.localStorage.setItem(editingDraftStorageKey, JSON.stringify(draft));
-}
-
-export function readEditingDraft(): InvitationDraft | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const raw = window.localStorage.getItem(editingDraftStorageKey);
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(raw) as InvitationDraft;
-  } catch {
-    return null;
-  }
-}
+export function findDraftBySlug(slug: string) { return readDrafts().find((draft) => draft.slug === slug); }
+export function saveDraft(draft: InvitationDraft) { const drafts = readDrafts(); const nextDrafts = [draft, ...drafts.filter((item) => item.id !== draft.id)]; window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts)); return nextDrafts; }
+export function removeDraft(draftId: string) { const nextDrafts = readDrafts().filter((draft) => draft.id !== draftId); window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts)); return nextDrafts; }
+export function setEditingDraft(draft: InvitationDraft) { window.localStorage.setItem(editingDraftStorageKey, JSON.stringify(draft)); }
+export function readEditingDraft(): InvitationDraft | null { if (typeof window === "undefined") return null; const raw = window.localStorage.getItem(editingDraftStorageKey); if (!raw) return null; try { return JSON.parse(raw) as InvitationDraft; } catch { return null; } }
