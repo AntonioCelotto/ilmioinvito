@@ -11,7 +11,16 @@ export function HeroCenterEnhancer() {
       const video = hero.querySelector("video");
       if (video) {
         hero.style.removeProperty("text-align");
+        hero.style.removeProperty("min-height");
         return;
+      }
+
+      const phoneScreen = hero.closest<HTMLElement>(".phone-screen");
+      if (phoneScreen) {
+        const styles = window.getComputedStyle(phoneScreen);
+        const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
+        const firstViewportHeight = Math.max(330, phoneScreen.clientHeight - paddingTop);
+        hero.style.minHeight = `${firstViewportHeight}px`;
       }
 
       hero.style.position = "relative";
@@ -45,7 +54,11 @@ export function HeroCenterEnhancer() {
 
     sync();
     const timer = window.setInterval(sync, 400);
-    return () => window.clearInterval(timer);
+    window.addEventListener("resize", sync);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   return null;
