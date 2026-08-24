@@ -17,6 +17,12 @@ export function HeroCenterEnhancer() {
         return;
       }
 
+      const previewPhone = hero.closest<HTMLElement>(".preview-phone");
+      if (previewPhone) {
+        previewPhone.style.backgroundPosition = "center center";
+        previewPhone.style.backgroundRepeat = "no-repeat";
+      }
+
       const phoneScreen = hero.closest<HTMLElement>(".phone-screen");
       if (phoneScreen) {
         const styles = window.getComputedStyle(phoneScreen);
