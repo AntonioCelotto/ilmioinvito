@@ -9,14 +9,6 @@ import { AuthGate } from "@/components/auth-gate";
 export default function BuilderPage() {
   return (
     <main className="workspace">
-      <style>{`
-        /* Solo template immagine: la prima schermata del telefono contiene
-           esclusivamente titolo, frase e data/ora. I blocchi iniziano sotto.
-           I template video restano invariati. */
-        .phone-hero-preview:not(.phone-video-only-hero) {
-          min-height: 100%;
-        }
-      `}</style>
       <div className="app-shell">
         <aside
           className="sidebar"
