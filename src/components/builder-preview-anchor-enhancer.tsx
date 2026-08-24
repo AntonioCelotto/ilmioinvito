@@ -31,8 +31,6 @@ function arrangeBuilderSections() {
 
   if (!blocksHeading) return;
 
-  // Porta il pannello "Ordine dei blocchi" immediatamente sotto il suo titolo
-  // "Testi blocchi invito".
   const orderList = form.querySelector<HTMLElement>(".block-order-list");
   const orderPanel = orderList?.parentElement as HTMLElement | null;
   if (orderPanel && blocksHeading.nextElementSibling !== orderPanel) {
@@ -41,24 +39,36 @@ function arrangeBuilderSections() {
 
   const storyTextarea = form.querySelector<HTMLTextAreaElement>("#story");
   const storyField = storyTextarea?.closest<HTMLElement>(".field");
-  if (!storyField) return;
+  if (storyField) {
+    let storyBlock = storyField;
+    const previous = storyField.previousElementSibling as HTMLElement | null;
+    if (previous?.classList.contains("block-editor") && previous.textContent?.includes("La nostra storia")) {
+      storyBlock = previous;
+    }
 
-  let storyBlock = storyField;
-  const previous = storyField.previousElementSibling as HTMLElement | null;
-  if (previous?.classList.contains("block-editor") && previous.textContent?.includes("La nostra storia")) {
-    storyBlock = previous;
+    const storyNodes: HTMLElement[] = [];
+    if (storyBlock !== storyField) storyNodes.push(storyBlock);
+    storyNodes.push(storyField);
+
+    let anchor = orderPanel?.nextElementSibling ?? blocksHeading.nextElementSibling;
+    storyNodes.forEach((node) => {
+      form.insertBefore(node, anchor);
+      anchor = node.nextElementSibling;
+    });
   }
 
-  const storyNodes: HTMLElement[] = [];
-  if (storyBlock !== storyField) storyNodes.push(storyBlock);
-  storyNodes.push(storyField);
-
-  // La storia viene subito dopo il pannello Ordine dei blocchi.
-  let anchor = orderPanel?.nextElementSibling ?? blocksHeading.nextElementSibling;
-  storyNodes.forEach((node) => {
-    form.insertBefore(node, anchor);
-    anchor = node.nextElementSibling;
-  });
+  // I due pulsanti di salvataggio/pubblicazione devono essere l'ultima azione
+  // del builder. Spostiamo soltanto il loro contenitore, senza modificarne logica
+  // o handler. L'eventuale messaggio di conferma resta dopo i pulsanti.
+  const saveActions = form.querySelector<HTMLElement>(".builder-save-actions");
+  if (saveActions) {
+    const successBox = form.querySelector<HTMLElement>(".success-box");
+    if (successBox) {
+      form.insertBefore(saveActions, successBox);
+    } else if (form.lastElementChild !== saveActions) {
+      form.appendChild(saveActions);
+    }
+  }
 }
 
 function getSectionForEditor(editor: HTMLElement) {
