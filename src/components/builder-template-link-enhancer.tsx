@@ -6,14 +6,11 @@ export function BuilderTemplateLinkEnhancer() {
   useEffect(() => {
     const sync = () => {
       const editingId = new URLSearchParams(window.location.search).get("edit");
-      const link = document.querySelector<HTMLAnchorElement>(
-        '.selected-template-panel a[href^="/templates"]'
-      );
+      if (!editingId) return;
 
-      if (!link) return;
-      link.href = editingId
-        ? `/templates?edit=${encodeURIComponent(editingId)}`
-        : "/templates";
+      document.querySelectorAll<HTMLAnchorElement>('a[href="/templates"]').forEach((link) => {
+        link.href = `/templates?edit=${encodeURIComponent(editingId)}`;
+      });
     };
 
     sync();
