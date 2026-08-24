@@ -29,22 +29,30 @@ function arrangeBuilderSections() {
     nodes.forEach((node) => form.insertBefore(node, blocksHeading));
   }
 
-  const storyMount = form.querySelector<HTMLElement>("[data-story-title-mount]");
-  const storySection = storyMount?.querySelector<HTMLElement>("section") ?? storyMount?.firstElementChild as HTMLElement | null;
-  const storyContainer = storyMount?.parentElement;
-  if (!blocksHeading || !storyMount || !storyContainer) return;
+  if (!blocksHeading) return;
 
-  // Il mount della storia nasce dentro il campo Racconto della storia.
-  // Spostiamo l'intero pannello "Personalizza la storia" subito sotto il titolo
-  // "Testi blocchi invito", senza cambiare il textarea del racconto.
-  const insertAfter = blocksHeading.nextElementSibling;
-  if (storyMount.parentElement !== form) {
-    form.insertBefore(storyMount, insertAfter);
-  } else if (blocksHeading.nextElementSibling !== storyMount) {
-    form.insertBefore(storyMount, insertAfter);
+  const storyTextarea = form.querySelector<HTMLTextAreaElement>("#story");
+  const storyField = storyTextarea?.closest<HTMLElement>(".field");
+  if (!storyField) return;
+
+  // Sposta tutto il blocco storia: Visibile nel link, Personalizza la storia,
+  // Racconto della storia e Fotografie della storia.
+  let storyBlock = storyField;
+  const previous = storyField.previousElementSibling as HTMLElement | null;
+  if (previous?.classList.contains("block-editor") && previous.textContent?.includes("La nostra storia")) {
+    storyBlock = previous;
   }
 
-  if (storySection) storySection.style.marginTop = "12px";
+  const storyNodes: HTMLElement[] = [];
+  if (storyBlock !== storyField) storyNodes.push(storyBlock);
+  storyNodes.push(storyField);
+
+  // Inserisce l'intero gruppo immediatamente sotto il titolo Testi blocchi invito.
+  let anchor = blocksHeading.nextElementSibling;
+  storyNodes.forEach((node) => {
+    form.insertBefore(node, anchor);
+    anchor = node.nextElementSibling;
+  });
 }
 
 function getSectionForEditor(editor: HTMLElement) {
@@ -72,7 +80,8 @@ function scrollPreviewTo(section: string) {
 export function BuilderPreviewAnchorEnhancer() {
   useEffect(() => {
     arrangeBuilderSections();
-    const delayedMove = window.setTimeout(arrangeBuilderSections, 650);
+    const delayedMove = window.setTimeout(arrangeBuilderSections, 700);
+    const secondMove = window.setTimeout(arrangeBuilderSections, 1400);
 
     const style = document.createElement("style");
     style.dataset.builderPreviewAnchor = "true";
@@ -95,6 +104,7 @@ export function BuilderPreviewAnchorEnhancer() {
 
     return () => {
       window.clearTimeout(delayedMove);
+      window.clearTimeout(secondMove);
       document.removeEventListener("focusin", handleInteraction);
       document.removeEventListener("click", handleInteraction);
       style.remove();
