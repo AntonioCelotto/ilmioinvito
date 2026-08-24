@@ -13,8 +13,9 @@ export function BackgroundColorEnhancer() {
 
     const sync = () => {
       const preview = document.querySelector<HTMLElement>(".preview-phone");
+      const screen = preview?.querySelector<HTMLElement>(".phone-screen");
       const hero = preview?.querySelector<HTMLElement>(".phone-hero-preview");
-      if (!preview || !hero) return;
+      if (!preview || !screen || !hero) return;
 
       const video = preview.querySelector<HTMLVideoElement>(".phone-hero-video");
       if (video) {
@@ -35,23 +36,31 @@ export function BackgroundColorEnhancer() {
       if (!colorInput) return;
 
       const color = colorInput.value;
+      const firstScreenHeight = Math.max(330, screen.clientHeight);
 
-      // La grafica scelta resta intatta esclusivamente nella prima schermata.
       if (lastImageUrl) {
         hero.style.backgroundImage = `url("${lastImageUrl}")`;
         hero.style.backgroundPosition = "center center";
         hero.style.backgroundSize = "cover";
         hero.style.backgroundRepeat = "no-repeat";
+        hero.style.width = "calc(100% + 44px)";
+        hero.style.marginLeft = "-22px";
+        hero.style.marginRight = "-22px";
+        hero.style.minHeight = `${firstScreenHeight}px`;
+        hero.style.boxSizing = "border-box";
       }
 
-      // Dopo la copertina si usa solo la palette scelta, come nei template video.
       preview.style.backgroundImage = "none";
       preview.style.backgroundColor = color;
     };
 
     sync();
     const timer = window.setInterval(sync, 180);
-    return () => window.clearInterval(timer);
+    window.addEventListener("resize", sync);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   return null;
