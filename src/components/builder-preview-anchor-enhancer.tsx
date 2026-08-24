@@ -11,32 +11,40 @@ const labelToSection: Record<string, string> = {
   Social: "gallery"
 };
 
-function moveTemplateCustomizationUp() {
+function arrangeBuilderSections() {
   const form = document.querySelector<HTMLElement>(".form-panel");
   if (!form) return;
 
   const headings = Array.from(form.querySelectorAll<HTMLHeadingElement>("h3"));
-  const customizationHeading = headings.find(
-    (heading) => heading.textContent?.trim() === "Personalizza il template"
-  );
-  const blocksHeading = headings.find(
-    (heading) => heading.textContent?.trim() === "Testi blocchi invito"
-  );
+  const customizationHeading = headings.find((h) => h.textContent?.trim() === "Personalizza il template");
+  const blocksHeading = headings.find((h) => h.textContent?.trim() === "Testi blocchi invito");
 
-  if (!customizationHeading || !blocksHeading) return;
-
-  // Raccoglie tutto il gruppo "Personalizza il template" fino al titolo successivo.
-  const nodes: Element[] = [customizationHeading];
-  let next = customizationHeading.nextElementSibling;
-  while (next && !next.matches("h3")) {
-    nodes.push(next);
-    next = next.nextElementSibling;
-  }
-
-  // Deve stare esattamente prima di "Testi blocchi invito", cioe subito dopo Dati invito.
-  if (customizationHeading.nextElementSibling !== blocksHeading) {
+  if (customizationHeading && blocksHeading) {
+    const nodes: Element[] = [customizationHeading];
+    let next = customizationHeading.nextElementSibling;
+    while (next && !next.matches("h3")) {
+      nodes.push(next);
+      next = next.nextElementSibling;
+    }
     nodes.forEach((node) => form.insertBefore(node, blocksHeading));
   }
+
+  const storyMount = form.querySelector<HTMLElement>("[data-story-title-mount]");
+  const storySection = storyMount?.querySelector<HTMLElement>("section") ?? storyMount?.firstElementChild as HTMLElement | null;
+  const storyContainer = storyMount?.parentElement;
+  if (!blocksHeading || !storyMount || !storyContainer) return;
+
+  // Il mount della storia nasce dentro il campo Racconto della storia.
+  // Spostiamo l'intero pannello "Personalizza la storia" subito sotto il titolo
+  // "Testi blocchi invito", senza cambiare il textarea del racconto.
+  const insertAfter = blocksHeading.nextElementSibling;
+  if (storyMount.parentElement !== form) {
+    form.insertBefore(storyMount, insertAfter);
+  } else if (blocksHeading.nextElementSibling !== storyMount) {
+    form.insertBefore(storyMount, insertAfter);
+  }
+
+  if (storySection) storySection.style.marginTop = "12px";
 }
 
 function getSectionForEditor(editor: HTMLElement) {
@@ -46,7 +54,6 @@ function getSectionForEditor(editor: HTMLElement) {
   if (editor.querySelector("#countdown-date")) return "countdown";
   if (editor.querySelector("#rsvp-whatsapp")) return "rsvp";
   if (editor.querySelector("#dressCode")) return "dressCode";
-
   const title = editor.querySelector<HTMLElement>(".block-editor-head strong")?.textContent?.trim();
   return title ? labelToSection[title] : undefined;
 }
@@ -55,12 +62,7 @@ function scrollPreviewTo(section: string) {
   const preview = document.querySelector<HTMLElement>(".phone-screen");
   const target = preview?.querySelector<HTMLElement>(`[data-preview-section="${section}"]`);
   if (!preview || !target) return;
-
-  preview.scrollTo({
-    top: Math.max(0, target.offsetTop - 54),
-    behavior: "smooth"
-  });
-
+  preview.scrollTo({ top: Math.max(0, target.offsetTop - 54), behavior: "smooth" });
   target.classList.remove("preview-anchor-highlight");
   void target.offsetWidth;
   target.classList.add("preview-anchor-highlight");
@@ -69,21 +71,14 @@ function scrollPreviewTo(section: string) {
 
 export function BuilderPreviewAnchorEnhancer() {
   useEffect(() => {
-    moveTemplateCustomizationUp();
-    const delayedMove = window.setTimeout(moveTemplateCustomizationUp, 500);
+    arrangeBuilderSections();
+    const delayedMove = window.setTimeout(arrangeBuilderSections, 650);
 
     const style = document.createElement("style");
     style.dataset.builderPreviewAnchor = "true";
     style.textContent = `
-      .preview-anchor-highlight {
-        outline: 2px solid rgba(166, 109, 112, .72);
-        outline-offset: 4px;
-        border-radius: 14px;
-        transition: outline-color .2s ease;
-      }
-      .block-editor {
-        scroll-margin-top: 24px;
-      }
+      .preview-anchor-highlight { outline: 2px solid rgba(166,109,112,.72); outline-offset: 4px; border-radius: 14px; transition: outline-color .2s ease; }
+      .block-editor { scroll-margin-top: 24px; }
     `;
     document.head.appendChild(style);
 
@@ -105,6 +100,5 @@ export function BuilderPreviewAnchorEnhancer() {
       style.remove();
     };
   }, []);
-
   return null;
 }
