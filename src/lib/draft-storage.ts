@@ -94,7 +94,7 @@ export const defaultSections: InvitationSectionKey[] = [
 ];
 
 export const defaultBlockTexts: InvitationBlockTexts = {
-  countdown: "Il conto alla rovescia e iniziato: manca sempre meno al grande giorno.",
+  countdown: "",
   ceremony: "La cerimonia sara il primo momento da vivere insieme, con tutte le persone piu importanti.",
   reception: "Dopo la cerimonia continueremo a festeggiare nella location scelta per il ricevimento.",
   rsvp: "Conferma la tua presenza e indicaci eventuali accompagnatori o note utili.",
