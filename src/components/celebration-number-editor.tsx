@@ -126,7 +126,7 @@ export function CelebrationNumberEditor() {
 
   const showPreviewNumber = number && (!hasVideo || videoDataVisible);
   const preview = previewTarget && showPreviewNumber ? createPortal(
-    <div data-celebration-number-preview="true" style={{ position: "absolute", left: "50%", top: hasVideo ? "10%" : "calc(-3% + 12px)", transform: "translateX(-50%)", zIndex: 20, width: "88%", textAlign: "center", pointerEvents: "none", fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: "clamp(54px, 17vw, 100px)", lineHeight: ".82", letterSpacing: "-.05em", color, WebkitTextStroke: "1px rgba(255,255,255,.28)", textShadow: "0 2px 2px rgba(0,0,0,.22), 0 6px 16px rgba(0,0,0,.30)" }}>
+    <div data-celebration-number-preview="true" style={{ position: "absolute", left: "50%", top: hasVideo ? "10%" : "calc(-3% + 36px)", transform: "translateX(-50%)", zIndex: 20, width: "88%", textAlign: "center", pointerEvents: "none", fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 700, fontSize: "clamp(54px, 17vw, 100px)", lineHeight: ".82", letterSpacing: "-.05em", color, WebkitTextStroke: "1px rgba(255,255,255,.28)", textShadow: "0 2px 2px rgba(0,0,0,.22), 0 6px 16px rgba(0,0,0,.30)" }}>
       {number}
     </div>, previewTarget
   ) : null;
