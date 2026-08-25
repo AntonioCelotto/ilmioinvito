@@ -20,17 +20,40 @@ export function EmptyBlockTextEnhancer() {
       Object.entries(ids).forEach(([key, section]) => {
         const input = document.querySelector<HTMLTextAreaElement>(`#block-text-${key}`) ?? document.querySelector<HTMLTextAreaElement>(`textarea[name="blockTexts.${key}"]`);
         if (!input) return;
+        input.dataset.allowEmpty = "true";
         const preview = document.querySelector<HTMLElement>(`.preview-phone [data-preview-section="${section}"]`);
-        const intro = preview?.querySelector<HTMLElement>(":scope > p");
-        if (intro) intro.style.display = input.value.trim() ? "" : "none";
+        if (!preview) return;
+        const paragraphs = Array.from(preview.children).filter((node): node is HTMLElement => node instanceof HTMLElement && node.tagName === "P");
+        const intro = paragraphs[0];
+        if (intro) {
+          if (input.value.trim()) {
+            intro.textContent = input.value;
+            intro.style.display = "";
+          } else {
+            intro.textContent = "";
+            intro.style.display = "none";
+          }
+        }
       });
     };
-    const handler = () => window.setTimeout(sync, 0);
+
+    const handler = (event: Event) => {
+      const target = event.target;
+      if (target instanceof HTMLTextAreaElement && target.dataset.allowEmpty === "true") {
+        target.dataset.userEdited = "true";
+      }
+      window.setTimeout(sync, 0);
+    };
+
     sync();
-    const timer = window.setTimeout(sync, 600);
-    document.addEventListener("input", handler);
-    document.addEventListener("change", handler);
-    return () => { window.clearTimeout(timer); document.removeEventListener("input", handler); document.removeEventListener("change", handler); };
+    const timer = window.setInterval(sync, 500);
+    document.addEventListener("input", handler, true);
+    document.addEventListener("change", handler, true);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("input", handler, true);
+      document.removeEventListener("change", handler, true);
+    };
   }, []);
   return null;
 }
