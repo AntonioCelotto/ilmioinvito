@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
-import { InvitationDraft, readDrafts, removeDraft, setEditingDraft } from "@/lib/draft-storage";
-import { deleteDraftFromSupabase, loadUserDraftsFromSupabase } from "@/lib/supabase/drafts";
+import { InvitationDraft, draftStorageKey, editingDraftStorageKey, readDrafts, removeDraft, setEditingDraft } from "@/lib/draft-storage";
+import { deleteDraftFromSupabase, getCurrentUser, loadUserDraftsFromSupabase } from "@/lib/supabase/drafts";
 import { DashboardRsvp, loadDashboardRsvps } from "@/lib/supabase/rsvps";
 import { downloadGuestPdf } from "@/lib/guest-pdf";
 
@@ -17,19 +17,60 @@ export function DashboardClient() {
   const [draftActionMessage, setDraftActionMessage] = useState("");
 
   useEffect(() => {
-    const localDrafts = readDrafts();
-    setDrafts(localDrafts);
-    loadUserDraftsFromSupabase().then((result) => {
-      setRemoteMessage(result.message);
-      if (result.drafts.length > 0) {
-        const remoteIds = new Set(result.drafts.map((draft) => draft.id));
-        setDrafts([...result.drafts, ...localDrafts.filter((draft) => !remoteIds.has(draft.id))]);
+    let active = true;
+
+    async function syncDashboard() {
+      const user = await getCurrentUser();
+
+      if (!user) {
+        if (active) setDrafts(readDrafts());
+        return;
       }
-    });
+
+      const result = await loadUserDraftsFromSupabase();
+      if (!active) return;
+
+      setRemoteMessage(result.message);
+      setDrafts(result.drafts);
+
+      // Con un utente autenticato Supabase e la fonte unica condivisa tra dispositivi.
+      // La cache locale viene allineata esattamente al database remoto: gli inviti
+      // eliminati da un altro PC non possono quindi ricomparire da localStorage.
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(result.drafts));
+
+      const editingRaw = window.localStorage.getItem(editingDraftStorageKey);
+      if (editingRaw) {
+        try {
+          const editing = JSON.parse(editingRaw) as InvitationDraft;
+          if (!result.drafts.some((draft) => draft.id === editing.id)) {
+            window.localStorage.removeItem(editingDraftStorageKey);
+          }
+        } catch {
+          window.localStorage.removeItem(editingDraftStorageKey);
+        }
+      }
+    }
+
+    void syncDashboard();
     loadDashboardRsvps().then((result) => {
+      if (!active) return;
       setRsvps(result.rsvps);
       setRsvpMessage(result.message);
     });
+
+    const onFocus = () => void syncDashboard();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void syncDashboard();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   const invitationsWithRsvps = useMemo(() => {
