@@ -19,9 +19,11 @@ function newestDraft<T extends { updatedAt?: string }>(local: T | undefined, rem
 export function InviteCelebrationNumber({ slug }: { slug: string }) {
   const [number, setNumber] = useState("");
   const [color, setColor] = useState("#d6ad60");
-  const [mode, setMode] = useState<"number" | "logo">("number");
+  const [mode, setMode] = useState<"number" | "logo" | "text">("number");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoScale, setLogoScale] = useState(1);
+  const [coverText, setCoverText] = useState("");
+  const [coverTextScale, setCoverTextScale] = useState(1);
   const [target, setTarget] = useState<HTMLElement | null>(null);
   const supabase = useMemo(() => createClient(), []);
 
@@ -50,6 +52,8 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
         setMode(draft.theme.coverElement ?? "number");
         setLogoUrl(draft.theme.coverLogoUrl ?? "");
         setLogoScale(draft.theme.coverLogoScale ?? 1);
+        setCoverText(draft.theme.coverText ?? "");
+        setCoverTextScale(draft.theme.coverTextScale ?? 1);
       }
 
       const { data: invitation } = await client
@@ -98,11 +102,34 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
           pointerEvents: "none"
         }}
       >
-        <img
-          src={logoUrl}
-          alt="Logo evento"
-          style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
-        />
+        <img src={logoUrl} alt="Logo evento" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
+      </div>,
+      target
+    );
+  }
+
+  if (mode === "text" && coverText.trim()) {
+    return createPortal(
+      <div
+        aria-label="Testo copertina"
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "13%",
+          transform: "translateX(-50%)",
+          zIndex: 4,
+          width: "86%",
+          textAlign: "center",
+          pointerEvents: "none",
+          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontWeight: 700,
+          fontSize: `clamp(34px, ${Math.round(10 * coverTextScale)}vw, ${Math.round(92 * coverTextScale)}px)`,
+          lineHeight: 1,
+          color,
+          textShadow: "0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)"
+        }}
+      >
+        {coverText}
       </div>,
       target
     );
