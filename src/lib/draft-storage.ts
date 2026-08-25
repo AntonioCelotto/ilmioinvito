@@ -66,6 +66,7 @@ export type InvitationTheme = {
   coverElement?: "number" | "logo" | "text";
   coverLogoUrl?: string;
   coverLogoScale?: number;
+  coverNumberScale?: number;
   coverText?: string;
   coverTextScale?: number;
   countdownStyle?: "classic" | "cards" | "minimal" | "circles";
