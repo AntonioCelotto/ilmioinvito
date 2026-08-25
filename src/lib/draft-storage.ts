@@ -66,6 +66,8 @@ export type InvitationTheme = {
   coverElement?: "number" | "logo" | "text";
   coverLogoUrl?: string;
   coverLogoScale?: number;
+  coverNumber?: string;
+  coverNumberColor?: string;
   coverNumberScale?: number;
   coverText?: string;
   coverTextScale?: number;
@@ -98,6 +100,12 @@ export type InvitationDraft = {
   updatedAt: string;
 };
 
+declare global {
+  interface Window {
+    __ilmioinvitoPendingTheme?: Partial<InvitationTheme>;
+  }
+}
+
 export const draftStorageKey = "ilmioinvito:drafts";
 export const editingDraftStorageKey = "ilmioinvito:editing-draft";
 
@@ -121,6 +129,29 @@ export const defaultBlockTexts: InvitationBlockTexts = {
   dressCode: "Segui le indicazioni di stile pensate per rendere l'evento ancora piu armonioso.",
   giftInfo: "Qui puoi inserire indicazioni su regalo, lista nozze, IBAN o altre informazioni utili."
 };
+
+export function setPendingTheme(patch: Partial<InvitationTheme>) {
+  if (typeof window === "undefined") return;
+  window.__ilmioinvitoPendingTheme = {
+    ...(window.__ilmioinvitoPendingTheme ?? {}),
+    ...patch
+  };
+}
+
+export function applyPendingTheme(draft: InvitationDraft): InvitationDraft {
+  if (typeof window === "undefined" || !window.__ilmioinvitoPendingTheme) return draft;
+  return {
+    ...draft,
+    theme: {
+      ...draft.theme,
+      ...window.__ilmioinvitoPendingTheme
+    }
+  };
+}
+
+export function clearPendingTheme() {
+  if (typeof window !== "undefined") delete window.__ilmioinvitoPendingTheme;
+}
 
 export function makeSlug(value: string) {
   const slug = value
@@ -155,7 +186,7 @@ export function readDrafts(): InvitationDraft[] {
 }
 
 export function findDraftBySlug(slug: string) { return readDrafts().find((draft) => draft.slug === slug); }
-export function saveDraft(draft: InvitationDraft) { const drafts = readDrafts(); const nextDrafts = [draft, ...drafts.filter((item) => item.id !== draft.id)]; window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts)); return nextDrafts; }
+export function saveDraft(draft: InvitationDraft) { const normalized = applyPendingTheme(draft); const drafts = readDrafts(); const nextDrafts = [normalized, ...drafts.filter((item) => item.id !== normalized.id)]; window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts)); return nextDrafts; }
 export function removeDraft(draftId: string) { const nextDrafts = readDrafts().filter((draft) => draft.id !== draftId); window.localStorage.setItem(draftStorageKey, JSON.stringify(nextDrafts)); return nextDrafts; }
-export function setEditingDraft(draft: InvitationDraft) { window.localStorage.setItem(editingDraftStorageKey, JSON.stringify(draft)); }
+export function setEditingDraft(draft: InvitationDraft) { window.localStorage.setItem(editingDraftStorageKey, JSON.stringify(applyPendingTheme(draft))); }
 export function readEditingDraft(): InvitationDraft | null { if (typeof window === "undefined") return null; const raw = window.localStorage.getItem(editingDraftStorageKey); if (!raw) return null; try { return JSON.parse(raw) as InvitationDraft; } catch { return null; } }
