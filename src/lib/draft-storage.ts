@@ -42,7 +42,17 @@ export type InvitationTheme = {
   template: "darkLuxury" | "classicLight" | "botanical" | "minimal";
   primaryColor: string;
   accentColor: string;
-  fontStyle: "serif" | "modern" | "script";
+  fontStyle:
+    | "serif"
+    | "modern"
+    | "script"
+    | "classic"
+    | "elegant"
+    | "romantic"
+    | "editorial"
+    | "minimalist"
+    | "soft"
+    | "bold";
   backgroundImage?: string;
   backgroundVideo?: string;
   textColor?: string;
@@ -51,9 +61,13 @@ export type InvitationTheme = {
   fontScale?: number;
   titleFontScale?: number;
   textFontScale?: number;
-  coverElement?: "number" | "logo";
+  heroTitleScale?: number;
+  heroMetaScale?: number;
+  coverElement?: "number" | "logo" | "text";
   coverLogoUrl?: string;
   coverLogoScale?: number;
+  coverText?: string;
+  coverTextScale?: number;
   countdownStyle?: "classic" | "cards" | "minimal" | "circles";
   heroMetaStyle?: "pills" | "minimal" | "cards" | "editorial";
 };
