@@ -4,28 +4,28 @@ export const billingProducts = {
     name: "Essenziale",
     price: 29,
     guestLimit: 30,
-    priceEnv: "STRIPE_PRICE_ESSENTIAL"
+    stripePriceId: "price_1UBBUVQa5onFFcwqUj1r5AOX"
   },
   complete: {
     key: "complete",
     name: "Completo",
     price: 59,
     guestLimit: 100,
-    priceEnv: "STRIPE_PRICE_COMPLETE"
+    stripePriceId: "price_1UBBVyQa5onFFcwqBHdSrJRd"
   },
   premium: {
     key: "premium",
     name: "Premium",
     price: 99,
     guestLimit: null,
-    priceEnv: "STRIPE_PRICE_PREMIUM"
+    stripePriceId: "price_1UBBY9Qa5onFFcwq1Mmukd0G"
   },
   guest_pack_50: {
     key: "guest_pack_50",
     name: "+50 invitati",
     price: 5,
     guestLimit: 50,
-    priceEnv: "STRIPE_PRICE_GUEST_PACK_50"
+    stripePriceId: "price_1UBBdSQa5onFFcwqWAh9bcYa"
   }
 } as const;
 
@@ -36,5 +36,5 @@ export function isBillingProductKey(value: unknown): value is BillingProductKey 
 }
 
 export function getStripePriceId(productKey: BillingProductKey) {
-  return process.env[billingProducts[productKey].priceEnv];
+  return billingProducts[productKey].stripePriceId;
 }
