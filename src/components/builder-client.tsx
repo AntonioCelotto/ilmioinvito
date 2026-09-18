@@ -32,8 +32,8 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
   ceremony: "Chiesa / cerimonia",
   reception: "Ricevimento / location",
   rsvp: "Conferma partecipazione",
-  gallery: "Social",
-  video: "Social",
+  gallery: "Il mio album",
+  video: "Il mio album",
   program: "Programma",
   dressCode: "Dress code",
   giftInfo: "Regalo / info utili"
@@ -78,7 +78,7 @@ function expandBlockOrder(
 
 function blockLabel(section: InvitationSectionKey) {
   if (section === "ceremony") return "Luoghi";
-  if (section === "gallery") return "Social";
+  if (section === "gallery") return "Il mio album";
   return sectionLabels[section];
 }
 
@@ -87,8 +87,8 @@ const blockTextHelpers: Record<InvitationSectionKey, string> = {
   ceremony: "Indicazioni per chiesa o cerimonia.",
   reception: "Indicazioni per location e ricevimento.",
   rsvp: "Testo per la conferma partecipazione.",
-  gallery: "Dedica o informazioni da mostrare sopra la sezione Social.",
-  video: "Dedica o informazioni da mostrare sopra la sezione Social.",
+  gallery: "Dedica o informazioni da mostrare sopra la sezione Il mio album.",
+  video: "Dedica o informazioni da mostrare sopra la sezione Il mio album.",
   program: "Programma della giornata.",
   dressCode: "Indicazioni di stile per gli invitati.",
   giftInfo: "Informazioni su regalo, lista nozze o note utili."
