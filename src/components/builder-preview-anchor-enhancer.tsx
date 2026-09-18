@@ -8,7 +8,7 @@ const labelToSection: Record<string, string> = {
   Programma: "program",
   "Dress code": "dressCode",
   "Regalo / info utili": "giftInfo",
-  Social: "gallery"
+  "Il mio album": "gallery"
 };
 
 function arrangeBuilderSections() {
