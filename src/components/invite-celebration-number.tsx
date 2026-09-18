@@ -115,7 +115,7 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
         style={{
           position: "absolute",
           left: "50%",
-          top: "13%",
+          top: "30%",
           transform: "translateX(-50%)",
           zIndex: 4,
           width: "86%",
