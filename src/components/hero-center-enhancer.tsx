@@ -25,13 +25,12 @@ export function HeroCenterEnhancer() {
       if (phoneScreen) {
         const styles = window.getComputedStyle(phoneScreen);
         const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
-        const paddingLeft = Number.parseFloat(styles.paddingLeft) || 0;
-        const paddingRight = Number.parseFloat(styles.paddingRight) || 0;
+        const paddingBottom = Number.parseFloat(styles.paddingBottom) || 0;
 
-        hero.style.minHeight = `${Math.max(330, phoneScreen.clientHeight)}px`;
-        hero.style.width = `calc(100% + ${paddingLeft + paddingRight}px)`;
-        hero.style.marginLeft = `${-paddingLeft}px`;
-        hero.style.marginRight = `${-paddingRight}px`;
+        hero.style.minHeight = `${Math.max(330, phoneScreen.clientHeight - paddingTop - paddingBottom)}px`;
+        hero.style.width = "100%";
+        hero.style.marginLeft = "0";
+        hero.style.marginRight = "0";
         hero.style.marginTop = `${-paddingTop}px`;
       }
 
