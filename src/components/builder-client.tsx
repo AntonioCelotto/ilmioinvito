@@ -42,6 +42,10 @@ const sectionLabels: Record<InvitationSectionKey, string> = {
 const sectionOrder = Object.keys(sectionLabels) as InvitationSectionKey[];
 const locationSectionKeys: InvitationSectionKey[] = ["ceremony", "reception"];
 
+function draftSlug(title: string, id: string) {
+  return `${makeSlug(title)}-${id.replace(/-/g, "").slice(0, 8)}`;
+}
+
 function blockSection(section: InvitationSectionKey): InvitationSectionKey {
   if (section === "reception") return "ceremony";
   if (section === "video") return "gallery";
@@ -459,6 +463,7 @@ function PreviewSection({
 
 export function BuilderClient() {
   const previewScreenRef = useRef<HTMLDivElement>(null);
+  const autosaveReadyRef = useRef(false);
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
   const [publishing, setPublishing] = useState(false);
@@ -495,7 +500,7 @@ export function BuilderClient() {
     updatedAt: new Date().toISOString()
   });
 
-  const publicPath = useMemo(() => `/i/${makeSlug(draft.title)}`, [draft.title]);
+  const publicPath = useMemo(() => `/i/${draftSlug(draft.title, draft.id)}`, [draft.id, draft.title]);
   const visibleBlocks = useMemo(
     () => orderedBlocks(draft.activeSections),
     [draft.activeSections]
@@ -541,6 +546,27 @@ export function BuilderClient() {
   }, []);
 
   useEffect(() => {
+    if (!autosaveReadyRef.current) {
+      autosaveReadyRef.current = true;
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const autosavedDraft = {
+        ...draft,
+        slug: draftSlug(draft.title, draft.id),
+        updatedAt: new Date().toISOString()
+      };
+      saveDraft(autosavedDraft);
+      void saveDraftToSupabase(autosavedDraft).then((result) => {
+        if (result.status === "error") setSavedMessage(`Salvataggio automatico non riuscito: ${result.message}`);
+      });
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [draft]);
+
+  useEffect(() => {
     setVideoFinished(false);
   }, [draft.theme.backgroundVideo]);
 
@@ -551,7 +577,7 @@ export function BuilderClient() {
     setDraft((current) => ({
       ...current,
       [key]: value,
-      slug: key === "title" ? makeSlug(String(value)) : current.slug
+      slug: key === "title" ? draftSlug(String(value), current.id) : current.slug
     }));
   }
 
@@ -610,7 +636,7 @@ export function BuilderClient() {
 
     const preparedDraft = {
       ...draft,
-      slug: makeSlug(draft.title),
+      slug: draftSlug(draft.title, draft.id),
       updatedAt: new Date().toISOString()
     };
     saveDraft(preparedDraft);
@@ -824,7 +850,7 @@ export function BuilderClient() {
   async function handleSave() {
     const nextDraft = {
       ...draft,
-      slug: makeSlug(draft.title),
+      slug: draftSlug(draft.title, draft.id),
       updatedAt: new Date().toISOString()
     };
 
@@ -842,7 +868,7 @@ export function BuilderClient() {
       setSavedMessage("Salvataggio della bozza prima del pagamento...");
       const payableDraft = {
         ...draft,
-        slug: makeSlug(draft.title),
+        slug: draftSlug(draft.title, draft.id),
         status: "draft" as const,
         updatedAt: new Date().toISOString()
       };
@@ -866,7 +892,7 @@ export function BuilderClient() {
 
     const publishedDraft = {
       ...draft,
-      slug: makeSlug(draft.title),
+      slug: draftSlug(draft.title, draft.id),
       status: "published" as const,
       updatedAt: new Date().toISOString()
     };
