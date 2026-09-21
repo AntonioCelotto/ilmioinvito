@@ -39,8 +39,7 @@ export function InviteGuestMedia({
     setUploading(false);
     setMessage(result.message);
 
-    if (result.ok && result.item) {
-      setItems((current) => [result.item!, ...current]);
+    if (result.ok) {
       form.reset();
     }
   }

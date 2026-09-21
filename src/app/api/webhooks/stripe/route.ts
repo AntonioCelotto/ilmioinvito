@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isBillingProductKey } from "@/lib/billing-plans";
+import { billingProducts, isBillingProductKey } from "@/lib/billing-plans";
 import { verifyStripeWebhookSignature } from "@/lib/stripe-rest";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
@@ -21,10 +21,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Firma webhook non valida." }, { status: 400 });
   }
 
-  const event = JSON.parse(payload) as {
-    type?: string;
-    data?: { object?: StripeCheckoutSession };
-  };
+  let event: { type?: string; data?: { object?: StripeCheckoutSession } };
+  try {
+    event = JSON.parse(payload);
+  } catch {
+    return NextResponse.json({ error: "Payload webhook non valido." }, { status: 400 });
+  }
 
   if (event.type !== "checkout.session.completed") {
     return NextResponse.json({ received: true });
@@ -34,8 +36,12 @@ export async function POST(request: Request) {
   const ownerId = session?.metadata?.owner_id;
   const productKey = session?.metadata?.product_key;
   const invitationId = session?.metadata?.invitation_id;
+  const expectedAmount = productKey && isBillingProductKey(productKey)
+    ? billingProducts[productKey].price * 100
+    : null;
 
-  if (!session || session.payment_status !== "paid" || !ownerId || !invitationId || !isBillingProductKey(productKey)) {
+  if (!session || session.payment_status !== "paid" || !ownerId || !invitationId || !isBillingProductKey(productKey)
+    || session.amount_total !== expectedAmount || session.currency?.toLowerCase() !== "eur") {
     return NextResponse.json({ error: "Dati pagamento incompleti." }, { status: 400 });
   }
 

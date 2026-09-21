@@ -28,8 +28,8 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    if (password.length < 6) {
-      setMessage("La password deve contenere almeno 6 caratteri.");
+    if (password.length < 8) {
+      setMessage("La password deve contenere almeno 8 caratteri.");
       return;
     }
 
@@ -53,7 +53,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     if (isRegister) {
       setMessage(
-        "Registrazione completata. Controlla la tua email e clicca sul link per attivare l'account."
+        "Account creato. Ora puoi accedere con email e password."
       );
       return;
     }
@@ -90,7 +90,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <label htmlFor="password">Password</label>
         <input
           id="password"
-          minLength={6}
+          minLength={8}
           required
           type="password"
           value={password}
@@ -105,7 +105,9 @@ export function AuthForm({ mode }: AuthFormProps) {
             type="checkbox"
             onChange={(event) => setAccepted(event.target.checked)}
           />
-          <span>Accetto privacy e condizioni del servizio.</span>
+          <span>
+            Accetto la <a href="/privacy">Privacy Policy</a> e le <a href="/condizioni">Condizioni del servizio</a>.
+          </span>
         </label>
       ) : null}
 
@@ -114,6 +116,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       </button>
 
       {message ? <p className="auth-message">{message}</p> : null}
+      {!isRegister ? <a className="auth-help-link" href="/recupera-password">Hai dimenticato la password?</a> : null}
     </form>
   );
 }

@@ -24,49 +24,22 @@ type SaveRsvpResult =
   | { status: "saved"; message: string }
   | { status: "error"; message: string };
 
-function makeGroupId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = character === "x" ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-}
-
 export async function savePublicRsvp(
   invitationId: string,
   phone: string,
   guests: RsvpGuestInput[],
   rsvpStatus: RsvpStatus = "confirmed"
 ): Promise<SaveRsvpResult> {
-  const supabase = createClient();
-
-  if (!supabase) {
-    return { status: "error", message: "Salvataggio online non configurato." };
-  }
-
-  const responseGroupId = makeGroupId();
-  const { error } = await supabase.from("rsvps").insert(
-    guests.map((guest) => ({
-      invitation_id: invitationId,
-      response_group_id: responseGroupId,
-      guest_name: `${guest.name} ${guest.surname}`.trim(),
-      status: rsvpStatus,
-      party_size: rsvpStatus === "confirmed" ? 1 : 0,
-      contact_phone: phone.trim(),
-      additional_info: guest.additionalInfo.trim() || null
-    }))
-  );
-
-  if (error) {
+  const response = await fetch("/api/rsvp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ invitationId, phone, guests, status: rsvpStatus })
+  });
+  const result = await response.json().catch(() => ({})) as { error?: string };
+  if (!response.ok) {
     return {
       status: "error",
-      message: rsvpStatus === "confirmed"
-        ? "Non è stato possibile salvare la conferma nella dashboard."
-        : "Non è stato possibile salvare la mancata partecipazione nella dashboard."
+      message: result.error ?? "Non è stato possibile salvare la risposta nella dashboard."
     };
   }
 

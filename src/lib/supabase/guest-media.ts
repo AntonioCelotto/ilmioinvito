@@ -22,20 +22,6 @@ const supportedMediaTypes = new Set([
   "video/webm"
 ]);
 
-function friendlyUploadError(message: string) {
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes("row-level security") || normalized.includes("policy")) {
-    return "Questo invito non è ancora pubblicato. Il proprietario deve pubblicarlo prima di consentire i caricamenti.";
-  }
-
-  if (normalized.includes("mime") || normalized.includes("content type")) {
-    return "Formato non supportato. Usa JPG, PNG, WebP oppure un video MP4, MOV o WebM.";
-  }
-
-  return message;
-}
-
 function publicUrl(path: string) {
   const supabase = createClient();
   return supabase?.storage.from(bucket).getPublicUrl(path).data.publicUrl ?? "";
@@ -47,53 +33,26 @@ export async function uploadGuestMedia(
   dedication: string,
   file: File
 ) {
-  const supabase = createClient();
-  if (!supabase) return { ok: false, message: "Servizio non configurato." };
   if (guestName.trim().length < 2) return { ok: false, message: "Inserisci il tuo nome." };
 
-  const isPhoto = file.type.startsWith("image/");
-  const isVideo = file.type.startsWith("video/");
   if (!supportedMediaTypes.has(file.type)) {
     return {
       ok: false,
       message: "Formato non supportato. Usa JPG, PNG, WebP oppure un video MP4, MOV o WebM."
     };
   }
-  if (file.size > 50 * 1024 * 1024) return { ok: false, message: "Il file non può superare 50 MB." };
-
-  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || (isPhoto ? "jpg" : "mp4");
-  const path = `${invitationId}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
-    cacheControl: "3600",
-    upsert: false
-  });
-  if (uploadError) {
-    return { ok: false, message: friendlyUploadError(uploadError.message) };
-  }
-
-  const { data: publishedItem, error } = await supabase.from("guest_media").insert({
-    invitation_id: invitationId,
-    guest_name: guestName.trim(),
-    dedication: dedication.trim() || null,
-    media_type: isPhoto ? "photo" : "video",
-    storage_path: path,
-    status: "approved"
-  }).select("id, invitation_id, guest_name, dedication, media_type, storage_path, status, created_at").single();
-  if (error) return { ok: false, message: friendlyUploadError(error.message) };
+  if (file.size > 15 * 1024 * 1024) return { ok: false, message: "Il file non può superare 15 MB." };
+  const form = new FormData();
+  form.set("invitationId", invitationId);
+  form.set("guestName", guestName.trim());
+  form.set("dedication", dedication.trim());
+  form.set("file", file);
+  const response = await fetch("/api/guest-media", { method: "POST", body: form });
+  const result = await response.json().catch(() => ({})) as { error?: string; item?: GuestMediaItem };
+  if (!response.ok || !result.item) return { ok: false, message: result.error ?? "Caricamento non riuscito." };
   return {
     ok: true,
-    message: "Pubblicato! Il tuo ricordo è ora visibile nella bacheca.",
-    item: {
-      id: publishedItem.id,
-      invitationId: publishedItem.invitation_id,
-      invitationTitle: "",
-      guestName: publishedItem.guest_name,
-      dedication: publishedItem.dedication ?? "",
-      mediaType: publishedItem.media_type,
-      url: publicUrl(publishedItem.storage_path),
-      status: publishedItem.status,
-      createdAt: publishedItem.created_at
-    } as GuestMediaItem
+    message: "Caricato! Il proprietario dell’invito potrà approvare il contenuto dalla dashboard."
   };
 }
 

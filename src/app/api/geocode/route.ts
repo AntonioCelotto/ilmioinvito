@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { allowRequest, requestAddress } from "@/lib/rate-limit";
 
 type PhotonFeature = {
   properties?: {
@@ -29,6 +30,9 @@ function formatAddress(feature: PhotonFeature) {
 }
 
 export async function GET(request: NextRequest) {
+  if (!allowRequest(`geocode:${requestAddress(request)}`, 30, 10 * 60_000)) {
+    return NextResponse.json({ suggestions: [] }, { status: 429 });
+  }
   const query = request.nextUrl.searchParams.get("q")?.trim();
 
   if (!query || query.length < 3) {

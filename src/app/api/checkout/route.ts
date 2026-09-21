@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { billingProducts, getStripePriceId, isBillingProductKey } from "@/lib/billing-plans";
 import { createStripeCheckoutSession } from "@/lib/stripe-rest";
 import { createServerAuthClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { allowRequest } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
 
     const { data, error } = await authClient.auth.getUser(token);
     if (error || !data.user) return NextResponse.json({ error: "Sessione non valida." }, { status: 401 });
+    if (!allowRequest(`checkout:${data.user.id}`, 8, 10 * 60_000)) {
+      return NextResponse.json({ error: "Troppi tentativi di pagamento. Attendi qualche minuto." }, { status: 429 });
+    }
 
     const body = (await request.json()) as { productKey?: unknown; invitationId?: unknown };
     if (!isBillingProductKey(body.productKey)) {
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
       cancelUrl: `${origin}/abbonamenti?pagamento=annullato&invito=${encodeURIComponent(body.invitationId)}&titolo=${encodeURIComponent(invitation.title)}`
     });
 
-    return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Errore durante il pagamento." },

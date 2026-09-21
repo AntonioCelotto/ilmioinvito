@@ -539,6 +539,41 @@ textarea {
   }
 }
 
+.auth-help-link {
+  color: var(--accent-dark);
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.check-row a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.legal-page {
+  background: #f7f2ec;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.legal-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(43, 37, 40, 0.08);
+  margin: 0 auto;
+  max-width: 820px;
+  padding: clamp(24px, 5vw, 56px);
+}
+
+.legal-card h1 { margin-bottom: 28px; }
+.legal-card h2 { font-size: 20px; margin: 28px 0 8px; }
+.legal-card p { line-height: 1.7; }
+.legal-card .button { margin-top: 20px; }
+
 .template-page {
   min-height: 100svh;
   padding: 0 clamp(20px, 5vw, 72px) 80px;

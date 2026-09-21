@@ -49,6 +49,18 @@ export async function createStripeCheckoutSession(params: {
   return data;
 }
 
+export async function retrieveStripeCheckoutSession(sessionId: string) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) throw new Error("Stripe non è configurato.");
+  if (!/^cs_(test_|live_)?[A-Za-z0-9]+$/.test(sessionId)) throw new Error("Sessione Stripe non valida.");
+  const response = await fetch(`${stripeApiUrl}/checkout/sessions/${encodeURIComponent(sessionId)}`, {
+    headers: { Authorization: `Bearer ${secretKey}` }, cache: "no-store"
+  });
+  const data = (await response.json()) as { id?: string; payment_status?: string; amount_total?: number | null; currency?: string | null; metadata?: { owner_id?: string; product_key?: string; invitation_id?: string }; error?: { message?: string } };
+  if (!response.ok || !data.id) throw new Error(data.error?.message ?? "Sessione Stripe non disponibile.");
+  return data;
+}
+
 export function verifyStripeWebhookSignature(
   payload: string,
   signatureHeader: string,
