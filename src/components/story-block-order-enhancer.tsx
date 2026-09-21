@@ -133,7 +133,7 @@ export function StoryBlockOrderEnhancer() {
         if (!control) {
           control = document.createElement("div");
           control.dataset.storyEditorToggleMount = "true";
-          storyTitleMount.insertAdjacentElement("afterend", control);
+          storyTitleMount.insertAdjacentElement("afterbegin", control);
         }
         setEditorMount(control);
       }
@@ -176,7 +176,7 @@ export function StoryBlockOrderEnhancer() {
   ) : null;
 
   const activeControl = editorMount ? createPortal(
-    <div className="nested-fields block-editor" style={{ marginTop: 14 }}>
+    <div className="nested-fields block-editor" style={{ marginBottom: 14 }}>
       <div className="block-editor-head">
         <div>
           <span>{enabled ? "Visibile nel link" : "Nascosto dal link"}</span>
