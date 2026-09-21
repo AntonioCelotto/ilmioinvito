@@ -592,15 +592,12 @@ export function readSelectedTemplate() {
 
   const selectedId = window.localStorage.getItem(selectedTemplateStorageKey);
 
-  if (selectedId?.startsWith("custom-upload")) {
+  if (selectedId === "custom-upload") {
     const storedCustomTemplate = window.localStorage.getItem(customTemplateStorageKey);
 
     if (storedCustomTemplate) {
       try {
-        const customTemplate = JSON.parse(storedCustomTemplate) as InvitationTemplate;
-        if (customTemplate.id === selectedId && customTemplate.theme?.backgroundImage) {
-          return customTemplate;
-        }
+        return JSON.parse(storedCustomTemplate) as InvitationTemplate;
       } catch {
         window.localStorage.removeItem(customTemplateStorageKey);
       }
