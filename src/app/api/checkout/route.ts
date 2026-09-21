@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { billingProducts, getStripePriceId, isBillingProductKey } from "@/lib/billing-plans";
-import { createStripeCheckoutSession } from "@/lib/stripe-rest";
+import { createStripeCheckoutSession, findPaidStripeCheckoutSession } from "@/lib/stripe-rest";
 import { createServerAuthClient, createSupabaseAdminClient } from "@/lib/supabase/server";
 import { allowRequest } from "@/lib/rate-limit";
 
@@ -53,6 +53,31 @@ export async function POST(request: Request) {
       }
       if (entitlement.plan_key === "premium") {
         return NextResponse.json({ error: "Il piano Premium include già invitati illimitati." }, { status: 409 });
+      }
+    }
+
+    if (body.productKey !== "guest_pack_50" && invitation.status !== "published") {
+      const paidSession = await findPaidStripeCheckoutSession({
+        ownerId: data.user.id,
+        invitationId: body.invitationId
+      });
+      const paidProductKey = paidSession?.metadata?.product_key;
+      if (paidSession && isBillingProductKey(paidProductKey) && paidProductKey !== "guest_pack_50"
+        && paidSession.amount_total === billingProducts[paidProductKey].price * 100
+        && paidSession.currency?.toLowerCase() === "eur") {
+        const { error: activationError } = await admin.rpc("apply_stripe_checkout", {
+          checkout_owner_id: data.user.id,
+          checkout_invitation_id: body.invitationId,
+          checkout_session_id: paidSession.id,
+          checkout_payment_id: paidSession.payment_intent ?? null,
+          checkout_product_key: paidProductKey,
+          checkout_amount_cents: paidSession.amount_total ?? 0,
+          checkout_currency: paidSession.currency ?? "eur"
+        });
+        if (activationError) return NextResponse.json({ error: "Pagamento trovato, ma attivazione non riuscita." }, { status: 500 });
+        return NextResponse.json({
+          url: `${process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin}/pagamento/completato?session_id=${encodeURIComponent(paidSession.id)}&invito=${encodeURIComponent(invitation.slug)}`
+        }, { headers: { "Cache-Control": "no-store" } });
       }
     }
 
