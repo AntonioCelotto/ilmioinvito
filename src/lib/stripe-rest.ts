@@ -16,6 +16,7 @@ export async function createStripeCheckoutSession(params: {
 
   const body = new URLSearchParams({
     mode: "payment",
+    "managed_payments[enabled]": "false",
     "line_items[0][price]": params.priceId,
     "line_items[0][quantity]": "1",
     success_url: params.successUrl,
