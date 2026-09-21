@@ -23,6 +23,16 @@ export function BackgroundColorEnhancer() {
     // il cambio immagine segue sempre la scelta effettuata nella galleria.
     const selectedTemplate = readSelectedTemplate();
     const selectedImage = selectedTemplate.theme.backgroundImage;
+    const isCustomTemplate = selectedTemplate.id.startsWith("custom-upload");
+
+    if (isCustomTemplate && selectedImage) {
+      hero.style.backgroundImage = "none";
+      preview.style.backgroundImage = `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${selectedImage}")`;
+      preview.style.backgroundPosition = "top center";
+      preview.style.backgroundSize = "cover";
+      preview.style.backgroundRepeat = "no-repeat";
+      return;
+    }
 
     if (selectedImage) {
       hero.style.backgroundImage = `url("${selectedImage}")`;
