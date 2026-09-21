@@ -1194,7 +1194,7 @@ export function BuilderClient() {
               {section === "rsvp" ? (
                 <div className="field">
                   <label htmlFor="rsvp-whatsapp">
-                    Numero WhatsApp che riceverà le conferme
+                    Numero WhatsApp per ricevere anche le conferme sul telefono (facoltativo)
                   </label>
                   <input
                     id="rsvp-whatsapp"
@@ -1207,7 +1207,7 @@ export function BuilderClient() {
                     }
                   />
                   <span className="muted">
-                    Puoi inserirlo con o senza il prefisso +39.
+                    Le risposte vengono sempre salvate nella dashboard. Inserisci il numero solo se vuoi riceverle anche su WhatsApp; puoi scriverlo con o senza il prefisso +39.
                   </span>
                 </div>
               ) : null}

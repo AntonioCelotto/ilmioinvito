@@ -46,9 +46,10 @@ export function InviteRsvp({ invitationId, whatsappNumber, invitationTitle }: In
   const recipientNumber = useMemo(() => normalizeWhatsappNumber(whatsappNumber), [whatsappNumber]);
 
   const whatsappLink = useMemo(() => {
+    const phoneLine = phone.trim() ? `Telefono di contatto: ${phone.trim()}` : "";
     const message = attendance === "confirmed"
-      ? [`CONFERMA ${invitationTitle.toUpperCase()}`, `Telefono di contatto: ${phone}`, `Invitati (${guests.length}):`, guestsText].join("\n")
-      : [`RISPOSTA ${invitationTitle.toUpperCase()}`, "Non potrò partecipare all'evento.", `Telefono di contatto: ${phone}`, guestsText].join("\n");
+      ? [`CONFERMA ${invitationTitle.toUpperCase()}`, phoneLine, `Invitati (${guests.length}):`, guestsText].filter(Boolean).join("\n")
+      : [`RISPOSTA ${invitationTitle.toUpperCase()}`, "Non potrò partecipare all'evento.", phoneLine, guestsText].filter(Boolean).join("\n");
     return recipientNumber ? `https://wa.me/${recipientNumber}?text=${encodeURIComponent(message)}` : "";
   }, [attendance, guests.length, guestsText, invitationTitle, phone, recipientNumber]);
 
@@ -72,8 +73,8 @@ export function InviteRsvp({ invitationId, whatsappNumber, invitationTitle }: In
         </div>
 
         <div className="field">
-          <label htmlFor="phone">Telefono WhatsApp</label>
-          <input id="phone" required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          <label htmlFor="phone">Telefono di contatto (facoltativo)</label>
+          <input id="phone" placeholder="Inseriscilo solo se desideri" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} />
         </div>
 
         <div className="guest-head">

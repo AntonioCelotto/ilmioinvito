@@ -22,6 +22,7 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
   const [mode, setMode] = useState<"number" | "logo" | "text">("number");
   const [logoUrl, setLogoUrl] = useState("");
   const [logoScale, setLogoScale] = useState(1);
+  const [numberScale, setNumberScale] = useState(1);
   const [coverText, setCoverText] = useState("");
   const [coverTextScale, setCoverTextScale] = useState(1);
   const [target, setTarget] = useState<HTMLElement | null>(null);
@@ -29,10 +30,9 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
 
   useEffect(() => {
     const timer = window.setInterval(() => {
-      const hero = document.querySelector<HTMLElement>(".invite-hero");
-      if (hero) {
-        hero.style.position = "relative";
-        setTarget(hero);
+      const heroContent = document.querySelector<HTMLElement>(".invite-hero > div");
+      if (heroContent) {
+        setTarget(heroContent);
         window.clearInterval(timer);
       }
     }, 120);
@@ -52,6 +52,7 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
         setMode(draft.theme.coverElement ?? "number");
         setLogoUrl(draft.theme.coverLogoUrl ?? "");
         setLogoScale(draft.theme.coverLogoScale ?? 1);
+        setNumberScale(draft.theme.coverNumberScale ?? 1);
         setCoverText(draft.theme.coverText ?? "");
         setCoverTextScale(draft.theme.coverTextScale ?? 1);
       }
@@ -85,11 +86,11 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
   if (!target) return null;
 
   return createPortal(
-    <>
-      {logoUrl ? <div aria-label="Logo evento" style={{position:"absolute",left:"50%",top:"7%",transform:"translateX(-50%)",zIndex:4,width:`${Math.round(30*logoScale)}%`,height:"clamp(70px,10vw,125px)",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><img src={logoUrl} alt="Logo evento" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}} /></div> : null}
-      {number ? <div aria-label={`Numero compleanno ${number}`} style={{position:"absolute",inset:"16% 0 auto",zIndex:4,textAlign:"center",pointerEvents:"none",fontFamily:"Georgia, 'Times New Roman', serif",fontWeight:700,fontSize:"clamp(92px,22vw,240px)",lineHeight:".82",letterSpacing:"-.06em",color,textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.52)"}}>{number}</div> : null}
-      {coverText.trim() ? <div aria-label="Testo copertina" style={{position:"absolute",left:"50%",top:"34%",transform:"translateX(-50%)",zIndex:4,width:"86%",textAlign:"center",pointerEvents:"none",fontFamily:"Georgia, 'Times New Roman', serif",fontWeight:700,fontSize:`clamp(34px, ${Math.round(10*coverTextScale)}vw, ${Math.round(92*coverTextScale)}px)`,lineHeight:1,color,textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)"}}>{coverText}</div> : null}
-    </>,
+    <div aria-label="Elementi personalizzati della copertina" style={{alignItems:"center",display:"flex",flexDirection:"column",gap:"clamp(8px,1.5vw,16px)",margin:"0 auto clamp(18px,3vw,34px)",pointerEvents:"none",width:"min(88vw,720px)"}}>
+      {logoUrl ? <div aria-label="Logo evento" style={{alignItems:"center",display:"flex",height:`clamp(62px,${Math.round(10*logoScale)}vw,${Math.round(130*logoScale)}px)`,justifyContent:"center",width:`${Math.min(76,Math.round(34*logoScale))}%`}}><img src={logoUrl} alt="Logo evento" style={{display:"block",height:"100%",objectFit:"contain",width:"100%"}} /></div> : null}
+      {number ? <div aria-label={`Numero compleanno ${number}`} style={{color,fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(68*numberScale)}px,${Math.round(15*numberScale)}vw,${Math.round(154*numberScale)}px)`,fontWeight:700,letterSpacing:"-.04em",lineHeight:.82,textAlign:"center",textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.42)",width:"100%"}}>{number}</div> : null}
+      {coverText.trim() ? <div aria-label="Testo copertina" style={{color,fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(30*coverTextScale)}px, ${Math.round(7*coverTextScale)}vw, ${Math.round(76*coverTextScale)}px)`,fontWeight:700,lineHeight:1,overflowWrap:"anywhere",textAlign:"center",textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)",width:"100%"}}>{coverText}</div> : null}
+    </div>,
     target
   );
 }

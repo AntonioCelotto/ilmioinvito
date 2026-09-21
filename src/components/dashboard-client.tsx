@@ -224,12 +224,12 @@ export function DashboardClient() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12, marginTop: 16 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 16 }}>
         <button
           type="button"
           className={`button ${selectedInvitationId === "all" ? "" : "light"}`}
           onClick={() => setSelectedInvitationId("all")}
-          style={{ textAlign: "left", minHeight: 86 }}
+          style={{ textAlign: "left", minHeight: 58, width: "auto", padding: "10px 15px" }}
         >
           <strong>Tutti gli inviti</strong><br />
           <span>{rsvps.filter((rsvp) => rsvp.status === "confirmed").length} partecipanti totali</span>
@@ -242,7 +242,7 @@ export function DashboardClient() {
               key={invitation.id}
               className={`button ${selectedInvitationId === invitation.id ? "" : "light"}`}
               onClick={() => setSelectedInvitationId(invitation.id)}
-              style={{ textAlign: "left", minHeight: 86 }}
+              style={{ textAlign: "left", minHeight: 58, width: "auto", padding: "10px 15px" }}
             >
               <strong>{invitation.title}</strong><br />
               <span>{stats.confirmed} presenti · {stats.declined} assenti · {stats.responses} risposte</span>
