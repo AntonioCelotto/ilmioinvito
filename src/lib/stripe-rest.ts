@@ -57,9 +57,45 @@ export async function retrieveStripeCheckoutSession(sessionId: string) {
   const response = await fetch(`${stripeApiUrl}/checkout/sessions/${encodeURIComponent(sessionId)}`, {
     headers: { Authorization: `Bearer ${secretKey}` }, cache: "no-store"
   });
-  const data = (await response.json()) as { id?: string; payment_status?: string; amount_total?: number | null; currency?: string | null; metadata?: { owner_id?: string; product_key?: string; invitation_id?: string }; error?: { message?: string } };
+  const data = (await response.json()) as { id?: string; payment_status?: string; payment_intent?: string | null; amount_total?: number | null; currency?: string | null; metadata?: { owner_id?: string; product_key?: string; invitation_id?: string }; error?: { message?: string } };
   if (!response.ok || !data.id) throw new Error(data.error?.message ?? "Sessione Stripe non disponibile.");
   return data;
+}
+
+export async function findPaidStripeCheckoutSession(params: {
+  ownerId: string;
+  invitationId: string;
+}) {
+  const secretKey = process.env.STRIPE_SECRET_KEY;
+  if (!secretKey) throw new Error("Stripe non è configurato.");
+
+  const query = new URLSearchParams({
+    limit: "100",
+    status: "complete",
+    "created[gte]": String(Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60)
+  });
+  const response = await fetch(`${stripeApiUrl}/checkout/sessions?${query}`, {
+    headers: { Authorization: `Bearer ${secretKey}` },
+    cache: "no-store"
+  });
+  const result = (await response.json()) as {
+    data?: Array<{
+      id: string;
+      payment_status?: string;
+      payment_intent?: string | null;
+      amount_total?: number | null;
+      currency?: string | null;
+      metadata?: { owner_id?: string; product_key?: string; invitation_id?: string };
+    }>;
+    error?: { message?: string };
+  };
+  if (!response.ok) throw new Error(result.error?.message ?? "Pagamenti Stripe non disponibili.");
+
+  return result.data?.find((session) =>
+    session.payment_status === "paid" &&
+    session.metadata?.owner_id === params.ownerId &&
+    session.metadata?.invitation_id === params.invitationId
+  ) ?? null;
 }
 
 export function verifyStripeWebhookSignature(
