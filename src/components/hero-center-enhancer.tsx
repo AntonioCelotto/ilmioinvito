@@ -38,6 +38,7 @@ export function HeroCenterEnhancer() {
       hero.style.textAlign = "center";
       hero.style.placeContent = "center";
       hero.style.alignContent = "center";
+      hero.style.justifyItems = "center";
 
       const title = hero.querySelector<HTMLElement>("h2");
       const kicker = hero.querySelector<HTMLElement>(".phone-kicker");

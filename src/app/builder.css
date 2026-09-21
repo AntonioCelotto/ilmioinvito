@@ -739,16 +739,21 @@
 .phone-hero-preview {
   display: grid;
   gap: 10px;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
   min-width: 0;
   min-height: 330px;
+  overflow: hidden;
   place-content: center;
   width: 100%;
 }
 
 .phone-hero-preview > * {
   box-sizing: border-box;
+  grid-column: 1;
   max-width: 100%;
   min-width: 0;
+  width: 100%;
 }
 
 .phone-video-only-hero {
