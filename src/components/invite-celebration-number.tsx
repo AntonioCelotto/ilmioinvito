@@ -84,79 +84,12 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
 
   if (!target) return null;
 
-  if (mode === "logo" && logoUrl) {
-    return createPortal(
-      <div
-        aria-label="Logo evento"
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "13%",
-          transform: "translateX(-50%)",
-          zIndex: 4,
-          width: `${Math.round(34 * logoScale)}%`,
-          height: "clamp(80px, 12vw, 150px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          pointerEvents: "none"
-        }}
-      >
-        <img src={logoUrl} alt="Logo evento" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
-      </div>,
-      target
-    );
-  }
-
-  if (mode === "text" && coverText.trim()) {
-    return createPortal(
-      <div
-        aria-label="Testo copertina"
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "30%",
-          transform: "translateX(-50%)",
-          zIndex: 4,
-          width: "86%",
-          textAlign: "center",
-          pointerEvents: "none",
-          fontFamily: "Georgia, 'Times New Roman', serif",
-          fontWeight: 700,
-          fontSize: `clamp(34px, ${Math.round(10 * coverTextScale)}vw, ${Math.round(92 * coverTextScale)}px)`,
-          lineHeight: 1,
-          color,
-          textShadow: "0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)"
-        }}
-      >
-        {coverText}
-      </div>,
-      target
-    );
-  }
-
-  if (!number) return null;
-
   return createPortal(
-    <div
-      aria-label={`Numero compleanno ${number}`}
-      style={{
-        position: "absolute",
-        inset: "15% 0 auto",
-        zIndex: 4,
-        textAlign: "center",
-        pointerEvents: "none",
-        fontFamily: "Georgia, 'Times New Roman', serif",
-        fontWeight: 700,
-        fontSize: "clamp(92px, 22vw, 240px)",
-        lineHeight: ".82",
-        letterSpacing: "-.06em",
-        color,
-        textShadow: "0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.52)"
-      }}
-    >
-      {number}
-    </div>,
+    <>
+      {logoUrl ? <div aria-label="Logo evento" style={{position:"absolute",left:"50%",top:"7%",transform:"translateX(-50%)",zIndex:4,width:`${Math.round(30*logoScale)}%`,height:"clamp(70px,10vw,125px)",display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none"}}><img src={logoUrl} alt="Logo evento" style={{width:"100%",height:"100%",objectFit:"contain",display:"block"}} /></div> : null}
+      {number ? <div aria-label={`Numero compleanno ${number}`} style={{position:"absolute",inset:"16% 0 auto",zIndex:4,textAlign:"center",pointerEvents:"none",fontFamily:"Georgia, 'Times New Roman', serif",fontWeight:700,fontSize:"clamp(92px,22vw,240px)",lineHeight:".82",letterSpacing:"-.06em",color,textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.52)"}}>{number}</div> : null}
+      {coverText.trim() ? <div aria-label="Testo copertina" style={{position:"absolute",left:"50%",top:"34%",transform:"translateX(-50%)",zIndex:4,width:"86%",textAlign:"center",pointerEvents:"none",fontFamily:"Georgia, 'Times New Roman', serif",fontWeight:700,fontSize:`clamp(34px, ${Math.round(10*coverTextScale)}vw, ${Math.round(92*coverTextScale)}px)`,lineHeight:1,color,textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)"}}>{coverText}</div> : null}
+    </>,
     target
   );
 }
