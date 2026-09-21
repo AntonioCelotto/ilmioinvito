@@ -14,10 +14,6 @@ export function HeroCenterEnhancer() {
         hero.style.removeProperty("min-height");
         hero.style.removeProperty("place-content");
         hero.style.removeProperty("align-content");
-        hero.style.removeProperty("width");
-        hero.style.removeProperty("margin-left");
-        hero.style.removeProperty("margin-right");
-        hero.style.removeProperty("margin-top");
         return;
       }
 
@@ -25,20 +21,14 @@ export function HeroCenterEnhancer() {
       if (phoneScreen) {
         const styles = window.getComputedStyle(phoneScreen);
         const paddingTop = Number.parseFloat(styles.paddingTop) || 0;
-        const paddingBottom = Number.parseFloat(styles.paddingBottom) || 0;
-
-        hero.style.minHeight = `${Math.max(330, phoneScreen.clientHeight - paddingTop - paddingBottom)}px`;
-        hero.style.width = "100%";
-        hero.style.marginLeft = "0";
-        hero.style.marginRight = "0";
-        hero.style.marginTop = `${-paddingTop}px`;
+        const firstViewportHeight = Math.max(330, phoneScreen.clientHeight - paddingTop);
+        hero.style.minHeight = `${firstViewportHeight}px`;
       }
 
       hero.style.position = "relative";
       hero.style.textAlign = "center";
       hero.style.placeContent = "center";
       hero.style.alignContent = "center";
-      hero.style.justifyItems = "center";
 
       const title = hero.querySelector<HTMLElement>("h2");
       const kicker = hero.querySelector<HTMLElement>(".phone-kicker");
@@ -67,8 +57,12 @@ export function HeroCenterEnhancer() {
     };
 
     sync();
+    const timer = window.setInterval(sync, 400);
     window.addEventListener("resize", sync);
-    return () => window.removeEventListener("resize", sync);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   return null;
