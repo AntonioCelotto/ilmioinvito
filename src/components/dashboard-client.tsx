@@ -16,6 +16,11 @@ import {
   loadUserDraftsFromSupabase
 } from "@/lib/supabase/drafts";
 import { DashboardRsvp, loadDashboardRsvps } from "@/lib/supabase/rsvps";
+import {
+  GuestMediaItem,
+  loadDashboardGuestMedia,
+  updateGuestMediaStatus
+} from "@/lib/supabase/guest-media";
 import { downloadGuestPdf } from "@/lib/guest-pdf";
 
 export function DashboardClient() {
@@ -26,6 +31,9 @@ export function DashboardClient() {
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
   const [deletingDraftId, setDeletingDraftId] = useState("");
   const [draftActionMessage, setDraftActionMessage] = useState("");
+  const [guestMedia, setGuestMedia] = useState<GuestMediaItem[]>([]);
+  const [guestMediaMessage, setGuestMediaMessage] = useState("");
+  const [updatingGuestMediaId, setUpdatingGuestMediaId] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -58,16 +66,30 @@ export function DashboardClient() {
       }
     }
 
+    async function syncGuestMedia() {
+      const result = await loadDashboardGuestMedia();
+      if (!active) return;
+      setGuestMedia(result.items);
+      setGuestMediaMessage(result.message);
+    }
+
     void syncDashboard();
+    void syncGuestMedia();
     loadDashboardRsvps().then((result) => {
       if (!active) return;
       setRsvps(result.rsvps);
       setRsvpMessage(result.message);
     });
 
-    const onFocus = () => void syncDashboard();
+    const onFocus = () => {
+      void syncDashboard();
+      void syncGuestMedia();
+    };
     const onVisibility = () => {
-      if (document.visibilityState === "visible") void syncDashboard();
+      if (document.visibilityState === "visible") {
+        void syncDashboard();
+        void syncGuestMedia();
+      }
     };
 
     window.addEventListener("focus", onFocus);
@@ -99,6 +121,15 @@ export function DashboardClient() {
       : rsvps.filter((rsvp) => rsvp.invitationId === selectedInvitationId),
     [rsvps, selectedInvitationId]
   );
+  const visibleGuestMedia = useMemo(
+    () => selectedInvitationId === "all"
+      ? guestMedia
+      : guestMedia.filter((item) => item.invitationId === selectedInvitationId),
+    [guestMedia, selectedInvitationId]
+  );
+  const pendingGuestMedia = visibleGuestMedia.filter((item) => item.status === "pending");
+  const approvedGuestMedia = visibleGuestMedia.filter((item) => item.status === "approved");
+  const rejectedGuestMedia = visibleGuestMedia.filter((item) => item.status === "rejected");
 
   const confirmedRsvps = visibleRsvps.filter((rsvp) => rsvp.status === "confirmed");
   const declinedRsvps = visibleRsvps.filter((rsvp) => rsvp.status === "declined");
@@ -147,6 +178,61 @@ export function DashboardClient() {
     setDraftActionMessage(result.message);
     setDeletingDraftId("");
   }
+
+  async function handleGuestMediaStatus(item: GuestMediaItem, status: GuestMediaItem["status"]) {
+    setUpdatingGuestMediaId(item.id);
+    setGuestMediaMessage("");
+    const result = await updateGuestMediaStatus(item.id, status);
+    if (result.ok) {
+      setGuestMedia((current) => current.map((media) => media.id === item.id ? { ...media, status } : media));
+      setGuestMediaMessage(status === "approved"
+        ? "Ricordo pubblicato sull’invito."
+        : status === "rejected"
+          ? "Ricordo rifiutato e non visibile agli invitati."
+          : "Ricordo riportato in attesa.");
+    } else {
+      setGuestMediaMessage(`Aggiornamento non riuscito: ${result.message}`);
+    }
+    setUpdatingGuestMediaId("");
+  }
+
+  const GuestMediaCards = ({ items }: { items: GuestMediaItem[] }) => items.length === 0 ? (
+    <div className="empty-state">
+      <h3>Nessun ricordo in questa sezione</h3>
+      <p className="muted">Le foto e i video condivisi dagli invitati compariranno qui.</p>
+    </div>
+  ) : (
+    <div className="guest-media-gallery social-feed dashboard-media-feed">
+      {items.map((item) => (
+        <article className="guest-media-card social-post dashboard-media-card" key={item.id}>
+          <div className="social-post-author">
+            <span>{item.guestName.slice(0, 1).toUpperCase()}</span>
+            <div>
+              <strong>{item.guestName}</strong>
+              <small>{item.invitationTitle} · {new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(item.createdAt))}</small>
+            </div>
+          </div>
+          {item.dedication ? <p className="social-post-dedication">“{item.dedication}”</p> : null}
+          {item.mediaType === "photo" ? (
+            <img src={item.url} alt={`Ricordo condiviso da ${item.guestName}`} loading="lazy" />
+          ) : (
+            <video src={item.url} controls preload="metadata" />
+          )}
+          <div className="draft-actions dashboard-media-actions">
+            {item.status !== "approved" ? (
+              <button className="button" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaStatus(item, "approved")}>Pubblica sull’invito</button>
+            ) : <span className="status confirmed">Pubblicato</span>}
+            {item.status !== "rejected" ? (
+              <button className="button light" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaStatus(item, "rejected")}>Rifiuta</button>
+            ) : <span className="status pending">Rifiutato</span>}
+            {item.status !== "pending" ? (
+              <button className="draft-delete-button" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaStatus(item, "pending")}>Rimetti in attesa</button>
+            ) : null}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
 
   const GuestTable = ({ rows, declined = false }: { rows: DashboardRsvp[]; declined?: boolean }) =>
     rows.length === 0 ? (
@@ -280,6 +366,37 @@ export function DashboardClient() {
       </div>
 
       {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
+    </section>
+
+    <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">Il mio album</p>
+          <h3>Foto e video ricevuti — {selectedInvitationTitle}</h3>
+          <p className="muted">Controlla i ricordi inviati dagli ospiti e scegli quali pubblicare sull’invito.</p>
+        </div>
+        <strong>{pendingGuestMedia.length} da approvare</strong>
+      </div>
+      {guestMediaMessage ? <p className="panel-note" role="status">{guestMediaMessage}</p> : null}
+
+      <div className="media-moderation-group">
+        <div className="panel-header"><h3>Da approvare</h3><span className="status pending">{pendingGuestMedia.length}</span></div>
+        <GuestMediaCards items={pendingGuestMedia} />
+      </div>
+
+      {approvedGuestMedia.length > 0 ? (
+        <div className="media-moderation-group">
+          <div className="panel-header"><h3>Pubblicati sull’invito</h3><span className="status confirmed">{approvedGuestMedia.length}</span></div>
+          <GuestMediaCards items={approvedGuestMedia} />
+        </div>
+      ) : null}
+
+      {rejectedGuestMedia.length > 0 ? (
+        <div className="media-moderation-group">
+          <div className="panel-header"><h3>Rifiutati</h3><span className="status pending">{rejectedGuestMedia.length}</span></div>
+          <GuestMediaCards items={rejectedGuestMedia} />
+        </div>
+      ) : null}
     </section>
 
     <div className="metrics" style={{ marginTop: 18 }}>
