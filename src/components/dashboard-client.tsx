@@ -84,6 +84,14 @@ export function DashboardClient() {
     () => drafts.map((draft) => ({ id: draft.id, title: draft.title, status: draft.status })),
     [drafts]
   );
+  const publishedInvitations = useMemo(
+    () => drafts.filter((draft) => draft.status === "published"),
+    [drafts]
+  );
+  const savedDrafts = useMemo(
+    () => drafts.filter((draft) => draft.status !== "published"),
+    [drafts]
+  );
 
   const visibleRsvps = useMemo(
     () => selectedInvitationId === "all"
@@ -175,6 +183,27 @@ export function DashboardClient() {
       </div>
     );
 
+  const InvitationRows = ({ items, published = false }: { items: InvitationDraft[]; published?: boolean }) => (
+    <div className="draft-list">
+      {items.map((draft) => (
+        <article className="draft-row" key={draft.id}>
+          <div>
+            <h3>{draft.title}</h3>
+            <p className="muted">{draft.eventDate} alle {draft.eventTime} - {draft.activeSections.length} sezioni - {draft.locations.length} location</p>
+            <div className="mini-section-list">{draft.activeSections.map((section) => <span key={section}>{section}</span>)}</div>
+          </div>
+          <div className="draft-actions">
+            <span className={`status ${published ? "confirmed" : "pending"}`}>{published ? "Pubblicato" : "Bozza"}</span>
+            <a className="button draft-preview-button" href={`/i/${draft.slug}`}>{published ? "Apri invito" : "Anteprima"}</a>
+            <button className="button draft-edit-button" type="button" onClick={() => handleEdit(draft)}>Modifica</button>
+            {!published ? <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>Pubblica e paga</button> : null}
+            <button className="draft-delete-button" disabled={deletingDraftId === draft.id} type="button" onClick={() => handleDelete(draft)}>{deletingDraftId === draft.id ? "Eliminazione…" : "Elimina"}</button>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+
   return <>
     <div className="toolbar">
       <div>
@@ -188,31 +217,19 @@ export function DashboardClient() {
     <AuthPanel />
 
     <section className="panel dashboard-section">
-      <div className="panel-header"><h3>Bozze salvate</h3><span className="muted">{drafts.length} bozze</span></div>
+      <div className="panel-header"><h3>Inviti pubblicati</h3><span className="muted">{publishedInvitations.length} pubblicati</span></div>
       {remoteMessage ? <p className="panel-note">{remoteMessage}</p> : null}
       {draftActionMessage ? <p className="panel-note dashboard-action-message" role="status">{draftActionMessage}</p> : null}
-      {drafts.length === 0 ? (
+      {publishedInvitations.length === 0 ? (
+        <div className="empty-state"><h3>Nessun invito pubblicato</h3><p className="muted">Dopo il pagamento, gli inviti pubblicati compariranno qui.</p></div>
+      ) : <InvitationRows items={publishedInvitations} published />}
+    </section>
+
+    <section className="panel dashboard-section" style={{ marginTop: 18 }}>
+      <div className="panel-header"><h3>Bozze salvate</h3><span className="muted">{savedDrafts.length} bozze</span></div>
+      {savedDrafts.length === 0 ? (
         <div className="empty-state"><h3>Nessuna bozza salvata</h3><p className="muted">Crea un invito dal builder e premi "Salva bozza".</p><a className="button" href="/templates">Crea invito</a></div>
-      ) : (
-        <div className="draft-list">
-          {drafts.map((draft) => (
-            <article className="draft-row" key={draft.id}>
-              <div>
-                <h3>{draft.title}</h3>
-                <p className="muted">{draft.eventDate} alle {draft.eventTime} - {draft.activeSections.length} sezioni - {draft.locations.length} location</p>
-                <div className="mini-section-list">{draft.activeSections.map((section) => <span key={section}>{section}</span>)}</div>
-              </div>
-              <div className="draft-actions">
-                <span className={`status ${draft.status === "published" ? "confirmed" : "pending"}`}>{draft.status === "published" ? "Pubblicato" : "Bozza"}</span>
-                <a className="button draft-preview-button" href={`/i/${draft.slug}`}>Anteprima</a>
-                <button className="button draft-edit-button" type="button" onClick={() => handleEdit(draft)}>Modifica</button>
-                {draft.status !== "published" ? <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>Pubblica e paga</button> : null}
-                <button className="draft-delete-button" disabled={deletingDraftId === draft.id} type="button" onClick={() => handleDelete(draft)}>{deletingDraftId === draft.id ? "Eliminazione…" : "Elimina"}</button>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      ) : <InvitationRows items={savedDrafts} />}
     </section>
 
     <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
