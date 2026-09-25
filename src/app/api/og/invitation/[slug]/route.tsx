@@ -1,16 +1,24 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { loadPublicInvitationSocial } from "@/lib/supabase/public-invitation-social";
 
 export const runtime = "nodejs";
 
-function appUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "https://www.ilmioinvito.com";
-}
-
-function absoluteImageUrl(value: string) {
+async function imageSource(value: string) {
   if (!value) return "";
   if (/^https?:\/\//.test(value)) return value;
-  return new URL(value, `${appUrl()}/`).toString();
+  if (/^\/templates\/[a-z0-9-]+\.(webp|png|jpe?g)$/i.test(value)) {
+    try {
+      const extension = value.split(".").pop()?.toLowerCase();
+      const mime = extension === "png" ? "image/png" : extension === "jpg" || extension === "jpeg" ? "image/jpeg" : "image/webp";
+      const file = await readFile(join(process.cwd(), "public", value));
+      return `data:${mime};base64,${file.toString("base64")}`;
+    } catch {
+      return "";
+    }
+  }
+  return "";
 }
 
 function formatDate(value: string) {
@@ -31,7 +39,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     );
   }
 
-  const backgroundImage = absoluteImageUrl(invitation.backgroundImage);
+  const backgroundImage = await imageSource(invitation.backgroundImage);
   const coverText = invitation.coverText || (invitation.celebrationNumber ? "Anni insieme" : "");
 
   return new ImageResponse(
