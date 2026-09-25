@@ -1,25 +1,7 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { loadPublicInvitationSocial } from "@/lib/supabase/public-invitation-social";
 
 export const runtime = "nodejs";
-
-async function imageSource(value: string) {
-  if (!value) return "";
-  if (/^https?:\/\//.test(value)) return value;
-  if (/^\/templates\/[a-z0-9-]+\.(webp|png|jpe?g)$/i.test(value)) {
-    try {
-      const extension = value.split(".").pop()?.toLowerCase();
-      const mime = extension === "png" ? "image/png" : extension === "jpg" || extension === "jpeg" ? "image/jpeg" : "image/webp";
-      const file = await readFile(join(process.cwd(), "public", value));
-      return `data:${mime};base64,${file.toString("base64")}`;
-    } catch {
-      return "";
-    }
-  }
-  return "";
-}
 
 function formatDate(value: string) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
@@ -39,15 +21,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     );
   }
 
-  const backgroundImage = await imageSource(invitation.backgroundImage);
   const coverText = invitation.coverText || (invitation.celebrationNumber ? "Anni insieme" : "");
 
   return new ImageResponse(
-    <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", overflow: "hidden", background: "#fffaf5", color: "#4b292c" }}>
-      {backgroundImage ? (
-        <img src={backgroundImage} alt="" width="1200" height="630" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-      ) : null}
-      <div style={{ position: "absolute", inset: 0, display: "flex", background: "rgba(255, 252, 247, 0.20)" }} />
+    <div style={{ width: "100%", height: "100%", display: "flex", position: "relative", overflow: "hidden", background: "linear-gradient(135deg, #fff9f4 0%, #fffdf9 48%, #f8eee7 100%)", color: "#4b292c" }}>
+      <div style={{ position: "absolute", left: -90, top: -95, width: 310, height: 310, display: "flex", borderRadius: 999, background: "radial-gradient(circle at 65% 65%, #f2b9b7 0 18%, #efcfbf 19% 37%, rgba(255,255,255,0) 38%)", opacity: .9 }} />
+      <div style={{ position: "absolute", left: 45, top: 30, width: 105, height: 205, display: "flex", borderRadius: "100% 0 100% 0", background: "#94a56e", transform: "rotate(-35deg)", opacity: .52 }} />
+      <div style={{ position: "absolute", right: -75, top: -80, width: 285, height: 285, display: "flex", borderRadius: 999, background: "radial-gradient(circle at 38% 68%, #efa6a6 0 17%, #f3c8bc 18% 39%, rgba(255,255,255,0) 40%)", opacity: .88 }} />
+      <div style={{ position: "absolute", right: 30, top: 25, width: 95, height: 210, display: "flex", borderRadius: "0 100% 0 100%", background: "#7f9665", transform: "rotate(28deg)", opacity: .48 }} />
+      <div style={{ position: "absolute", left: -70, bottom: -105, width: 270, height: 270, display: "flex", borderRadius: 999, background: "radial-gradient(circle at 65% 35%, #e9a9a8 0 17%, #f5d1c0 18% 40%, rgba(255,255,255,0) 41%)", opacity: .82 }} />
+      <div style={{ position: "absolute", right: -65, bottom: -100, width: 270, height: 270, display: "flex", borderRadius: 999, background: "radial-gradient(circle at 35% 30%, #efb5b1 0 16%, #f4d1be 17% 39%, rgba(255,255,255,0) 40%)", opacity: .84 }} />
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "58px 90px" }}>
         <div style={{ display: "flex", fontSize: 23, fontWeight: 800, letterSpacing: 2.5, textTransform: "uppercase", marginBottom: 22 }}>
           {invitation.kicker}
