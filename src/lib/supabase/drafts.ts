@@ -23,7 +23,153 @@ async function uploadImageToLocationBucket(file:File,path:string):Promise<Upload
 export async function uploadLocationImage(draftId:string,locationId:string,file:File){const s=createClient();if(!s)return{status:"error" as const,message:"Supabase non è configurato."};const{data:u}=await s.auth.getUser();if(!u.user)return{status:"error" as const,message:"Accedi prima di caricare la foto."};const e=file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";return uploadImageToLocationBucket(file,`${u.user.id}/${draftId}/${locationId}-${Date.now()}.${e}`)}export async function uploadCoverLogo(draftId:string,file:File){const s=createClient();if(!s)return{status:"error" as const,message:"Supabase non è configurato."};const{data:u}=await s.auth.getUser();if(!u.user)return{status:"error" as const,message:"Accedi prima di caricare il logo."};const e=file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g,"")||"png";return uploadImageToLocationBucket(file,`${u.user.id}/${draftId}/cover-logo-${Date.now()}.${e}`)}
 export async function uploadInvitationMedia(draftId:string,file:File):Promise<UploadResult>{const s=createClient();if(!s)return{status:"error",message:"Supabase non è configurato."};const photo=["image/jpeg","image/png","image/webp"].includes(file.type),video=["video/mp4","video/quicktime","video/webm"].includes(file.type);if(!photo&&!video)return{status:"error",message:"Carica una foto JPG, PNG o WebP oppure un video compatibile."};if(file.size>50*1024*1024)return{status:"error",message:"Il file non può superare 50 MB."};const{data:u}=await s.auth.getUser();if(!u.user)return{status:"error",message:"Accedi prima di aggiungere contenuti Social all'invito."};const e=file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g,"")||(photo?"jpg":"mp4"),path=`${draftId}/owner/${crypto.randomUUID()}.${e}`,bucket="invitation-guest-media";const{error}=await s.storage.from(bucket).upload(path,file,{cacheControl:"3600",upsert:false});if(error)return{status:"error",message:error.message};const{data}=s.storage.from(bucket).getPublicUrl(path);return{status:"remote",url:data.publicUrl,message:"Contenuto Social caricato. Salva la bozza per pubblicarlo."}}
 export async function uploadCustomTemplateImage(file:File){const s=createClient();if(!s)return{status:"error" as const,message:"Supabase non è configurato."};const{data:u}=await s.auth.getUser();if(!u.user)return{status:"error" as const,message:"Accedi prima di caricare la grafica."};const e=file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";return uploadImageToLocationBucket(file,`${u.user.id}/custom-templates/template-${Date.now()}.${e}`)}
-export async function saveDraftToSupabase(draft:InvitationDraft):Promise<SaveResult>{const s=createClient();if(!s)return{status:"local",message:"Bozza salvata nel browser. Configura Supabase per il salvataggio account."};const{data:u,error:ue}=await s.auth.getUser();if(ue||!u.user)return{status:"local",message:"Bozza salvata nel browser. Accedi per salvarla anche su Supabase."};const user=u.user;let{error}=await s.from("profiles").upsert({id:user.id,email:user.email,updated_at:new Date().toISOString()});if(error)return{status:"error",message:error.message};const{data:existingInvitation}=await s.from("invitations").select("status").eq("id",draft.id).eq("owner_id",user.id).maybeSingle();const savedStatus=existingInvitation?.status==="published"?"published":draft.status;({error}=await s.from("invitations").upsert({id:draft.id,owner_id:user.id,slug:draft.slug,status:savedStatus,title:draft.title,subtitle:draft.subtitle,host_name:draft.hostName,event_date:isoDateOrNull(draft.eventDate),event_time:timeOrNull(draft.eventTime),venue_name:draft.locations[0]?.name??null,venue_address:draft.locations[0]?.address??null,whatsapp_number:draft.whatsappNumber,updated_at:new Date().toISOString()}));if(error)return{status:"error",message:error.message};({error}=await s.from("invitation_content").upsert({invitation_id:draft.id,story:draft.story,dress_code:draft.dressCode,gift_iban:draft.giftIban||null,gift_wishes:draft.giftWishes,program:draft.program,theme:themeWithDisplayDate(draft),updated_at:new Date().toISOString()}));if(error)return{status:"error",message:error.message};await s.from("invitation_sections").delete().eq("invitation_id",draft.id);await s.from("invitation_locations").delete().eq("invitation_id",draft.id);await s.from("invitation_media").delete().eq("invitation_id",draft.id);if(draft.activeSections.length){({error}=await s.from("invitation_sections").insert(draft.activeSections.map((x,i)=>({invitation_id:draft.id,type:sectionToDb[x],title:x,enabled:true,sort_order:i}))));if(error)return{status:"error",message:error.message}}if(draft.locations.length){({error}=await s.from("invitation_locations").insert(draft.locations.map((l,i)=>({invitation_id:draft.id,type:l.type,name:l.name||"Location",address:l.address,description:l.description,maps_url:l.mapsUrl,enabled:l.enabled,image_url:l.imageUrl||null,sort_order:i}))));if(error)return{status:"error",message:error.message}}const pm=draft.media.filter(i=>/^https?:\/\//.test(i.url));if(pm.length){({error}=await s.from("invitation_media").insert(pm.map((i,x)=>({invitation_id:draft.id,type:i.type,title:i.title,external_url:i.url,sort_order:x}))));if(error)return{status:"error",message:error.message}}({error}=await s.from("invitation_themes").upsert({invitation_id:draft.id,template_slug:draft.theme.template,primary_color:draft.theme.primaryColor,accent_color:draft.theme.accentColor,font_style:draft.theme.fontStyle,updated_at:new Date().toISOString()}));if(error)return{status:"error",message:error.message};return{status:"remote",message:savedStatus==="published"?"Invito pubblicato aggiornato su Supabase e nel browser.":"Bozza salvata su Supabase e nel browser."}}
+const draftSaveQueues = new Map<string, Promise<SaveResult>>();
+
+async function persistDraftToSupabase(draft: InvitationDraft): Promise<SaveResult> {
+  const s = createClient();
+  if (!s) return { status: "local", message: "Bozza salvata nel browser. Configura Supabase per il salvataggio account." };
+
+  const { data: u, error: userError } = await s.auth.getUser();
+  if (userError || !u.user) return { status: "local", message: "Bozza salvata nel browser. Accedi per salvarla anche su Supabase." };
+
+  const user = u.user;
+  let { error } = await s.from("profiles").upsert({ id: user.id, email: user.email, updated_at: new Date().toISOString() });
+  if (error) return { status: "error", message: error.message };
+
+  const { data: existingInvitation, error: existingError } = await s
+    .from("invitations")
+    .select("status")
+    .eq("id", draft.id)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  if (existingError) return { status: "error", message: existingError.message };
+
+  const savedStatus = existingInvitation?.status === "published" ? "published" : draft.status;
+  ({ error } = await s.from("invitations").upsert({
+    id: draft.id,
+    owner_id: user.id,
+    slug: draft.slug,
+    status: savedStatus,
+    title: draft.title,
+    subtitle: draft.subtitle,
+    host_name: draft.hostName,
+    event_date: isoDateOrNull(draft.eventDate),
+    event_time: timeOrNull(draft.eventTime),
+    venue_name: draft.locations[0]?.name ?? null,
+    venue_address: draft.locations[0]?.address ?? null,
+    whatsapp_number: draft.whatsappNumber,
+    updated_at: new Date().toISOString()
+  }));
+  if (error) return { status: "error", message: error.message };
+
+  ({ error } = await s.from("invitation_content").upsert({
+    invitation_id: draft.id,
+    story: draft.story,
+    dress_code: draft.dressCode,
+    gift_iban: draft.giftIban || null,
+    gift_wishes: draft.giftWishes,
+    program: draft.program,
+    theme: themeWithDisplayDate(draft),
+    updated_at: new Date().toISOString()
+  }));
+  if (error) return { status: "error", message: error.message };
+
+  // Keep the independently managed story block. Removing it used to trigger a
+  // recreation while the other sections were being saved, allowing concurrent
+  // autosaves to leave the public invitation with a partial block list.
+  ({ error } = await s.from("invitation_sections").delete().eq("invitation_id", draft.id).neq("type", "story"));
+  if (error) return { status: "error", message: error.message };
+  ({ error } = await s.from("invitation_locations").delete().eq("invitation_id", draft.id));
+  if (error) return { status: "error", message: error.message };
+  ({ error } = await s.from("invitation_media").delete().eq("invitation_id", draft.id));
+  if (error) return { status: "error", message: error.message };
+
+  if (draft.activeSections.length) {
+    ({ error } = await s.from("invitation_sections").insert(draft.activeSections.map((section, index) => ({
+      invitation_id: draft.id,
+      type: sectionToDb[section],
+      title: section,
+      enabled: true,
+      sort_order: index
+    }))));
+    if (error) return { status: "error", message: error.message };
+  }
+
+  if (draft.locations.length) {
+    ({ error } = await s.from("invitation_locations").insert(draft.locations.map((location, index) => ({
+      invitation_id: draft.id,
+      type: location.type,
+      name: location.name || "Location",
+      address: location.address,
+      description: location.description,
+      maps_url: location.mapsUrl,
+      enabled: location.enabled,
+      image_url: location.imageUrl || null,
+      sort_order: index
+    }))));
+    if (error) return { status: "error", message: error.message };
+  }
+
+  const persistedMedia = draft.media.filter((item) => /^https?:\/\//.test(item.url));
+  if (persistedMedia.length) {
+    ({ error } = await s.from("invitation_media").insert(persistedMedia.map((item, index) => ({
+      invitation_id: draft.id,
+      type: item.type,
+      title: item.title,
+      external_url: item.url,
+      sort_order: index
+    }))));
+    if (error) return { status: "error", message: error.message };
+  }
+
+  ({ error } = await s.from("invitation_themes").upsert({
+    invitation_id: draft.id,
+    template_slug: draft.theme.template,
+    primary_color: draft.theme.primaryColor,
+    accent_color: draft.theme.accentColor,
+    font_style: draft.theme.fontStyle,
+    updated_at: new Date().toISOString()
+  }));
+  if (error) return { status: "error", message: error.message };
+
+  const { data: verification, error: verificationError } = await s
+    .from("invitations")
+    .select("id, invitation_content(invitation_id), invitation_themes(invitation_id), invitation_locations(id), invitation_sections(id,type), invitation_media(id)")
+    .eq("id", draft.id)
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  if (verificationError || !verification) return { status: "error", message: verificationError?.message ?? "Verifica del salvataggio non riuscita." };
+
+  const expectedSections = draft.activeSections.length;
+  const savedSections = (verification.invitation_sections ?? []).filter((section: { type?: string }) => section.type !== "story").length;
+  const expectedLocations = draft.locations.length;
+  const savedLocations = verification.invitation_locations?.length ?? 0;
+  const expectedMedia = persistedMedia.length;
+  const savedMedia = verification.invitation_media?.length ?? 0;
+  const contentSaved = (verification.invitation_content?.length ?? 0) === 1;
+  const themeSaved = (verification.invitation_themes?.length ?? 0) === 1;
+
+  if (!contentSaved || !themeSaved || savedSections !== expectedSections || savedLocations !== expectedLocations || savedMedia !== expectedMedia) {
+    return { status: "error", message: "Il controllo della bozza online non coincide con i contenuti inseriti. Riprova il salvataggio prima di pubblicare." };
+  }
+
+  return {
+    status: "remote",
+    message: savedStatus === "published"
+      ? "Invito pubblicato aggiornato e verificato online."
+      : "Bozza salvata e verificata online."
+  };
+}
+
+export function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveResult> {
+  const previous = draftSaveQueues.get(draft.id) ?? Promise.resolve<SaveResult>({ status: "remote", message: "" });
+  const queued = previous.catch(() => ({ status: "error", message: "Il salvataggio precedente non è riuscito." } as SaveResult)).then(() => persistDraftToSupabase(draft));
+  draftSaveQueues.set(draft.id, queued);
+  void queued.finally(() => {
+    if (draftSaveQueues.get(draft.id) === queued) draftSaveQueues.delete(draft.id);
+  });
+  return queued;
+}
 export async function loadUserDraftsFromSupabase(){const s=createClient();if(!s)return{drafts:[] as InvitationDraft[],message:"Supabase non configurato."};const{data:u}=await s.auth.getUser();if(!u.user)return{drafts:[] as InvitationDraft[],message:"Accedi per vedere le bozze salvate online."};const{data,error}=await s.from("invitations").select("*, invitation_content(*), invitation_themes(*), invitation_locations(*), invitation_sections(*), invitation_media(*)").eq("owner_id",u.user.id).order("updated_at",{ascending:false});return{drafts:error?[]:(data??[]).map(rowToDraft),message:error?error.message:"Bozze sincronizzate con il tuo account."}}
 export async function findDraftBySlugFromSupabase(slug:string){const s=createClient();if(!s)return null;const{data,error}=await s.from("invitations").select("*, invitation_content(*), invitation_themes(*), invitation_locations(*), invitation_sections(*), invitation_media(*)").eq("slug",slug).maybeSingle();return error||!data?null:rowToDraft(data)}
 export async function deleteDraftFromSupabase(id:string):Promise<SaveResult>{const s=createClient();if(!s)return{status:"error",message:"Supabase non configurato."};const{data:u}=await s.auth.getUser();if(!u.user)return{status:"error",message:"Accedi per eliminare l'invito."};const{error}=await s.from("invitations").delete().eq("id",id).eq("owner_id",u.user.id);return error?{status:"error",message:error.message}:{status:"remote",message:"Invito eliminato definitivamente."}}
