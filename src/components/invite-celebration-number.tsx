@@ -32,7 +32,13 @@ export function InviteCelebrationNumber({ slug }: { slug: string }) {
     const timer = window.setInterval(() => {
       const heroContent = document.querySelector<HTMLElement>(".invite-hero > div");
       if (heroContent) {
-        setTarget(heroContent);
+        let mount = heroContent.querySelector<HTMLElement>(":scope > [data-public-cover-elements-mount]");
+        if (!mount) {
+          mount = document.createElement("div");
+          mount.dataset.publicCoverElementsMount = "true";
+          heroContent.insertBefore(mount, heroContent.firstChild);
+        }
+        setTarget(mount);
         window.clearInterval(timer);
       }
     }, 120);
