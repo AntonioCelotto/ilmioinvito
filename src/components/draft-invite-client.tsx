@@ -8,6 +8,7 @@ import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 import { LiveCountdown } from "@/components/live-countdown";
 import { InviteGuestMedia } from "@/components/invite-guest-media";
+import { captureVideoFrameDataUrl } from "@/lib/video-frame";
 
 type DraftInviteClientProps = { slug: string };
 
@@ -39,13 +40,14 @@ function newestDraft(local: InvitationDraft | undefined, remote: InvitationDraft
 }
 
 export function DraftInviteClient({slug}:DraftInviteClientProps){
- const[draft,setDraft]=useState<InvitationDraft|null>(null),[loaded,setLoaded]=useState(false),[ibanCopied,setIbanCopied]=useState(false),[videoFinished,setVideoFinished]=useState(false);
+ const[draft,setDraft]=useState<InvitationDraft|null>(null),[loaded,setLoaded]=useState(false),[ibanCopied,setIbanCopied]=useState(false),[videoFinished,setVideoFinished]=useState(false),[lastVideoFrame,setLastVideoFrame]=useState("");
  useEffect(()=>{const local=findDraftBySlug(slug);findDraftBySlugFromSupabase(slug).then(remote=>{setDraft(newestDraft(local,remote)??null);setLoaded(true);});},[slug]);
  const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft),isDemoSlug=slug===demoInvitation.slug;
- useEffect(()=>setVideoFinished(false),[invitation.theme.backgroundVideo]);
+ useEffect(()=>{setVideoFinished(false);setLastVideoFrame("");},[invitation.theme.backgroundVideo]);
  if(loaded&&!hasCustomDraft&&!isDemoSlug)return <main className="workspace"><section className="section"><div className="section-inner"><div className="empty-state invitation-unavailable"><p className="eyebrow">Invito non disponibile</p><h1>Questo invito è ancora in bozza.</h1><p className="muted">La bozza è visibile soltanto al proprietario autenticato. Per condividerla con gli invitati, apri il builder e premi “Pubblica invito”.</p><a className="button" href="/login">Accedi</a></div></div></section></main>;
 
- const contentBackgroundImage = invitation.theme.backgroundVideo ? "none" : invitation.theme.backgroundImage ? `url("${invitation.theme.backgroundImage}")` : "none";
+ const contentBackgroundSource = lastVideoFrame || invitation.theme.backgroundImage;
+ const contentBackgroundImage = contentBackgroundSource ? `url("${contentBackgroundSource}")` : "none";
  const themeStyles={
    "--invitation-text-color":invitation.theme.textColor??"#3f292a",
    "--invitation-button-color":invitation.theme.buttonColor??invitation.theme.accentColor,
@@ -59,7 +61,7 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
 
  return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}`} style={themeStyles}>
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
-   {invitation.theme.backgroundVideo?<video aria-hidden="true" autoPlay className="invite-background-video" muted onEnded={()=>setVideoFinished(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>:null}
+   {invitation.theme.backgroundVideo?<video aria-hidden="true" autoPlay className="invite-background-video" crossOrigin="anonymous" muted onEnded={(event)=>{try{setLastVideoFrame(captureVideoFrameDataUrl(event.currentTarget));}catch{}setVideoFinished(true);}} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>:null}
    {!invitation.theme.backgroundVideo||videoFinished?<div className={invitation.theme.backgroundVideo?"invite-video-data":undefined}><p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta"><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
   </section>
   <div className="invite-content-background">

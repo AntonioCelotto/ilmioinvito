@@ -26,6 +26,7 @@ import {
   readSelectedTemplate
 } from "@/lib/template-catalog";
 import { LiveCountdown } from "@/components/live-countdown";
+import { captureVideoFrameDataUrl } from "@/lib/video-frame";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
   countdown: "Countdown",
@@ -469,6 +470,7 @@ export function BuilderClient() {
   const [publishing, setPublishing] = useState(false);
   const [uploadingLocationId, setUploadingLocationId] = useState("");
   const [videoFinished, setVideoFinished] = useState(false);
+  const [lastVideoFrame, setLastVideoFrame] = useState("");
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
   const [draft, setDraft] = useState<InvitationDraft>({
@@ -512,6 +514,7 @@ export function BuilderClient() {
     draft.theme.buttonColor ?? draft.theme.accentColor;
   const themeButtonTextColor =
     draft.theme.buttonTextColor ?? "#ffffff";
+  const previewBackgroundSource = lastVideoFrame || draft.theme.backgroundImage;
 
   useEffect(() => {
     const editingDraftId = new URLSearchParams(window.location.search).get("edit");
@@ -568,6 +571,7 @@ export function BuilderClient() {
 
   useEffect(() => {
     setVideoFinished(false);
+    setLastVideoFrame("");
   }, [draft.theme.backgroundVideo]);
 
   function updateField<Key extends keyof InvitationDraft>(
@@ -1483,10 +1487,10 @@ export function BuilderClient() {
           className={`preview-phone theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
           style={{
             backgroundColor: draft.theme.primaryColor,
-            backgroundImage: draft.theme.backgroundVideo
+            backgroundImage: previewBackgroundSource
+              ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${previewBackgroundSource}")`
+              : draft.theme.backgroundVideo
               ? "none"
-              : draft.theme.backgroundImage
-              ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${draft.theme.backgroundImage}")`
               : `linear-gradient(180deg, ${draft.theme.accentColor} 0%, ${draft.theme.primaryColor} 38%, ${draft.theme.primaryColor} 100%)`,
             backgroundPosition: "top center",
             backgroundSize: "cover",
@@ -1507,8 +1511,14 @@ export function BuilderClient() {
                     aria-hidden="true"
                     autoPlay
                     className="phone-hero-video"
+                    crossOrigin="anonymous"
                     muted
-                    onEnded={() => setVideoFinished(true)}
+                    onEnded={(event) => {
+                      try {
+                        setLastVideoFrame(captureVideoFrameDataUrl(event.currentTarget));
+                      } catch {}
+                      setVideoFinished(true);
+                    }}
                     playsInline
                     poster={draft.theme.backgroundImage}
                     preload="auto"

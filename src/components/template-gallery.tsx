@@ -15,6 +15,7 @@ import {
   saveDraft,
   setEditingDraft
 } from "@/lib/draft-storage";
+import { createFinalVideoFrameFile } from "@/lib/video-frame";
 
 const eighteenTemplateIds = new Set([
   "compleanno-diciotto-celeste",
@@ -135,11 +136,23 @@ function CustomVideoTemplateUpload() {
       return;
     }
     setUploading(true);
-    setMessage("Caricamento del video in corso...");
-    const result = await uploadCustomTemplateVideo(file);
-    if (result.status === "error") {
+    setMessage("Preparazione dell’ultimo fotogramma...");
+    let posterFile: File;
+    try {
+      posterFile = await createFinalVideoFrameFile(file);
+    } catch (error) {
       setUploading(false);
-      setMessage(result.message);
+      setMessage(error instanceof Error ? error.message : "Non è stato possibile preparare lo sfondo fermo.");
+      return;
+    }
+    setMessage("Caricamento del video e dello sfondo fermo...");
+    const [videoResult, posterResult] = await Promise.all([
+      uploadCustomTemplateVideo(file),
+      uploadCustomTemplateImage(posterFile)
+    ]);
+    if (videoResult.status === "error" || posterResult.status === "error") {
+      setUploading(false);
+      setMessage(videoResult.status === "error" ? videoResult.message : posterResult.message);
       return;
     }
     const customTemplate: InvitationTemplate = {
@@ -155,7 +168,8 @@ function CustomVideoTemplateUpload() {
         primaryColor: "#151313",
         accentColor: "#b87333",
         fontStyle: "serif",
-        backgroundVideo: result.url
+        backgroundImage: posterResult.url,
+        backgroundVideo: videoResult.url
       }
     };
     window.localStorage.setItem(customTemplateStorageKey, JSON.stringify(customTemplate));
