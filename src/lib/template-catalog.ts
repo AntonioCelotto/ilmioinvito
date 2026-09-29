@@ -598,7 +598,10 @@ export function readSelectedTemplate() {
     if (storedCustomTemplate) {
       try {
         const customTemplate = JSON.parse(storedCustomTemplate) as InvitationTemplate;
-        if (customTemplate.id === selectedId && customTemplate.theme?.backgroundImage) {
+        if (
+          customTemplate.id === selectedId &&
+          (customTemplate.theme?.backgroundImage || customTemplate.theme?.backgroundVideo)
+        ) {
           return customTemplate;
         }
       } catch {

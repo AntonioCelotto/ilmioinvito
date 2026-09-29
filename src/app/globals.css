@@ -934,6 +934,22 @@ textarea {
   border-style: solid;
 }
 
+.custom-video-template-upload {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(184, 115, 51, 0.34), transparent 34%),
+    var(--night);
+}
+
+.custom-template-preview.has-video {
+  border-style: solid;
+}
+
+.custom-template-preview.has-video video {
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
 .custom-template-preview > div {
   align-items: center;
   color: rgba(255, 255, 255, 0.72);

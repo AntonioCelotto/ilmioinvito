@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { saveDraftToSupabase, uploadCustomTemplateImage } from "@/lib/supabase/drafts";
+import { useEffect, useMemo, useState } from "react";
+import { saveDraftToSupabase, uploadCustomTemplateImage, uploadCustomTemplateVideo } from "@/lib/supabase/drafts";
 import {
   customTemplateStorageKey,
   invitationTemplates,
@@ -93,8 +93,100 @@ function CustomTemplateUpload() {
   return <section className="custom-template-upload" id="carica-template" aria-labelledby="custom-template-title"><div className="custom-template-copy"><p className="eyebrow">Il tuo stile</p><h2 id="custom-template-title">Carica la tua grafica</h2><p>Usa un'immagine personale come sfondo del tuo invito. Per il risultato migliore scegli un formato verticale 9:16.</p><label className="custom-template-file"><span>{file?"Cambia immagine":"Scegli un'immagine"}</span><input accept="image/jpeg,image/png,image/webp" type="file" onChange={(event)=>handleFile(event.target.files?.[0])}/></label><small>JPG, PNG o WebP, massimo 8 MB.</small>{message?<p className="custom-template-message" aria-live="polite">{message}</p>:null}<button className="button" disabled={!file||uploading} type="button" onClick={useCustomTemplate}>{uploading?"Caricamento...":"Usa la mia grafica"}</button></div><div className={`custom-template-preview${previewUrl?" has-image":""}`} style={previewUrl?{backgroundImage:`url("${previewUrl}")`}:undefined} aria-label="Anteprima della grafica personale">{previewUrl?null:<div><span aria-hidden="true">＋</span><strong>Anteprima immagine</strong></div>}</div></section>;
 }
 
+function CustomVideoTemplateUpload() {
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [message, setMessage] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  function handleFile(selectedFile?: File) {
+    setMessage("");
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    if (!selectedFile) {
+      setFile(null);
+      setPreviewUrl("");
+      return;
+    }
+    if (!["video/mp4", "video/webm", "video/quicktime"].includes(selectedFile.type)) {
+      setFile(null);
+      setPreviewUrl("");
+      setMessage("Carica un video MP4, WebM o MOV.");
+      return;
+    }
+    if (selectedFile.size > 50 * 1024 * 1024) {
+      setFile(null);
+      setPreviewUrl("");
+      setMessage("Il video non può superare 50 MB.");
+      return;
+    }
+    setFile(selectedFile);
+    setPreviewUrl(URL.createObjectURL(selectedFile));
+  }
+
+  async function useCustomVideoTemplate() {
+    if (!file) {
+      setMessage("Seleziona prima un video.");
+      return;
+    }
+    setUploading(true);
+    setMessage("Caricamento del video in corso...");
+    const result = await uploadCustomTemplateVideo(file);
+    if (result.status === "error") {
+      setUploading(false);
+      setMessage(result.message);
+      return;
+    }
+    const customTemplate: InvitationTemplate = {
+      id: `custom-upload-video-${Date.now()}`,
+      category: "evento-privato",
+      name: "Il tuo video",
+      description: "Template animato creato con il video caricato da te.",
+      occasionLabel: "Template video personale",
+      previewTitle: "Il tuo evento",
+      previewSubtitle: "Personalizza testi, colori e contenuti",
+      theme: {
+        template: "classicLight",
+        primaryColor: "#151313",
+        accentColor: "#b87333",
+        fontStyle: "serif",
+        backgroundVideo: result.url
+      }
+    };
+    window.localStorage.setItem(customTemplateStorageKey, JSON.stringify(customTemplate));
+    applyTemplateAndOpenBuilder(customTemplate);
+  }
+
+  return (
+    <section className="custom-template-upload custom-video-template-upload" id="carica-template-video" aria-labelledby="custom-video-template-title">
+      <div className="custom-template-copy">
+        <p className="eyebrow">Il tuo video</p>
+        <h2 id="custom-video-template-title">Carica un template video</h2>
+        <p>Usa un tuo video come sfondo animato dell&apos;invito. Per il risultato migliore scegli un formato verticale 9:16.</p>
+        <label className="custom-template-file">
+          <span>{file ? "Cambia video" : "Scegli un video"}</span>
+          <input accept="video/mp4,video/webm,video/quicktime,.mov" type="file" onChange={(event) => handleFile(event.target.files?.[0])} />
+        </label>
+        <small>MP4, WebM o MOV, massimo 50 MB. MP4 è il formato più compatibile.</small>
+        {message ? <p className="custom-template-message" aria-live="polite">{message}</p> : null}
+        <button className="button" disabled={!file || uploading} type="button" onClick={useCustomVideoTemplate}>
+          {uploading ? "Caricamento..." : "Usa il mio video"}
+        </button>
+      </div>
+      <div className={`custom-template-preview${previewUrl ? " has-video" : ""}`} aria-label="Anteprima del video personale">
+        {previewUrl ? <video autoPlay loop muted playsInline preload="metadata" src={previewUrl} /> : <div><span aria-hidden="true">▶</span><strong>Anteprima video</strong></div>}
+      </div>
+    </section>
+  );
+}
+
 export function TemplateGallery() {
   const {videoTemplates,imageTemplates}=useMemo(()=>{const availableTemplates=invitationTemplates.filter(template=>!eighteenTemplateIds.has(template.id));const videos=availableTemplates.filter(template=>Boolean(template.theme.backgroundVideo));const images=availableTemplates.filter(template=>!template.theme.backgroundVideo).sort((a,b)=>colorBrightness(b.theme.primaryColor)-colorBrightness(a.theme.primaryColor));return{videoTemplates:videos,imageTemplates:images};},[]);
   const selectTemplate=(template:InvitationTemplate)=>applyTemplateAndOpenBuilder(template);
-  return <><div className="template-gallery-actions"><a className="template-upload-jump" href="#carica-template">Carica il tuo template<span aria-hidden="true">↓</span></a></div><TemplateSection title="Inviti video" description="Template animati: le anteprime partono automaticamente senza audio. Se il browser blocca l'avvio, basta toccare il video." templates={videoTemplates} onSelect={selectTemplate}/><section style={{marginBottom:"3.5rem"}}><div className="template-grid">{imageTemplates.map(template=><TemplateCard key={template.id} template={template} onSelect={selectTemplate}/>)}</div></section><CustomTemplateUpload/></>;
+  return <><div className="template-gallery-actions"><a className="template-upload-jump" href="#carica-template">Carica immagine<span aria-hidden="true">↓</span></a><a className="template-upload-jump" href="#carica-template-video">Carica video<span aria-hidden="true">↓</span></a></div><TemplateSection title="Inviti video" description="Template animati: le anteprime partono automaticamente senza audio. Se il browser blocca l'avvio, basta toccare il video." templates={videoTemplates} onSelect={selectTemplate}/><section style={{marginBottom:"3.5rem"}}><div className="template-grid">{imageTemplates.map(template=><TemplateCard key={template.id} template={template} onSelect={selectTemplate}/>)}</div></section><CustomTemplateUpload/><CustomVideoTemplateUpload/></>;
 }
