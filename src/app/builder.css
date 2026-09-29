@@ -761,6 +761,11 @@
   width: 100%;
 }
 
+.phone-video-opener {
+  font-size: 13px;
+  padding: 12px 18px;
+}
+
 .phone-video-data {
   animation: video-data-reveal 0.55s ease both;
   background: transparent;

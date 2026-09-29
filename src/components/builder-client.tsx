@@ -464,12 +464,14 @@ function PreviewSection({
 
 export function BuilderClient() {
   const previewScreenRef = useRef<HTMLDivElement>(null);
+  const previewVideoRef = useRef<HTMLVideoElement>(null);
   const autosaveReadyRef = useRef(false);
   const [selectedTemplate, setSelectedTemplate] = useState(invitationTemplates[0]);
   const [savedMessage, setSavedMessage] = useState("");
   const [publishing, setPublishing] = useState(false);
   const [uploadingLocationId, setUploadingLocationId] = useState("");
   const [videoFinished, setVideoFinished] = useState(false);
+  const [videoStarted, setVideoStarted] = useState(false);
   const [lastVideoFrame, setLastVideoFrame] = useState("");
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
@@ -571,8 +573,23 @@ export function BuilderClient() {
 
   useEffect(() => {
     setVideoFinished(false);
+    setVideoStarted(false);
     setLastVideoFrame("");
   }, [draft.theme.backgroundVideo]);
+
+  async function startPreviewVideo() {
+    const video = previewVideoRef.current;
+    if (!video) return;
+    video.muted = false;
+    try {
+      await video.play();
+      setVideoStarted(true);
+    } catch {
+      video.muted = true;
+      await video.play();
+      setVideoStarted(true);
+    }
+  }
 
   function updateField<Key extends keyof InvitationDraft>(
     key: Key,
@@ -1509,10 +1526,9 @@ export function BuilderClient() {
                 <>
                   <video
                     aria-hidden="true"
-                    autoPlay
                     className="phone-hero-video"
                     crossOrigin="anonymous"
-                    muted
+                    ref={previewVideoRef}
                     onEnded={(event) => {
                       try {
                         setLastVideoFrame(captureVideoFrameDataUrl(event.currentTarget));
@@ -1524,6 +1540,12 @@ export function BuilderClient() {
                     preload="auto"
                     src={draft.theme.backgroundVideo}
                   />
+                  {!videoStarted && !videoFinished ? (
+                    <button className="video-invitation-opener phone-video-opener" type="button" onClick={startPreviewVideo}>
+                      <span aria-hidden="true">✦</span>
+                      Apri l&apos;invito
+                    </button>
+                  ) : null}
                   {videoFinished ? (
                     <div className="phone-video-data">
                       <p className="phone-kicker">Il nostro invito</p>
