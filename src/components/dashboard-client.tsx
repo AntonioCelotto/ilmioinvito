@@ -8,6 +8,7 @@ import {
   editingDraftStorageKey,
   readDrafts,
   removeDraft,
+  saveDraft,
   setEditingDraft
 } from "@/lib/draft-storage";
 import {
@@ -22,6 +23,7 @@ import {
   updateGuestMediaStatus
 } from "@/lib/supabase/guest-media";
 import { downloadGuestPdf } from "@/lib/guest-pdf";
+import { isProjectAdmin, publishInvitationAsAdmin } from "@/lib/admin-publish";
 
 export function DashboardClient() {
   const [drafts, setDrafts] = useState<InvitationDraft[]>([]);
@@ -34,12 +36,15 @@ export function DashboardClient() {
   const [guestMedia, setGuestMedia] = useState<GuestMediaItem[]>([]);
   const [guestMediaMessage, setGuestMediaMessage] = useState("");
   const [updatingGuestMediaId, setUpdatingGuestMediaId] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminPublishingId, setAdminPublishingId] = useState("");
 
   useEffect(() => {
     let active = true;
 
     async function syncDashboard() {
       const user = await getCurrentUser();
+      if (active) setIsAdmin(isProjectAdmin(user));
 
       if (!user) {
         if (active) setDrafts(readDrafts());
@@ -159,6 +164,19 @@ export function DashboardClient() {
   function handlePublish(draft: InvitationDraft) {
     setEditingDraft(draft);
     window.location.href = `/abbonamenti?invito=${encodeURIComponent(draft.id)}&titolo=${encodeURIComponent(draft.title)}`;
+  }
+
+  async function handleAdminPublish(draft: InvitationDraft) {
+    setAdminPublishingId(draft.id);
+    setDraftActionMessage("");
+    const result = await publishInvitationAsAdmin(draft.id);
+    if (result.ok) {
+      const publishedDraft = { ...draft, status: "published" as const, updatedAt: new Date().toISOString() };
+      saveDraft(publishedDraft);
+      setDrafts((current) => current.map((item) => item.id === draft.id ? publishedDraft : item));
+    }
+    setDraftActionMessage(result.message);
+    setAdminPublishingId("");
   }
 
   async function handleDelete(draft: InvitationDraft) {
@@ -283,6 +301,7 @@ export function DashboardClient() {
             <a className="button draft-preview-button" href={`/i/${draft.slug}`}>{published ? "Apri invito" : "Anteprima"}</a>
             <button className="button draft-edit-button" type="button" onClick={() => handleEdit(draft)}>Modifica</button>
             {!published ? <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>Pubblica e paga</button> : null}
+            {!published && isAdmin ? <button className="button secondary" disabled={adminPublishingId === draft.id} type="button" onClick={() => handleAdminPublish(draft)}>{adminPublishingId === draft.id ? "Pubblicazione…" : "Pubblica come amministratore"}</button> : null}
             <button className="draft-delete-button" disabled={deletingDraftId === draft.id} type="button" onClick={() => handleDelete(draft)}>{deletingDraftId === draft.id ? "Eliminazione…" : "Elimina"}</button>
           </div>
         </article>

@@ -18,6 +18,7 @@ import {
 } from "@/lib/draft-storage";
 import {
   saveDraftToSupabase,
+  getCurrentUser,
   uploadInvitationMedia,
   uploadLocationImage
 } from "@/lib/supabase/drafts";
@@ -27,6 +28,7 @@ import {
 } from "@/lib/template-catalog";
 import { LiveCountdown } from "@/components/live-countdown";
 import { captureVideoFrameDataUrl } from "@/lib/video-frame";
+import { isProjectAdmin, publishInvitationAsAdmin } from "@/lib/admin-publish";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
   countdown: "Countdown",
@@ -472,6 +474,7 @@ export function BuilderClient() {
   const [uploadingLocationId, setUploadingLocationId] = useState("");
   const [videoFinished, setVideoFinished] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [lastVideoFrame, setLastVideoFrame] = useState("");
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
@@ -517,6 +520,10 @@ export function BuilderClient() {
   const themeButtonTextColor =
     draft.theme.buttonTextColor ?? "#ffffff";
   const previewBackgroundSource = lastVideoFrame || draft.theme.backgroundImage;
+
+  useEffect(() => {
+    void getCurrentUser().then((user) => setIsAdmin(isProjectAdmin(user)));
+  }, []);
 
   useEffect(() => {
     const editingDraftId = new URLSearchParams(window.location.search).get("edit");
@@ -930,6 +937,27 @@ export function BuilderClient() {
       setSavedMessage(result.message);
     }
 
+    setPublishing(false);
+  }
+
+  async function handleAdminPublish() {
+    setPublishing(true);
+    setSavedMessage("Salvataggio e pubblicazione amministrativa...");
+    const payableDraft = { ...draft, slug: draftSlug(draft.title, draft.id), status: "draft" as const, updatedAt: new Date().toISOString() };
+    saveDraft(payableDraft);
+    const saved = await saveDraftToSupabase(payableDraft);
+    if (saved.status !== "remote") {
+      setSavedMessage(saved.message);
+      setPublishing(false);
+      return;
+    }
+    const result = await publishInvitationAsAdmin(payableDraft.id);
+    if (result.ok) {
+      const publishedDraft = { ...payableDraft, status: "published" as const, updatedAt: new Date().toISOString() };
+      saveDraft(publishedDraft);
+      setDraft(publishedDraft);
+    }
+    setSavedMessage(result.message);
     setPublishing(false);
   }
 
@@ -1480,6 +1508,11 @@ export function BuilderClient() {
                 ? "Aggiorna invito pubblico"
                 : "Pubblica e paga"}
           </button>
+          {isAdmin && draft.status !== "published" ? (
+            <button className="button secondary" disabled={publishing} type="button" onClick={handleAdminPublish}>
+              Pubblica senza pagamento
+            </button>
+          ) : null}
         </div>
         {savedMessage ? (
           <div className="success-box">
