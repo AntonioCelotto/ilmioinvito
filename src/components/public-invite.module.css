@@ -126,7 +126,8 @@
   padding: clamp(22px, 4vw, 34px);
   border: 1px solid color-mix(in srgb, var(--invitation-text-color) 24%, transparent);
   border-radius: 24px;
-  background: color-mix(in srgb, var(--invitation-primary-color) 78%, #ffffff 22%);
+  background: color-mix(in srgb, var(--invitation-primary-color) 36%, transparent);
+  backdrop-filter: blur(4px);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.12);
 }
 
