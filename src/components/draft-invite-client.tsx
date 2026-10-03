@@ -45,7 +45,21 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const isDemoSlug=slug===demoInvitation.slug;
  const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft);
  useEffect(()=>{setVideoStarted(false);setVideoFinished(false);},[invitation.theme.backgroundVideo]);
- async function startVideo(){const video=videoRef.current;if(!video)return;video.muted=false;try{await video.play();setVideoStarted(true);}catch{video.muted=true;await video.play();setVideoStarted(true);}}
+ function openInvitationFullscreen(){
+  const invitationRoot=videoRef.current?.closest("main") as (HTMLElement&{webkitRequestFullscreen?:()=>Promise<void>|void})|null;
+  if(!invitationRoot||document.fullscreenElement)return;
+  try{
+   const request=invitationRoot.requestFullscreen?.({navigationUI:"hide"})??invitationRoot.webkitRequestFullscreen?.();
+   if(request instanceof Promise)void request.catch(()=>undefined);
+  }catch{/* Fullscreen is optional and must never block video playback. */}
+ }
+ async function startVideo(){
+  const video=videoRef.current;if(!video)return;
+  video.muted=false;
+  const playback=video.play();
+  openInvitationFullscreen();
+  try{await playback;setVideoStarted(true);}catch{video.muted=true;await video.play();setVideoStarted(true);}
+ }
  if(!loaded&&!isDemoSlug)return <main aria-label="Caricamento invito" style={{background:"#fff9f7",minHeight:"100svh"}}/>;
  if(loaded&&!hasCustomDraft&&!isDemoSlug)return <main className="workspace"><section className="section"><div className="section-inner"><div className="empty-state invitation-unavailable"><p className="eyebrow">Invito non disponibile</p><h1>Questo invito è ancora in bozza.</h1><p className="muted">La bozza è visibile soltanto al proprietario autenticato. Per condividerla con gli invitati, apri il builder e premi “Pubblica invito”.</p><a className="button" href="/login">Accedi</a></div></div></section></main>;
 
@@ -65,9 +79,9 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
    backgroundColor:invitation.theme.primaryColor
  } as CSSProperties;
 
- return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}`} style={themeStyles}>
+ return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}${videoStarted&&!videoFinished?" invitation-video-playing":""}`} style={themeStyles}>
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
-   {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
+   {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} onPlay={()=>setVideoStarted(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
    {!invitation.theme.backgroundVideo||videoFinished?<div className={invitation.theme.backgroundVideo?"invite-video-data":undefined}>
     <div aria-label="Elementi personalizzati della copertina" style={{alignItems:"center",display:"flex",flexDirection:"column",gap:"clamp(8px,1.5vw,16px)",margin:"0 auto clamp(18px,3vw,34px)",pointerEvents:"none",width:"min(88vw,720px)"}}>
      {invitation.theme.coverLogoUrl?<div aria-label="Logo evento" style={{alignItems:"center",display:"flex",height:`clamp(62px,${Math.round(10*(invitation.theme.coverLogoScale??1))}vw,${Math.round(130*(invitation.theme.coverLogoScale??1))}px)`,justifyContent:"center",width:`${Math.min(76,Math.round(34*(invitation.theme.coverLogoScale??1)))}%`}}><img src={invitation.theme.coverLogoUrl} alt="Logo evento" style={{display:"block",height:"100%",objectFit:"contain",width:"100%"}}/></div>:null}
