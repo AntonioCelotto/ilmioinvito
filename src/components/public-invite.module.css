@@ -25,6 +25,21 @@
   min-width: 0;
 }
 
+.publicInvite :global(.invite-video-data) {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: auto;
+  text-align: center;
+  width: min(100%, 760px);
+}
+
+.publicInvite :global(.invite-video-data .lead) {
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .publicInvite :global(.invite-section),
 .publicInvite :global(.invite-rsvp-section) {
   width: 100%;
@@ -185,7 +200,8 @@
   .publicInvite :global(.invite-content-background) {
     background-attachment: scroll;
     background-position: center top;
-    background-size: cover;
+    background-size: 100% auto;
+    background-repeat: repeat-y;
   }
 
   .publicInvite :global(.invite-hero) {
@@ -198,6 +214,22 @@
   .publicInvite :global(.invite-hero > div) {
     width: 100%;
     max-width: 100%;
+  }
+
+  .publicInvite :global(.invite-video-data) {
+    padding: clamp(18px, 4vw, 28px) 0;
+  }
+
+  .publicInvite :global(.invite-video-data h1) {
+    margin-bottom: 14px;
+  }
+
+  .publicInvite :global(.invite-video-data .lead) {
+    margin-bottom: 16px;
+  }
+
+  .publicInvite :global(.invite-video-data .invite-meta) {
+    margin-top: 0;
   }
 
   .publicInvite :global(.invite-meta) {

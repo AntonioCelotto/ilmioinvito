@@ -42,9 +42,11 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const videoRef=useRef<HTMLVideoElement>(null);
  const[draft,setDraft]=useState<InvitationDraft|null>(null),[loaded,setLoaded]=useState(false),[ibanCopied,setIbanCopied]=useState(false),[videoStarted,setVideoStarted]=useState(false),[videoFinished,setVideoFinished]=useState(false);
  useEffect(()=>{const local=findDraftBySlug(slug);findDraftBySlugFromSupabase(slug).then(remote=>{setDraft(newestDraft(local,remote)??null);setLoaded(true);});},[slug]);
- const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft),isDemoSlug=slug===demoInvitation.slug;
+ const isDemoSlug=slug===demoInvitation.slug;
+ const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft);
  useEffect(()=>{setVideoStarted(false);setVideoFinished(false);},[invitation.theme.backgroundVideo]);
  async function startVideo(){const video=videoRef.current;if(!video)return;video.muted=false;try{await video.play();setVideoStarted(true);}catch{video.muted=true;await video.play();setVideoStarted(true);}}
+ if(!loaded&&!isDemoSlug)return <main aria-label="Caricamento invito" style={{background:"#fff9f7",minHeight:"100svh"}}/>;
  if(loaded&&!hasCustomDraft&&!isDemoSlug)return <main className="workspace"><section className="section"><div className="section-inner"><div className="empty-state invitation-unavailable"><p className="eyebrow">Invito non disponibile</p><h1>Questo invito è ancora in bozza.</h1><p className="muted">La bozza è visibile soltanto al proprietario autenticato. Per condividerla con gli invitati, apri il builder e premi “Pubblica invito”.</p><a className="button" href="/login">Accedi</a></div></div></section></main>;
 
  // The uploader persists the video's final frame as backgroundImage. Reusing

@@ -147,8 +147,12 @@ async function persistDraftToSupabase(draft: InvitationDraft): Promise<SaveResul
   const savedLocations = verification.invitation_locations?.length ?? 0;
   const expectedMedia = persistedMedia.length;
   const savedMedia = verification.invitation_media?.length ?? 0;
-  const contentSaved = (verification.invitation_content?.length ?? 0) === 1;
-  const themeSaved = (verification.invitation_themes?.length ?? 0) === 1;
+  // Supabase can return a one-to-one relation either as an object or as a
+  // single-item array. Treat both shapes as saved; checking only `.length`
+  // incorrectly rejected successful saves on the public schema.
+  const relationSaved = (value: unknown) => Array.isArray(value) ? value.length === 1 : Boolean(value);
+  const contentSaved = relationSaved(verification.invitation_content);
+  const themeSaved = relationSaved(verification.invitation_themes);
 
   if (!contentSaved || !themeSaved || savedSections !== expectedSections || savedLocations !== expectedLocations || savedMedia !== expectedMedia) {
     return { status: "error", message: "Il controllo della bozza online non coincide con i contenuti inseriti. Riprova il salvataggio prima di pubblicare." };
