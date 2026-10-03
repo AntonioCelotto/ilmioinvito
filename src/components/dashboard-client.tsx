@@ -18,6 +18,7 @@ import {
 } from "@/lib/supabase/drafts";
 import { DashboardRsvp, loadDashboardRsvps } from "@/lib/supabase/rsvps";
 import {
+  deleteGuestMedia,
   GuestMediaItem,
   loadDashboardGuestMedia,
   updateGuestMediaStatus
@@ -214,6 +215,20 @@ export function DashboardClient() {
     setUpdatingGuestMediaId("");
   }
 
+  async function handleGuestMediaDelete(item: GuestMediaItem) {
+    if (!window.confirm(`Vuoi eliminare definitivamente il contenuto condiviso da ${item.guestName}?`)) return;
+    setUpdatingGuestMediaId(item.id);
+    setGuestMediaMessage("");
+    const result = await deleteGuestMedia(item);
+    if (result.ok) {
+      setGuestMedia((current) => current.filter((media) => media.id !== item.id));
+      setGuestMediaMessage(result.message);
+    } else {
+      setGuestMediaMessage(`Eliminazione non riuscita: ${result.message}`);
+    }
+    setUpdatingGuestMediaId("");
+  }
+
   const GuestMediaCards = ({ items }: { items: GuestMediaItem[] }) => items.length === 0 ? (
     <div className="empty-state">
       <h3>Nessun ricordo in questa sezione</h3>
@@ -246,6 +261,7 @@ export function DashboardClient() {
             {item.status !== "pending" ? (
               <button className="draft-delete-button" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaStatus(item, "pending")}>Rimetti in attesa</button>
             ) : null}
+            <button className="draft-delete-button" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaDelete(item)}>{updatingGuestMediaId === item.id ? "Attendi…" : item.mediaType === "photo" ? "Elimina immagine" : "Elimina video"}</button>
           </div>
         </article>
       ))}
