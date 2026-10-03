@@ -91,6 +91,10 @@
   padding: clamp(20px, 4vw, 34px);
 }
 
+.publicInvite :global(.invite-rsvp-section) {
+  background: transparent !important;
+}
+
 .publicInvite :global(.invite-program) {
   border-color: var(--invitation-button-color);
 }
