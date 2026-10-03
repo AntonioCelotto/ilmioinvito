@@ -8,7 +8,6 @@ import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 import { LiveCountdown } from "@/components/live-countdown";
 import { InviteGuestMedia } from "@/components/invite-guest-media";
-import { captureVideoFrameDataUrl } from "@/lib/video-frame";
 
 type DraftInviteClientProps = { slug: string };
 
@@ -41,14 +40,17 @@ function newestDraft(local: InvitationDraft | undefined, remote: InvitationDraft
 
 export function DraftInviteClient({slug}:DraftInviteClientProps){
  const videoRef=useRef<HTMLVideoElement>(null);
- const[draft,setDraft]=useState<InvitationDraft|null>(null),[loaded,setLoaded]=useState(false),[ibanCopied,setIbanCopied]=useState(false),[videoStarted,setVideoStarted]=useState(false),[videoFinished,setVideoFinished]=useState(false),[lastVideoFrame,setLastVideoFrame]=useState("");
+ const[draft,setDraft]=useState<InvitationDraft|null>(null),[loaded,setLoaded]=useState(false),[ibanCopied,setIbanCopied]=useState(false),[videoStarted,setVideoStarted]=useState(false),[videoFinished,setVideoFinished]=useState(false);
  useEffect(()=>{const local=findDraftBySlug(slug);findDraftBySlugFromSupabase(slug).then(remote=>{setDraft(newestDraft(local,remote)??null);setLoaded(true);});},[slug]);
  const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft),isDemoSlug=slug===demoInvitation.slug;
- useEffect(()=>{setVideoStarted(false);setVideoFinished(false);setLastVideoFrame("");},[invitation.theme.backgroundVideo]);
+ useEffect(()=>{setVideoStarted(false);setVideoFinished(false);},[invitation.theme.backgroundVideo]);
  async function startVideo(){const video=videoRef.current;if(!video)return;video.muted=false;try{await video.play();setVideoStarted(true);}catch{video.muted=true;await video.play();setVideoStarted(true);}}
  if(loaded&&!hasCustomDraft&&!isDemoSlug)return <main className="workspace"><section className="section"><div className="section-inner"><div className="empty-state invitation-unavailable"><p className="eyebrow">Invito non disponibile</p><h1>Questo invito è ancora in bozza.</h1><p className="muted">La bozza è visibile soltanto al proprietario autenticato. Per condividerla con gli invitati, apri il builder e premi “Pubblica invito”.</p><a className="button" href="/login">Accedi</a></div></div></section></main>;
 
- const contentBackgroundSource = lastVideoFrame || invitation.theme.backgroundImage;
+ // The uploader persists the video's final frame as backgroundImage. Reusing
+ // that stable URL keeps every section visually continuous after playback;
+ // a canvas data URL was browser-dependent and disappeared on some phones.
+ const contentBackgroundSource = invitation.theme.backgroundImage;
  const contentBackgroundImage = contentBackgroundSource ? `url("${contentBackgroundSource}")` : "none";
  const themeStyles={
    "--invitation-text-color":invitation.theme.textColor??"#3f292a",
@@ -63,8 +65,14 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
 
  return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}`} style={themeStyles}>
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
-   {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={(event)=>{try{setLastVideoFrame(captureVideoFrameDataUrl(event.currentTarget));}catch{}setVideoFinished(true);}} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
-   {!invitation.theme.backgroundVideo||videoFinished?<div className={invitation.theme.backgroundVideo?"invite-video-data":undefined}><p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta"><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
+   {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
+   {!invitation.theme.backgroundVideo||videoFinished?<div className={invitation.theme.backgroundVideo?"invite-video-data":undefined}>
+    <div aria-label="Elementi personalizzati della copertina" style={{alignItems:"center",display:"flex",flexDirection:"column",gap:"clamp(8px,1.5vw,16px)",margin:"0 auto clamp(18px,3vw,34px)",pointerEvents:"none",width:"min(88vw,720px)"}}>
+     {invitation.theme.coverLogoUrl?<div aria-label="Logo evento" style={{alignItems:"center",display:"flex",height:`clamp(62px,${Math.round(10*(invitation.theme.coverLogoScale??1))}vw,${Math.round(130*(invitation.theme.coverLogoScale??1))}px)`,justifyContent:"center",width:`${Math.min(76,Math.round(34*(invitation.theme.coverLogoScale??1)))}%`}}><img src={invitation.theme.coverLogoUrl} alt="Logo evento" style={{display:"block",height:"100%",objectFit:"contain",width:"100%"}}/></div>:null}
+     {invitation.theme.coverNumber?<div aria-label={`Numero compleanno ${invitation.theme.coverNumber}`} style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(68*(invitation.theme.coverNumberScale??1))}px,${Math.round(15*(invitation.theme.coverNumberScale??1))}vw,${Math.round(154*(invitation.theme.coverNumberScale??1))}px)`,fontWeight:700,letterSpacing:"-.04em",lineHeight:.82,textAlign:"center",textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.42)",width:"100%"}}>{invitation.theme.coverNumber}</div>:null}
+     {invitation.theme.coverText?.trim()?<div aria-label="Testo copertina" style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(30*(invitation.theme.coverTextScale??1))}px,${Math.round(7*(invitation.theme.coverTextScale??1))}vw,${Math.round(76*(invitation.theme.coverTextScale??1))}px)`,fontWeight:700,lineHeight:1,overflowWrap:"anywhere",textAlign:"center",textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)",width:"100%"}}>{invitation.theme.coverText}</div>:null}
+    </div>
+    <p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta"><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
   </section>
   <div className="invite-content-background">
    <section className="section invite-section"><div className="section-inner invite-section-inner"><h2>Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section>
