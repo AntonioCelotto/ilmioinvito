@@ -79,9 +79,16 @@
 .publicInvite :global(.countdown-panel div),
 .publicInvite :global(.invite-dress-code-card),
 .publicInvite :global(.gift-iban-card),
-.publicInvite :global(.gift-wish-card) {
+.publicInvite :global(.gift-wish-card),
+.publicInvite :global(.rsvp) {
   background: color-mix(in srgb, var(--invitation-primary-color) 36%, transparent);
   backdrop-filter: blur(4px);
+}
+
+.publicInvite :global(.rsvp) {
+  border: 1px solid color-mix(in srgb, var(--invitation-text-color) 20%, transparent);
+  border-radius: 24px;
+  padding: clamp(20px, 4vw, 34px);
 }
 
 .publicInvite :global(.invite-program) {
