@@ -45,19 +45,10 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const isDemoSlug=slug===demoInvitation.slug;
  const invitation=draft??fallbackDraft;const hasCustomDraft=Boolean(draft);
  useEffect(()=>{setVideoStarted(false);setVideoFinished(false);},[invitation.theme.backgroundVideo]);
- function openInvitationFullscreen(){
-  const invitationRoot=videoRef.current?.closest("main") as (HTMLElement&{webkitRequestFullscreen?:()=>Promise<void>|void})|null;
-  if(!invitationRoot||document.fullscreenElement)return;
-  try{
-   const request=invitationRoot.requestFullscreen?.({navigationUI:"hide"})??invitationRoot.webkitRequestFullscreen?.();
-   if(request instanceof Promise)void request.catch(()=>undefined);
-  }catch{/* Fullscreen is optional and must never block video playback. */}
- }
  async function startVideo(){
   const video=videoRef.current;if(!video)return;
   video.muted=false;
   const playback=video.play();
-  openInvitationFullscreen();
   try{await playback;setVideoStarted(true);}catch{video.muted=true;await video.play();setVideoStarted(true);}
  }
  if(!loaded&&!isDemoSlug)return <main aria-label="Caricamento invito" style={{background:"#fff9f7",minHeight:"100svh"}}/>;
