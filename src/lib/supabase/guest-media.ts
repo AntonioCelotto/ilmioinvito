@@ -7,6 +7,7 @@ export type GuestMediaItem = {
   guestName: string;
   dedication: string;
   mediaType: "photo" | "video";
+  storagePath: string;
   url: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
@@ -72,6 +73,7 @@ export async function loadApprovedGuestMedia(invitationId: string) {
     guestName: row.guest_name,
     dedication: row.dedication ?? "",
     mediaType: row.media_type,
+    storagePath: row.storage_path,
     url: publicUrl(row.storage_path),
     status: row.status,
     createdAt: row.created_at
@@ -94,6 +96,7 @@ export async function loadDashboardGuestMedia() {
       guestName: row.guest_name,
       dedication: row.dedication ?? "",
       mediaType: row.media_type,
+      storagePath: row.storage_path,
       url: publicUrl(row.storage_path),
       status: row.status,
       createdAt: row.created_at
@@ -107,4 +110,15 @@ export async function updateGuestMediaStatus(id: string, status: GuestMediaItem[
   if (!supabase) return { ok: false, message: "Supabase non configurato." };
   const { error } = await supabase.from("guest_media").update({ status, updated_at: new Date().toISOString() }).eq("id", id);
   return error ? { ok: false, message: error.message } : { ok: true, message: "Contenuto aggiornato." };
+}
+
+export async function deleteGuestMedia(item: GuestMediaItem) {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+  const { error } = await supabase.from("guest_media").delete().eq("id", item.id);
+  if (error) return { ok: false, message: error.message };
+  const { error: storageError } = await supabase.storage.from(bucket).remove([item.storagePath]);
+  return storageError
+    ? { ok: true, message: "Contenuto eliminato. Il file verrà ripulito automaticamente." }
+    : { ok: true, message: "Contenuto eliminato definitivamente." };
 }
