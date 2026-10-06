@@ -27,8 +27,23 @@ function sectionIsActive(draft: InvitationDraft, section: InvitationSectionKey) 
 function sectionPosition(draft: InvitationDraft, ...sections: InvitationSectionKey[]) { const p=sections.map(s=>draft.activeSections.indexOf(s)).filter(x=>x>=0); return p.length?Math.min(...p):999; }
 function blockText(draft: InvitationDraft, section: InvitationSectionKey) { return draft.blockTexts?.[section] || defaultBlockTexts[section]; }
 function mapDirectionsUrl(address:string){return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;}
+function invitationFontFamily(style: InvitationDraft["theme"]["fontStyle"]) {
+  const families: Record<InvitationDraft["theme"]["fontStyle"], string> = {
+    serif: "Georgia, serif",
+    script: "'Brush Script MT', 'Segoe Script', cursive",
+    modern: "Arial, Helvetica, sans-serif",
+    classic: "'Times New Roman', serif",
+    elegant: "Didot, 'Times New Roman', serif",
+    romantic: "'Brush Script MT', cursive",
+    editorial: "Garamond, Georgia, serif",
+    minimalist: "Helvetica, Arial, sans-serif",
+    soft: "'Trebuchet MS', Arial, sans-serif",
+    bold: "'Arial Black', Arial, sans-serif"
+  };
+  return families[style] ?? families.serif;
+}
 function LocationCard({location}:{location:InvitationDraft["locations"][number]}){return <article className="invite-location">{location.imageUrl?<img alt={location.name||"Luogo dell'evento"} src={location.imageUrl}/>:null}{location.description?<p className="invite-location-description">{location.description}</p>:null}<h3>{location.name||"Luogo dell'evento"}</h3><p className="muted">{location.address||"Indirizzo da definire"}</p>{location.address?<a className="button" href={mapDirectionsUrl(location.address)} rel="noreferrer" target="_blank">Portami</a>:null}</article>}
-function CountdownBlock({draft}:{draft:InvitationDraft}){return <LiveCountdown className="countdown-panel light-panel" eventDate={draft.slug===demoInvitation.slug?demoInvitation.eventDateIso.slice(0,10):draft.eventDate} eventTime={draft.eventTime}/>;}
+function CountdownBlock({draft}:{draft:InvitationDraft}){return <LiveCountdown className={`countdown-panel light-panel countdown-${draft.theme.countdownStyle??"classic"}`} eventDate={draft.slug===demoInvitation.slug?demoInvitation.eventDateIso.slice(0,10):draft.eventDate} eventTime={draft.eventTime}/>;}
 
 function newestDraft(local: InvitationDraft | undefined, remote: InvitationDraft | null) {
   if (!local) return remote;
@@ -67,6 +82,11 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
    "--invitation-accent-color":invitation.theme.accentColor,
    "--invitation-primary-color":invitation.theme.primaryColor,
    "--invitation-background-image":contentBackgroundImage,
+   "--invitation-title-scale":invitation.theme.titleFontScale??invitation.theme.fontScale??1,
+   "--hero-title-scale":invitation.theme.heroTitleScale??invitation.theme.titleFontScale??invitation.theme.fontScale??1,
+   "--invitation-text-scale":invitation.theme.textFontScale??invitation.theme.fontScale??1,
+   "--hero-meta-scale":invitation.theme.heroMetaScale??1,
+   "--invitation-font-family":invitationFontFamily(invitation.theme.fontStyle),
    backgroundColor:invitation.theme.primaryColor
  } as CSSProperties;
 
@@ -79,10 +99,10 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
      {invitation.theme.coverNumber?<div aria-label={`Numero compleanno ${invitation.theme.coverNumber}`} style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(68*(invitation.theme.coverNumberScale??1))}px,${Math.round(15*(invitation.theme.coverNumberScale??1))}vw,${Math.round(154*(invitation.theme.coverNumberScale??1))}px)`,fontWeight:700,letterSpacing:"-.04em",lineHeight:.82,textAlign:"center",textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.42)",width:"100%"}}>{invitation.theme.coverNumber}</div>:null}
      {invitation.theme.coverText?.trim()?<div aria-label="Testo copertina" style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:"Georgia, 'Times New Roman', serif",fontSize:`clamp(${Math.round(30*(invitation.theme.coverTextScale??1))}px,${Math.round(7*(invitation.theme.coverTextScale??1))}vw,${Math.round(76*(invitation.theme.coverTextScale??1))}px)`,fontWeight:700,lineHeight:1,overflowWrap:"anywhere",textAlign:"center",textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)",width:"100%"}}>{invitation.theme.coverText}</div>:null}
     </div>
-    <p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta"><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
+    <p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta" data-meta-style={invitation.theme.heroMetaStyle??"pills"}><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
   </section>
   <div className="invite-content-background">
-   <section className="section invite-section"><div className="section-inner invite-section-inner"><h2 className="public-story-heading">Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section>
+   {invitation.story && invitation.story !== demoInvitation.story ? <section className="section invite-section"><div className="section-inner invite-section-inner"><h2 className="public-story-heading">Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section> : null}
    <div className="invite-dynamic-sections">
     {sectionIsActive(invitation,"countdown")?<section className="section invite-section" style={{order:sectionPosition(invitation,"countdown")}}><div className="section-inner invite-section-inner"><h2>Il grande giorno si avvicina.</h2><p className="muted invite-copy">{blockText(invitation,"countdown")}</p><CountdownBlock draft={invitation}/></div></section>:null}
     {sectionIsActive(invitation,"ceremony")||sectionIsActive(invitation,"reception")?<section className="section invite-section" style={{order:sectionPosition(invitation,"ceremony","reception")}}><div className="section-inner invite-section-inner"><h2>Raggiungi ogni momento dell’evento.</h2><p className="muted invite-copy">{blockText(invitation,"ceremony")}</p><div className="invite-location-grid">{invitation.locations.filter(l=>l.enabled).map(l=><LocationCard key={l.id} location={l}/>)}</div></div></section>:null}
