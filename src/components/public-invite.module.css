@@ -50,7 +50,7 @@
   min-width: 0;
   max-width: 100%;
   color: var(--invitation-text-color);
-  background: transparent;
+  background: color-mix(in srgb, var(--invitation-primary-color) 18%, transparent);
 }
 
 .publicInvite :global(.invite-section h1),
@@ -81,8 +81,8 @@
 .publicInvite :global(.gift-iban-card),
 .publicInvite :global(.gift-wish-card),
 .publicInvite :global(.rsvp) {
-  background: rgba(255, 255, 255, 0.13);
-  backdrop-filter: none;
+  background: color-mix(in srgb, var(--invitation-primary-color) 36%, transparent);
+  backdrop-filter: blur(4px);
 }
 
 .publicInvite :global(.rsvp) {
@@ -288,24 +288,7 @@
   }
 
   .publicInvite :global(.countdown-panel) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 5px;
-    width: 100%;
-  }
-
-  .publicInvite :global(.countdown-panel div) {
-    padding: 8px 4px;
-    border-radius: 12px;
-  }
-
-  .publicInvite :global(.countdown-panel strong) {
-    font-size: calc(18px * var(--invitation-font-scale, 1));
-  }
-
-  .publicInvite :global(.countdown-panel span) {
-    font-size: calc(11px * var(--invitation-font-scale, 1));
-    text-transform: none;
-    font-weight: 400;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .publicInvite :global(.guest-head) {
@@ -342,113 +325,5 @@
 
   .publicInvite :global(.social-composer-heading) {
     align-items: flex-start;
-  }
-}
-
-.publicInvite :global(.public-invitation-view .invite-section) {
-  border-top: 1px solid color-mix(in srgb, var(--invitation-text-color) 24%, transparent);
-}
-
-.publicInvite :global(.public-invitation-view .invite-section:first-child) {
-  border-top: 0;
-}
-
-.publicInvite :global(.public-invitation-view .invite-section-inner) {
-  gap: 14px;
-}
-
-.publicInvite :global(.public-invitation-view .invite-copy) {
-  max-width: 720px;
-  line-height: 1.55;
-  margin: 0 auto;
-}
-
-.publicInvite :global(.public-invitation-view .public-featured-text) {
-  display: block;
-  font-size: calc(18px * var(--invitation-font-scale, 1));
-  font-weight: 700;
-  text-align: center;
-}
-
-.publicInvite :global(.public-invitation-view .countdown-panel) {
-  width: min(100%, 430px);
-}
-
-.publicInvite :global(.public-invitation-view .invite-location) {
-  border-radius: 12px;
-  gap: 5px;
-  padding: 13px;
-}
-
-.publicInvite :global(.public-invitation-view .invite-location > img) {
-  height: 150px;
-  border-radius: 8px;
-  margin-top: 6px;
-}
-
-.publicInvite :global(.public-invitation-view .invite-location h3) {
-  margin: 0;
-  font-size: calc(18px * var(--invitation-font-scale, 1));
-}
-
-.publicInvite :global(.public-invitation-view .invite-location p) {
-  margin: 0;
-}
-
-.publicInvite :global(.public-invitation-view .invite-hero .invite-kicker) {
-  font-size: calc(11px * var(--invitation-font-scale, 1));
-  font-weight: 900;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-}
-
-.publicInvite :global(.public-invitation-view .invite-hero h1) {
-  font-size: clamp(
-    calc(30px * var(--invitation-font-scale, 1)),
-    calc(5vw * var(--invitation-font-scale, 1)),
-    calc(44px * var(--invitation-font-scale, 1))
-  );
-  margin: 0;
-}
-
-.publicInvite :global(.public-invitation-view .invite-hero .lead) {
-  font-size: calc(13px * var(--invitation-font-scale, 1));
-  line-height: 1.55;
-}
-
-.publicInvite :global(.public-invitation-view .invite-meta) {
-  gap: 7px;
-  margin-top: 6px;
-}
-
-.publicInvite :global(.public-invitation-view .invite-meta span) {
-  font-size: calc(11px * var(--invitation-font-scale, 1));
-  font-weight: 800;
-  opacity: .85;
-  padding: 5px 8px;
-}
-
-.publicInvite :global(.public-invitation-view .invite-dress-code-card),
-.publicInvite :global(.public-invitation-view .gift-iban-card),
-.publicInvite :global(.public-invitation-view .gift-wish-card),
-.publicInvite :global(.public-invitation-view .rsvp) {
-  background: rgba(255,255,255,.13);
-  border-color: color-mix(in srgb, var(--invitation-text-color) 20%, transparent);
-  border-radius: 12px;
-  box-shadow: none;
-}
-
-@media (max-width: 560px) {
-  .publicInvite :global(.public-invitation-view .invite-hero) {
-    min-height: 330px;
-    padding: 58px 22px 28px;
-  }
-
-  .publicInvite :global(.public-invitation-view .section) {
-    padding: 34px 22px;
-  }
-
-  .publicInvite :global(.public-invitation-view .invite-location-grid) {
-    grid-template-columns: 1fr;
   }
 }
