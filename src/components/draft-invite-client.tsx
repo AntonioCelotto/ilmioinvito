@@ -60,7 +60,7 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const contentBackgroundSource = invitation.theme.backgroundImage;
  const contentBackgroundImage = contentBackgroundSource ? `url("${contentBackgroundSource}")` : "none";
  const themeStyles={
-   "--invitation-text-color":invitation.theme.textColor??"#3f292a",
+   "--invitation-text-color":invitation.theme.textColor??(invitation.theme.template==="classicLight"?"#2f2a24":"#ffffff"),
    "--invitation-button-color":invitation.theme.buttonColor??invitation.theme.accentColor,
    "--invitation-button-text":invitation.theme.buttonTextColor??"#ffffff",
    "--invitation-font-scale":invitation.theme.fontScale??1,
