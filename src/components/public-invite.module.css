@@ -327,3 +327,113 @@
     align-items: flex-start;
   }
 }
+
+/* Keep the published classic-light invitation visually aligned with the
+   phone preview without changing the underlying public page structure. */
+.publicInvite :global(.theme-classicLight .public-story-heading) {
+  display: none;
+}
+
+.publicInvite :global(.theme-classicLight .invite-section),
+.publicInvite :global(.theme-classicLight .invite-rsvp-section) {
+  background: transparent;
+}
+
+.publicInvite :global(.theme-classicLight .invite-location),
+.publicInvite :global(.theme-classicLight .countdown-panel div),
+.publicInvite :global(.theme-classicLight .invite-dress-code-card),
+.publicInvite :global(.theme-classicLight .gift-iban-card),
+.publicInvite :global(.theme-classicLight .gift-wish-card),
+.publicInvite :global(.theme-classicLight .rsvp) {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(47, 42, 36, 0.16);
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.publicInvite :global(.theme-classicLight .invite-hero h1) {
+  font-size: clamp(
+    calc(30px * var(--invitation-font-scale, 1)),
+    calc(5vw * var(--invitation-font-scale, 1)),
+    calc(44px * var(--invitation-font-scale, 1))
+  );
+  margin: 0;
+}
+
+.publicInvite :global(.theme-classicLight .invite-hero .lead),
+.publicInvite :global(.theme-classicLight .invite-section p),
+.publicInvite :global(.theme-classicLight .invite-section .muted) {
+  font-size: calc(13px * var(--invitation-font-scale, 1));
+  line-height: 1.55;
+}
+
+.publicInvite :global(.theme-classicLight .invite-meta) {
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.publicInvite :global(.theme-classicLight .invite-meta span) {
+  font-size: calc(11px * var(--invitation-font-scale, 1));
+  font-weight: 800;
+  opacity: 0.85;
+  padding: 5px 8px;
+}
+
+.publicInvite :global(.theme-classicLight .countdown-panel) {
+  width: min(100%, 430px);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.publicInvite :global(.theme-classicLight .countdown-panel div) {
+  padding: 8px 4px;
+  border-radius: 12px;
+}
+
+.publicInvite :global(.theme-classicLight .countdown-panel strong) {
+  font-size: calc(18px * var(--invitation-font-scale, 1));
+}
+
+.publicInvite :global(.theme-classicLight .countdown-panel span) {
+  color: var(--invitation-text-color);
+  font-size: calc(11px * var(--invitation-font-scale, 1));
+  font-weight: 400;
+  margin-top: 0;
+  opacity: 0.78;
+  text-transform: none;
+}
+
+.publicInvite :global(.theme-classicLight .invite-location) {
+  border-radius: 12px;
+  gap: 5px;
+  padding: 13px;
+}
+
+.publicInvite :global(.theme-classicLight .invite-location > img) {
+  border-radius: 8px;
+  height: 150px;
+  margin-top: 6px;
+}
+
+.publicInvite :global(.theme-classicLight .invite-location h3) {
+  font-size: calc(18px * var(--invitation-font-scale, 1));
+  margin: 0;
+}
+
+.publicInvite :global(.theme-classicLight .invite-location p) {
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .publicInvite :global(.theme-classicLight .section) {
+    padding: 34px 22px;
+  }
+
+  .publicInvite :global(.theme-classicLight .countdown-panel) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .publicInvite :global(.theme-classicLight .invite-location-grid) {
+    grid-template-columns: 1fr;
+  }
+}
