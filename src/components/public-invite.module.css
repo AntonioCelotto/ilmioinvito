@@ -437,3 +437,115 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Public invite must use the exact builder typography scales. */
+.publicInvite :global(.invitation-custom-theme) {
+  font-family: var(--invitation-font-family, Georgia, serif);
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-hero h1) {
+  font-family: var(--invitation-font-family, Georgia, serif);
+  font-size: calc(30px * var(--hero-title-scale, 1)) !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-section h2),
+.publicInvite :global(.invitation-custom-theme .invite-section h3),
+.publicInvite :global(.invitation-custom-theme .invite-location strong),
+.publicInvite :global(.invitation-custom-theme .social-composer-heading strong) {
+  font-family: var(--invitation-font-family, Georgia, serif);
+  font-size: calc(30px * var(--invitation-title-scale, 1)) !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-hero .lead),
+.publicInvite :global(.invitation-custom-theme .invite-section p),
+.publicInvite :global(.invitation-custom-theme .invite-section .muted),
+.publicInvite :global(.invitation-custom-theme .invite-location),
+.publicInvite :global(.invitation-custom-theme .invite-program-item),
+.publicInvite :global(.invitation-custom-theme .social-composer-heading small) {
+  font-size: calc(13px * var(--invitation-text-scale, 1)) !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta) {
+  font-size: calc(13px * var(--hero-meta-scale, 1)) !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta span) {
+  font-size: inherit !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta[data-meta-style="minimal"] span) {
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 3px 8px !important;
+  border-bottom: 1px solid currentColor !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta[data-meta-style="cards"] span) {
+  border: 0 !important;
+  border-radius: 12px !important;
+  padding: 10px 13px !important;
+  background: rgba(255,255,255,.78) !important;
+  box-shadow: 0 5px 18px rgba(0,0,0,.10) !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta[data-meta-style="editorial"]) {
+  border-top: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  padding: 8px 0 !important;
+}
+
+.publicInvite :global(.invitation-custom-theme .invite-meta[data-meta-style="editorial"] span) {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 2px 12px !important;
+}
+
+.publicInvite :global(.social-composer) {
+  background: rgba(255,255,255,.13);
+  border-color: rgba(255,255,255,.20);
+  backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 12px;
+}
+
+.publicInvite :global(.theme-classicLight .social-composer) {
+  background: rgba(255,255,255,.55);
+  border-color: rgba(47,42,36,.18);
+}
+
+.publicInvite :global(.countdown-panel.countdown-cards > div) {
+  background: rgba(255,255,255,.82) !important;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(0,0,0,.08);
+}
+
+.publicInvite :global(.countdown-panel.countdown-minimal) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.publicInvite :global(.countdown-panel.countdown-minimal > div) {
+  background: transparent !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  border-right: 1px solid rgba(0,0,0,.12) !important;
+}
+
+.publicInvite :global(.countdown-panel.countdown-minimal > div:last-child) {
+  border-right: 0 !important;
+}
+
+.publicInvite :global(.countdown-panel.countdown-circles > div) {
+  aspect-ratio: 1;
+  border-radius: 50% !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,.76) !important;
+  border: 1px solid rgba(0,0,0,.10) !important;
+}
