@@ -70,7 +70,7 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
    backgroundColor:invitation.theme.primaryColor
  } as CSSProperties;
 
- return <main className={`invitation-custom-theme preview-font-${invitation.theme.fontStyle}${videoStarted&&!videoFinished?" invitation-video-playing":""}`} style={themeStyles}>
+ return <main className={`invitation-custom-theme theme-${invitation.theme.template} preview-font-${invitation.theme.fontStyle}${videoStarted&&!videoFinished?" invitation-video-playing":""}`} style={themeStyles}>
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
    {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} onPlay={()=>setVideoStarted(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
    {!invitation.theme.backgroundVideo||videoFinished?<div className={invitation.theme.backgroundVideo?"invite-video-data":undefined}>
@@ -82,7 +82,7 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
     <p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta"><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
   </section>
   <div className="invite-content-background">
-   <section className="section invite-section"><div className="section-inner invite-section-inner"><h2>Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section>
+   <section className="section invite-section"><div className="section-inner invite-section-inner"><h2 className="public-story-heading">Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section>
    <div className="invite-dynamic-sections">
     {sectionIsActive(invitation,"countdown")?<section className="section invite-section" style={{order:sectionPosition(invitation,"countdown")}}><div className="section-inner invite-section-inner"><h2>Il grande giorno si avvicina.</h2><p className="muted invite-copy">{blockText(invitation,"countdown")}</p><CountdownBlock draft={invitation}/></div></section>:null}
     {sectionIsActive(invitation,"ceremony")||sectionIsActive(invitation,"reception")?<section className="section invite-section" style={{order:sectionPosition(invitation,"ceremony","reception")}}><div className="section-inner invite-section-inner"><h2>Raggiungi ogni momento dell’evento.</h2><p className="muted invite-copy">{blockText(invitation,"ceremony")}</p><div className="invite-location-grid">{invitation.locations.filter(l=>l.enabled).map(l=><LocationCard key={l.id} location={l}/>)}</div></div></section>:null}
