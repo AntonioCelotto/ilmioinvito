@@ -27,6 +27,7 @@ import {
   readSelectedTemplate
 } from "@/lib/template-catalog";
 import { LiveCountdown } from "@/components/live-countdown";
+import { InvitationHeroBlock } from "@/components/invitation-hero-block";
 import { captureVideoFrameDataUrl } from "@/lib/video-frame";
 import { isProjectAdmin, publishInvitationAsAdmin } from "@/lib/admin-publish";
 
@@ -1581,26 +1582,12 @@ export function BuilderClient() {
                   ) : null}
                   {videoFinished ? (
                     <div className="phone-video-data">
-                      <p className="phone-kicker">Il nostro invito</p>
-                      <h2>{draft.title || "Titolo invito"}</h2>
-                      <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
-                      <div className="phone-meta">
-                        <span>{draft.eventDate || "Data"}</span>
-                        <span>{draft.eventTime || "Ora"}</span>
-                      </div>
+                      <InvitationHeroBlock draft={draft} />
                     </div>
                   ) : null}
                 </>
               ) : (
-                <>
-                  <p className="phone-kicker">Il nostro invito</p>
-                  <h2>{draft.title || "Titolo invito"}</h2>
-                  <p>{draft.subtitle || "Il sottotitolo apparirà qui"}</p>
-                  <div className="phone-meta">
-                    <span>{draft.eventDate || "Data"}</span>
-                    <span>{draft.eventTime || "Ora"}</span>
-                  </div>
-                </>
+                <InvitationHeroBlock draft={draft} />
               )}
             </header>
 
