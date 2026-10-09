@@ -91,7 +91,21 @@ export function InvitationHeroBlock({
         ) : null}
       </div>
 
-      <p className="phone-kicker invite-kicker">{kickerFallback}</p>
+      <p
+        className="phone-kicker invite-kicker"
+        style={{
+          color: draft.theme.template === "classicLight" ? "#8a7046" : "inherit",
+          fontFamily: "var(--invitation-font-family, inherit)",
+          fontSize: "calc(13px * var(--invitation-text-scale, 1))",
+          fontWeight: 900,
+          letterSpacing: "0.13em",
+          lineHeight: 1.55,
+          margin: 0,
+          textTransform: "uppercase"
+        }}
+      >
+        {kickerFallback}
+      </p>
       <h2
         className="invitation-hero-title"
         style={{
@@ -106,9 +120,12 @@ export function InvitationHeroBlock({
       <p
         className="lead invitation-hero-subtitle"
         style={{
+          color: "inherit",
+          fontFamily: "var(--invitation-font-family, inherit)",
           fontSize: "calc(13px * var(--invitation-text-scale, 1))",
           lineHeight: 1.55,
-          margin: 0
+          margin: 0,
+          maxWidth: "100%"
         }}
       >
         {draft.subtitle || "Il sottotitolo apparirà qui"}
@@ -116,9 +133,27 @@ export function InvitationHeroBlock({
       <div
         className="phone-meta invite-meta"
         data-meta-style={draft.theme.heroMetaStyle ?? "pills"}
-        style={{ "--hero-meta-scale": draft.theme.heroMetaScale ?? 1 } as CSSProperties}
+        style={{
+          "--hero-meta-scale": draft.theme.heroMetaScale ?? 1,
+          fontFamily: "var(--invitation-font-family, inherit)",
+          fontSize: "calc(13px * var(--hero-meta-scale, 1))",
+          gap: 7,
+          justifyContent: "center",
+          marginTop: 6
+        } as CSSProperties}
       >
-        <span>{displayDate(draft.eventDate || "Data")}</span>
+        <span
+          style={{
+            border: "1px solid currentColor",
+            borderRadius: 999,
+            fontSize: "inherit",
+            fontWeight: 800,
+            opacity: 0.85,
+            padding: "5px 8px"
+          }}
+        >
+          {displayDate(draft.eventDate || "Data")}
+        </span>
         <span style={{ display: "none" }}>{draft.eventTime || "Ora"}</span>
       </div>
     </>
