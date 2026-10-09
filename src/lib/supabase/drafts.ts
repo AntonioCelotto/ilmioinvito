@@ -1,4 +1,5 @@
 import {
+  applyPendingTheme,
   defaultBlockTexts,
   InvitationDraft,
   InvitationLocation,
@@ -167,11 +168,12 @@ async function persistDraftToSupabase(draft: InvitationDraft): Promise<SaveResul
 }
 
 export function saveDraftToSupabase(draft: InvitationDraft): Promise<SaveResult> {
-  const previous = draftSaveQueues.get(draft.id) ?? Promise.resolve<SaveResult>({ status: "remote", message: "" });
-  const queued = previous.catch(() => ({ status: "error", message: "Il salvataggio precedente non è riuscito." } as SaveResult)).then(() => persistDraftToSupabase(draft));
-  draftSaveQueues.set(draft.id, queued);
+  const normalizedDraft = applyPendingTheme(draft);
+  const previous = draftSaveQueues.get(normalizedDraft.id) ?? Promise.resolve<SaveResult>({ status: "remote", message: "" });
+  const queued = previous.catch(() => ({ status: "error", message: "Il salvataggio precedente non è riuscito." } as SaveResult)).then(() => persistDraftToSupabase(normalizedDraft));
+  draftSaveQueues.set(normalizedDraft.id, queued);
   void queued.finally(() => {
-    if (draftSaveQueues.get(draft.id) === queued) draftSaveQueues.delete(draft.id);
+    if (draftSaveQueues.get(normalizedDraft.id) === queued) draftSaveQueues.delete(normalizedDraft.id);
   });
   return queued;
 }
