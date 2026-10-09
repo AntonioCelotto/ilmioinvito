@@ -146,6 +146,7 @@ export function InvitationHeroBlock({
           style={{
             border: "1px solid currentColor",
             borderRadius: 999,
+            color: coverColor,
             fontSize: "inherit",
             fontWeight: 800,
             opacity: 0.85,
@@ -154,7 +155,7 @@ export function InvitationHeroBlock({
         >
           {displayDate(draft.eventDate || "Data")}
         </span>
-        <span style={{ display: "none" }}>{draft.eventTime || "Ora"}</span>
+        <span style={{ color: coverColor, display: "none" }}>{draft.eventTime || "Ora"}</span>
       </div>
     </>
   );
