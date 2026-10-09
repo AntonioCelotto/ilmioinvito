@@ -8,6 +8,7 @@ import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 import { LiveCountdown } from "@/components/live-countdown";
 import { InviteGuestMedia } from "@/components/invite-guest-media";
+import { InvitationHeroBlock } from "@/components/invitation-hero-block";
 
 type DraftInviteClientProps = { slug: string };
 
@@ -94,12 +95,8 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
    {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} onPlay={()=>setVideoStarted(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
    {!invitation.theme.backgroundVideo||videoFinished?<div className={`${invitation.theme.backgroundVideo?"invite-video-data ":""}public-hero-content`}>
-    <div className="public-cover-elements" aria-label="Elementi personalizzati della copertina" style={{alignItems:"center",display:"flex",flexDirection:"column",gap:8,margin:0,pointerEvents:"none",width:"100%"}}>
-     {invitation.theme.coverLogoUrl?<div className="public-cover-logo" aria-label="Logo evento" style={{alignItems:"center",display:"flex",height:`${Math.round(58*(invitation.theme.coverLogoScale??1))}px`,justifyContent:"center",maxHeight:105,width:`${Math.min(72,Math.round(40*(invitation.theme.coverLogoScale??1)))}%`}}><img src={invitation.theme.coverLogoUrl} alt="Logo evento" style={{display:"block",height:"100%",objectFit:"contain",width:"100%"}}/></div>:null}
-     {invitation.theme.coverNumber?<div aria-label={`Numero compleanno ${invitation.theme.coverNumber}`} style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:invitationFontFamily(invitation.theme.fontStyle),fontSize:`clamp(${38*(invitation.theme.coverNumberScale??1)}px,${13*(invitation.theme.coverNumberScale??1)}vw,${78*(invitation.theme.coverNumberScale??1)}px)`,fontWeight:700,letterSpacing:"-.04em",lineHeight:.82,textAlign:"center",textShadow:"0 2px 0 #fff2b8, 0 6px 18px rgba(0,0,0,.42)",width:"100%"}}>{invitation.theme.coverNumber}</div>:null}
-     {invitation.theme.coverText?.trim()?<div aria-label="Testo copertina" style={{color:invitation.theme.coverNumberColor??"#d6ad60",fontFamily:invitationFontFamily(invitation.theme.fontStyle),fontSize:`${Math.min(58,34*(invitation.theme.coverTextScale??1))}px`,fontWeight:700,lineHeight:1,overflowWrap:"anywhere",textAlign:"center",textShadow:"0 2px 0 rgba(255,255,255,.45), 0 6px 18px rgba(0,0,0,.22)",width:"100%"}}>{invitation.theme.coverText}</div>:null}
-    </div>
-    <p className="eyebrow invite-kicker">{hasCustomDraft?"":"Invito digitale demo"}</p><h1>{invitation.title}</h1><p className="lead">{invitation.subtitle}</p><div className="invite-meta" data-meta-style={invitation.theme.heroMetaStyle??"pills"}><span>{invitation.eventDate}</span><span>{invitation.eventTime}</span></div></div>:null}
+    <InvitationHeroBlock draft={invitation} renderCoverElements />
+   </div>:null}
   </section>
   <div className="invite-content-background">
    {invitation.story && invitation.story !== demoInvitation.story ? <section className="section invite-section"><div className="section-inner invite-section-inner"><h2 className="public-story-heading">Un invito pensato per essere personale.</h2><p className="muted invite-copy">{invitation.story}</p></div></section> : null}
