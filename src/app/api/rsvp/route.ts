@@ -26,5 +26,29 @@ export async function POST(request: Request) {
   const responseGroupId = crypto.randomUUID();
   const { error } = await admin.from("rsvps").insert(guests.map((guest) => ({ invitation_id: invitation.id, response_group_id: responseGroupId, guest_name: guest.name, status, party_size: status === "confirmed" ? 1 : 0, contact_phone: phone, additional_info: guest.info || null })));
   if (error) return NextResponse.json({ error: "Conferma non salvata." }, { status: 500 });
+
+  // If the host created an invitation guest list, keep its status aligned with
+  // the public RSVP. Name matching is case-insensitive; phone is used as an
+  // additional fallback when available.
+  for (const guest of guests) {
+    let matched = false;
+    const byName = await admin
+      .from("invitation_guests")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("invitation_id", invitation.id)
+      .ilike("guest_name", guest.name)
+      .select("id")
+      .limit(1);
+
+    if ((byName.data?.length ?? 0) > 0) matched = true;
+
+    if (!matched && phone) {
+      await admin
+        .from("invitation_guests")
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq("invitation_id", invitation.id)
+        .eq("contact_phone", phone);
+    }
+  }
   return NextResponse.json({ saved: true }, { headers: { "Cache-Control": "no-store" } });
 }
