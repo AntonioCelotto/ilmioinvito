@@ -18,6 +18,13 @@ import {
 } from "@/lib/supabase/drafts";
 import { DashboardRsvp, loadDashboardRsvps } from "@/lib/supabase/rsvps";
 import {
+  InvitationGuest,
+  addInvitationGuest,
+  deleteInvitationGuest,
+  loadInvitationGuests,
+  markGuestReminded
+} from "@/lib/supabase/invitation-guests";
+import {
   deleteGuestMedia,
   GuestMediaItem,
   loadDashboardGuestMedia,
@@ -31,6 +38,11 @@ export function DashboardClient() {
   const [remoteMessage, setRemoteMessage] = useState("");
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
+  const [invitationGuests, setInvitationGuests] = useState<InvitationGuest[]>([]);
+  const [guestListMessage, setGuestListMessage] = useState("");
+  const [newGuestName, setNewGuestName] = useState("");
+  const [newGuestPhone, setNewGuestPhone] = useState("");
+  const [guestListBusyId, setGuestListBusyId] = useState("");
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
   const [deletingDraftId, setDeletingDraftId] = useState("");
   const [draftActionMessage, setDraftActionMessage] = useState("");
@@ -86,6 +98,11 @@ export function DashboardClient() {
       setRsvps(result.rsvps);
       setRsvpMessage(result.message);
     });
+    loadInvitationGuests().then((result) => {
+      if (!active) return;
+      setInvitationGuests(result.guests);
+      setGuestListMessage(result.message);
+    });
 
     const onFocus = () => {
       void syncDashboard();
@@ -133,6 +150,12 @@ export function DashboardClient() {
       : guestMedia.filter((item) => item.invitationId === selectedInvitationId),
     [guestMedia, selectedInvitationId]
   );
+  const visibleInvitationGuests = useMemo(
+    () => selectedInvitationId === "all"
+      ? invitationGuests
+      : invitationGuests.filter((guest) => guest.invitationId === selectedInvitationId),
+    [invitationGuests, selectedInvitationId]
+  );
   const pendingGuestMedia = visibleGuestMedia.filter((item) => item.status === "pending");
   const approvedGuestMedia = visibleGuestMedia.filter((item) => item.status === "approved");
   const rejectedGuestMedia = visibleGuestMedia.filter((item) => item.status === "rejected");
@@ -143,6 +166,9 @@ export function DashboardClient() {
   const guestsWithInformation = confirmedRsvps.filter(
     (rsvp) => rsvp.additionalInfo.trim().length > 0
   ).length;
+  const pendingInvitationGuests = visibleInvitationGuests.filter((guest) => guest.status === "pending");
+  const confirmedInvitationGuests = visibleInvitationGuests.filter((guest) => guest.status === "confirmed");
+  const declinedInvitationGuests = visibleInvitationGuests.filter((guest) => guest.status === "declined");
 
   const selectedInvitationTitle = selectedInvitationId === "all"
     ? "Tutti gli inviti"
@@ -155,6 +181,57 @@ export function DashboardClient() {
       declined: rows.filter((rsvp) => rsvp.status === "declined").length,
       responses: new Set(rows.map((rsvp) => rsvp.responseGroupId)).size
     };
+  }
+
+  function reminderWhatsappLink(guest: InvitationGuest) {
+    const digits = guest.contactPhone.replace(/\D/g, "");
+    if (!digits) return "";
+    const phone = digits.startsWith("39") ? digits : digits.length === 10 ? `39${digits}` : digits;
+    const inviteUrl = `${window.location.origin}/i/${guest.invitationSlug}`;
+    const message = `Ciao ${guest.guestName}, ti ricordiamo l'invito “${guest.invitationTitle}”. Quando puoi, conferma se parteciperai oppure no qui: ${inviteUrl}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  async function handleAddInvitationGuest() {
+    if (selectedInvitationId === "all") {
+      setGuestListMessage("Seleziona prima un invito.");
+      return;
+    }
+    setGuestListBusyId("new");
+    const result = await addInvitationGuest(selectedInvitationId, newGuestName, newGuestPhone);
+    setGuestListMessage(result.message);
+    if (result.ok) {
+      setNewGuestName("");
+      setNewGuestPhone("");
+      const refreshed = await loadInvitationGuests();
+      setInvitationGuests(refreshed.guests);
+    }
+    setGuestListBusyId("");
+  }
+
+  async function handleDeleteInvitationGuest(guest: InvitationGuest) {
+    if (!window.confirm(`Vuoi eliminare ${guest.guestName} dalla lista invitati?`)) return;
+    setGuestListBusyId(guest.id);
+    const result = await deleteInvitationGuest(guest.id);
+    setGuestListMessage(result.message);
+    if (result.ok) setInvitationGuests((current) => current.filter((item) => item.id !== guest.id));
+    setGuestListBusyId("");
+  }
+
+  async function handleReminder(guest: InvitationGuest) {
+    const link = reminderWhatsappLink(guest);
+    if (!link) {
+      setGuestListMessage("Inserisci un numero di telefono per poter inviare il promemoria WhatsApp.");
+      return;
+    }
+    setGuestListBusyId(guest.id);
+    const result = await markGuestReminded(guest.id);
+    if (result.ok && result.remindedAt) {
+      setInvitationGuests((current) => current.map((item) => item.id === guest.id ? { ...item, remindedAt: result.remindedAt! } : item));
+      window.open(link, "_blank", "noopener,noreferrer");
+    }
+    setGuestListMessage(result.message);
+    setGuestListBusyId("");
   }
 
   function handleEdit(draft: InvitationDraft) {
@@ -401,6 +478,73 @@ export function DashboardClient() {
       </div>
 
       {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
+    </section>
+
+    <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">Promemoria RSVP</p>
+          <h3>Partecipa · Non partecipa · Nessuna risposta</h3>
+          <p className="muted">Aggiungi gli invitati prima di inviare il link. Chi non ha ancora risposto resta in “Nessuna risposta” e può ricevere un promemoria WhatsApp.</p>
+        </div>
+        <strong>{pendingInvitationGuests.length} da ricordare</strong>
+      </div>
+
+      {selectedInvitationId === "all" ? (
+        <p className="panel-note">Seleziona un invito qui sopra per aggiungere persone e inviare promemoria.</p>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,220px) auto", gap: 10, alignItems: "end", marginTop: 16 }}>
+          <label className="field">
+            <span>Nome invitato</span>
+            <input value={newGuestName} onChange={(event) => setNewGuestName(event.target.value)} placeholder="Es. Mario Rossi" />
+          </label>
+          <label className="field">
+            <span>Telefono WhatsApp</span>
+            <input type="tel" value={newGuestPhone} onChange={(event) => setNewGuestPhone(event.target.value)} placeholder="Es. 3331234567" />
+          </label>
+          <button className="button" type="button" disabled={guestListBusyId === "new"} onClick={() => void handleAddInvitationGuest()}>
+            {guestListBusyId === "new" ? "Aggiunta…" : "+ Aggiungi"}
+          </button>
+        </div>
+      )}
+
+      {guestListMessage ? <p className="panel-note" role="status">{guestListMessage}</p> : null}
+
+      <div className="metrics" style={{ marginTop: 18 }}>
+        <div className="metric"><span className="muted">Partecipa</span><strong>{confirmedInvitationGuests.length}</strong></div>
+        <div className="metric"><span className="muted">Non partecipa</span><strong>{declinedInvitationGuests.length}</strong></div>
+        <div className="metric"><span className="muted">Nessuna risposta</span><strong>{pendingInvitationGuests.length}</strong></div>
+      </div>
+
+      {visibleInvitationGuests.length === 0 ? (
+        <div className="empty-state" style={{ marginTop: 16 }}>
+          <h3>Nessun invitato inserito</h3>
+          <p className="muted">Inserisci nome e telefono delle persone a cui mandi l'invito: così saprai esattamente chi non ha ancora risposto.</p>
+        </div>
+      ) : (
+        <div className="guest-table-scroll" style={{ marginTop: 16 }}>
+          <table className="table guest-table">
+            <thead><tr><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Promemoria</th><th>Azioni</th></tr></thead>
+            <tbody>
+              {visibleInvitationGuests.map((guest) => (
+                <tr key={guest.id}>
+                  <td><strong>{guest.guestName}</strong></td>
+                  <td>{guest.invitationTitle}</td>
+                  <td><span className={`status ${guest.status === "confirmed" ? "confirmed" : "pending"}`}>{guest.status === "confirmed" ? "Partecipa" : guest.status === "declined" ? "Non partecipa" : "Nessuna risposta"}</span></td>
+                  <td>{guest.contactPhone || "-"}</td>
+                  <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
+                  <td>
+                    <div className="draft-actions">
+                      {guest.status === "pending" ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Ricorda su WhatsApp</button> : null}
+                      <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </section>
 
     <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
