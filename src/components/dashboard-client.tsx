@@ -626,10 +626,10 @@ export function DashboardClient() {
 
   async function handleShareInvitation(draft: InvitationDraft) {
     const url = `${window.location.origin}/i/${draft.slug}`;
+    const message = `${draft.subtitle || "Sei invitato/a!"}\n${url}`;
     const shareData = {
       title: draft.title || "Il mio invito",
-      text: draft.subtitle || "Guarda il mio invito e conferma la partecipazione.",
-      url
+      text: message
     };
 
     try {
@@ -639,15 +639,15 @@ export function DashboardClient() {
         return;
       }
 
-      await navigator.clipboard.writeText(url);
-      setDraftActionMessage("Link dell'invito copiato. Ora puoi incollarlo dove vuoi.");
+      await navigator.clipboard.writeText(message);
+      setDraftActionMessage("Messaggio con link dell'invito copiato. Ora puoi incollarlo dove vuoi.");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       try {
-        await navigator.clipboard.writeText(url);
-        setDraftActionMessage("Link dell'invito copiato.");
+        await navigator.clipboard.writeText(message);
+        setDraftActionMessage("Messaggio con link dell'invito copiato.");
       } catch {
-        setDraftActionMessage(`Copia questo link: ${url}`);
+        setDraftActionMessage(`Copia questo messaggio: ${message}`);
       }
     }
   }
