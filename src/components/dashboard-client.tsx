@@ -499,6 +499,38 @@ export function DashboardClient() {
     setUpdatingGuestMediaId("");
   }
 
+  async function handleDownloadAllGuestPhotos() {
+    const photos = visibleGuestMedia.filter((item) => item.mediaType === "photo");
+    if (photos.length === 0) {
+      setGuestMediaMessage("Non ci sono foto da scaricare.");
+      return;
+    }
+
+    setGuestMediaMessage(`Preparazione di ${photos.length} foto...`);
+    for (const item of photos) {
+      try {
+        const response = await fetch(item.url);
+        if (!response.ok) continue;
+        const blob = await response.blob();
+        const extension = item.storagePath.split(".").pop() || "jpg";
+        const safeGuest = item.guestName.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "ricordo";
+        const fileName = `${safeGuest}-${item.id.slice(0, 8)}.${extension}`;
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+        await new Promise((resolve) => window.setTimeout(resolve, 180));
+      } catch {
+        // Continua con le altre foto anche se una singola risorsa non è disponibile.
+      }
+    }
+    setGuestMediaMessage(`Download di ${photos.length} foto avviato.`);
+  }
+
   async function handleGuestMediaDownload(item: GuestMediaItem) {
     setUpdatingGuestMediaId(item.id);
     setGuestMediaMessage("");
@@ -1012,9 +1044,19 @@ export function DashboardClient() {
         <div>
           <p className="eyebrow">Il mio album</p>
           <h3>Foto e video ricevuti — {selectedInvitationTitle}</h3>
-          <p className="muted">Controlla i ricordi inviati dagli ospiti e scegli quali pubblicare sull’invito.</p>
+          <p className="muted">Foto e video degli invitati vengono pubblicati automaticamente. Da qui puoi scaricarli o eliminare quelli che non vuoi mantenere.</p>
         </div>
-        <strong>{pendingGuestMedia.length} da approvare</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <strong>{visibleGuestMedia.length} ricordi</strong>
+          <button
+            className="button secondary media-download-all-button"
+            type="button"
+            disabled={visibleGuestMedia.every((item) => item.mediaType !== "photo")}
+            onClick={() => void handleDownloadAllGuestPhotos()}
+          >
+            Scarica tutte le foto
+          </button>
+        </div>
       </div>
       {guestMediaMessage ? <p className="panel-note" role="status">{guestMediaMessage}</p> : null}
 
