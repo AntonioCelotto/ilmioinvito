@@ -624,6 +624,34 @@ export function DashboardClient() {
       </div>
     );
 
+  async function handleShareInvitation(draft: InvitationDraft) {
+    const url = `${window.location.origin}/i/${draft.slug}`;
+    const shareData = {
+      title: draft.title || "Il mio invito",
+      text: draft.subtitle || "Guarda il mio invito e conferma la partecipazione.",
+      url
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setDraftActionMessage("Invito condiviso.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(url);
+      setDraftActionMessage("Link dell'invito copiato. Ora puoi incollarlo dove vuoi.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        setDraftActionMessage("Link dell'invito copiato.");
+      } catch {
+        setDraftActionMessage(`Copia questo link: ${url}`);
+      }
+    }
+  }
+
   const InvitationRows = ({ items, published = false }: { items: InvitationDraft[]; published?: boolean }) => (
     <div className="draft-list">
       {items.map((draft) => (
@@ -636,6 +664,11 @@ export function DashboardClient() {
           <div className="draft-actions">
             <span className={`status ${published ? "confirmed" : "pending"}`}>{published ? "Pubblicato" : "Bozza"}</span>
             <a className="button draft-preview-button" href={`/i/${draft.slug}`}>{published ? "Apri invito" : "Anteprima"}</a>
+            {published ? (
+              <button className="button draft-share-button" type="button" onClick={() => void handleShareInvitation(draft)}>
+                <span aria-hidden="true">↗</span> Condividi
+              </button>
+            ) : null}
             <button className="button draft-edit-button" type="button" onClick={() => handleEdit(draft)}>Modifica</button>
             {!published ? <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>Pubblica e paga</button> : null}
             {!published && isAdmin ? <button className="button secondary" disabled={adminPublishingId === draft.id} type="button" onClick={() => handleAdminPublish(draft)}>{adminPublishingId === draft.id ? "Pubblicazione…" : "Pubblica come amministratore"}</button> : null}
