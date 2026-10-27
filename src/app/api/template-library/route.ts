@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerAuthClient, createSupabaseAdminClient } from "@/lib/supabase/server";
+import { invitationTemplates } from "@/lib/template-catalog";
 
 const MANAGER_IDS = new Set([
   "c47912c3-0662-4c91-bbfd-16efb7a80780",
@@ -13,8 +14,24 @@ const videoBucket = "invitation-template-videos";
 const publishedPrefix = "admin-gallery";
 const hiddenPrefix = "admin-gallery-hidden";
 const posterPrefix = "admin-gallery-posters";
+const manifestPath = "admin-config/template-overrides.json";
+
+const defaultHiddenLegacyIds = new Set([
+  "compleanno-diciotto-celeste",
+  "compleanno-diciotto-rame",
+  "compleanno-diciotto-rosa",
+  "compleanno-casino-diciotto",
+  "compleanno-diciotto-ghiaccio"
+]);
 
 type MediaType = "image" | "video";
+type TemplateOverride = {
+  hidden?: boolean;
+  category?: string;
+  order?: number;
+  name?: string;
+};
+type OverrideManifest = Record<string, TemplateOverride>;
 
 function encodeMeta(name: string, category: string) {
   return Buffer.from(JSON.stringify({ name, category }), "utf8").toString("base64url");
@@ -41,6 +58,29 @@ async function managerFromRequest(request: Request) {
   return data.user && MANAGER_IDS.has(data.user.id) ? data.user : null;
 }
 
+async function readManifest(): Promise<OverrideManifest> {
+  const admin = createSupabaseAdminClient();
+  if (!admin) return {};
+  const { data, error } = await admin.storage.from(imageBucket).download(manifestPath);
+  if (error || !data) return {};
+  try {
+    return JSON.parse(await data.text()) as OverrideManifest;
+  } catch {
+    return {};
+  }
+}
+
+async function writeManifest(manifest: OverrideManifest) {
+  const admin = createSupabaseAdminClient();
+  if (!admin) return { error: new Error("Servizio non configurato.") };
+  const body = new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json" });
+  return admin.storage.from(imageBucket).upload(manifestPath, body, {
+    contentType: "application/json",
+    cacheControl: "60",
+    upsert: true
+  });
+}
+
 async function listPrefix(bucket: string, prefix: string, mediaType: MediaType) {
   const admin = createSupabaseAdminClient();
   if (!admin) return [];
@@ -55,35 +95,78 @@ async function listPrefix(bucket: string, prefix: string, mediaType: MediaType) 
     const posterUrl = mediaType === "video" ? admin.storage.from(imageBucket).getPublicUrl(posterPath).data.publicUrl : "";
     return [{
       id: meta.id,
+      source: "custom" as const,
       name: meta.name,
       category: meta.category,
       mediaType,
       imageUrl: mediaType === "image" ? url : posterUrl,
       videoUrl: mediaType === "video" ? url : "",
       posterUrl,
-      published: prefix === publishedPrefix,
+      basePublished: prefix === publishedPrefix,
       storagePath
     }];
   });
 }
 
-async function allItems(includeHidden: boolean) {
-  const published = await Promise.all([
+async function allCustomItems() {
+  const groups = await Promise.all([
     listPrefix(imageBucket, publishedPrefix, "image"),
-    listPrefix(videoBucket, publishedPrefix, "video")
-  ]);
-  if (!includeHidden) return published.flat();
-  const hidden = await Promise.all([
+    listPrefix(videoBucket, publishedPrefix, "video"),
     listPrefix(imageBucket, hiddenPrefix, "image"),
     listPrefix(videoBucket, hiddenPrefix, "video")
   ]);
-  return [...published.flat(), ...hidden.flat()];
+  return groups.flat();
+}
+
+function applyCustomOverrides(items: Awaited<ReturnType<typeof allCustomItems>>, manifest: OverrideManifest, includeHidden: boolean) {
+  return items.flatMap((item, index) => {
+    const key = `admin-${item.id}`;
+    const override = manifest[key] ?? {};
+    const published = !(override.hidden ?? !item.basePublished);
+    if (!includeHidden && !published) return [];
+    return [{
+      ...item,
+      name: override.name || item.name,
+      category: override.category || item.category,
+      order: Number.isFinite(override.order) ? Number(override.order) : 10000 + index,
+      published
+    }];
+  });
+}
+
+function legacyItems(manifest: OverrideManifest, includeHidden: boolean) {
+  return invitationTemplates.flatMap((template, index) => {
+    const override = manifest[template.id] ?? {};
+    const hidden = override.hidden ?? defaultHiddenLegacyIds.has(template.id);
+    if (!includeHidden && hidden) return [];
+    return [{
+      id: template.id,
+      source: "legacy" as const,
+      name: override.name || template.name,
+      category: override.category || template.category,
+      mediaType: template.theme.backgroundVideo ? "video" as const : "image" as const,
+      imageUrl: template.theme.backgroundImage || "",
+      videoUrl: template.theme.backgroundVideo || "",
+      posterUrl: template.theme.backgroundImage || "",
+      published: !hidden,
+      order: Number.isFinite(override.order) ? Number(override.order) : index
+    }];
+  });
 }
 
 export async function GET(request: Request) {
   const manager = await managerFromRequest(request);
-  const items = await allItems(Boolean(manager));
-  return NextResponse.json({ items }, { headers: { "Cache-Control": "no-store" } });
+  const manifest = await readManifest();
+  const custom = applyCustomOverrides(await allCustomItems(), manifest, Boolean(manager));
+
+  if (!manager) {
+    return NextResponse.json({ items: custom, overrides: manifest }, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  return NextResponse.json({
+    items: [...legacyItems(manifest, true), ...custom],
+    overrides: manifest
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
@@ -144,18 +227,32 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   const manager = await managerFromRequest(request);
   if (!manager) return NextResponse.json({ error: "Accesso amministratore richiesto." }, { status: 403 });
-  const admin = createSupabaseAdminClient();
-  if (!admin) return NextResponse.json({ error: "Servizio non configurato." }, { status: 503 });
-  const body = await request.json() as { id?: string; mediaType?: MediaType; published?: boolean };
-  if (!body.id || (body.mediaType !== "image" && body.mediaType !== "video")) return NextResponse.json({ error: "Template non valido." }, { status: 400 });
 
-  const bucket = body.mediaType === "video" ? videoBucket : imageBucket;
-  const fromPrefix = body.published ? hiddenPrefix : publishedPrefix;
-  const toPrefix = body.published ? publishedPrefix : hiddenPrefix;
-  const { data } = await admin.storage.from(bucket).list(fromPrefix, { limit: 200 });
-  const object = (data ?? []).find((item) => item.name.startsWith(`${body.id}__`));
-  if (!object) return NextResponse.json({ error: "Template non trovato." }, { status: 404 });
-  const { error } = await admin.storage.from(bucket).move(`${fromPrefix}/${object.name}`, `${toPrefix}/${object.name}`);
+  const body = await request.json().catch(() => null) as {
+    id?: string;
+    source?: "legacy" | "custom";
+    published?: boolean;
+    category?: string;
+    order?: number;
+    name?: string;
+  } | null;
+
+  if (!body?.id || (body.source !== "legacy" && body.source !== "custom")) {
+    return NextResponse.json({ error: "Template non valido." }, { status: 400 });
+  }
+
+  const key = body.source === "custom" ? `admin-${body.id}` : body.id;
+  const manifest = await readManifest();
+  const current = manifest[key] ?? {};
+  const next: TemplateOverride = { ...current };
+
+  if (typeof body.published === "boolean") next.hidden = !body.published;
+  if (typeof body.category === "string" && body.category.trim()) next.category = body.category.trim().slice(0, 40);
+  if (typeof body.name === "string" && body.name.trim()) next.name = body.name.trim().slice(0, 80);
+  if (typeof body.order === "number" && Number.isFinite(body.order)) next.order = Math.max(0, Math.round(body.order));
+
+  manifest[key] = next;
+  const { error } = await writeManifest(manifest);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ updated: true });
 }
@@ -165,8 +262,11 @@ export async function DELETE(request: Request) {
   if (!manager) return NextResponse.json({ error: "Accesso amministratore richiesto." }, { status: 403 });
   const admin = createSupabaseAdminClient();
   if (!admin) return NextResponse.json({ error: "Servizio non configurato." }, { status: 503 });
-  const body = await request.json() as { id?: string; mediaType?: MediaType };
-  if (!body.id || (body.mediaType !== "image" && body.mediaType !== "video")) return NextResponse.json({ error: "Template non valido." }, { status: 400 });
+
+  const body = await request.json() as { id?: string; source?: "legacy" | "custom"; mediaType?: MediaType };
+  if (!body.id || body.source !== "custom" || (body.mediaType !== "image" && body.mediaType !== "video")) {
+    return NextResponse.json({ error: "I template storici vengono archiviati, non cancellati fisicamente in questa fase." }, { status: 400 });
+  }
 
   const bucket = body.mediaType === "video" ? videoBucket : imageBucket;
   for (const prefix of [publishedPrefix, hiddenPrefix]) {
@@ -175,5 +275,10 @@ export async function DELETE(request: Request) {
     if (object) await admin.storage.from(bucket).remove([`${prefix}/${object.name}`]);
   }
   if (body.mediaType === "video") await admin.storage.from(imageBucket).remove([`${posterPrefix}/${body.id}.jpg`]);
+
+  const manifest = await readManifest();
+  delete manifest[`admin-${body.id}`];
+  await writeManifest(manifest);
+
   return NextResponse.json({ deleted: true });
 }
