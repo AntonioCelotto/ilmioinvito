@@ -51,6 +51,26 @@ export async function savePublicRsvp(
   };
 }
 
+export async function updateDashboardRsvpStatus(id: string, status: RsvpStatus): Promise<{ ok: boolean; message: string }> {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { ok: false, message: "Accedi per modificare gli invitati." };
+
+  const { error } = await supabase
+    .from("rsvps")
+    .update({
+      status,
+      party_size: status === "confirmed" ? 1 : 0
+    })
+    .eq("id", id);
+
+  return error
+    ? { ok: false, message: error.message }
+    : { ok: true, message: status === "confirmed" ? "Stato aggiornato: partecipa." : "Stato aggiornato: non partecipa." };
+}
+
 export async function loadDashboardRsvps(): Promise<{
   rsvps: DashboardRsvp[];
   message: string;
