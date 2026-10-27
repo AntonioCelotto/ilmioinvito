@@ -50,6 +50,7 @@ export function DashboardClient() {
   const [newGuestInfo, setNewGuestInfo] = useState("");
   const [guestListBusyId, setGuestListBusyId] = useState("");
   const [importingGuestList, setImportingGuestList] = useState(false);
+  const [importInvitationId, setImportInvitationId] = useState("");
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
   const [deletingDraftId, setDeletingDraftId] = useState("");
   const [draftActionMessage, setDraftActionMessage] = useState("");
@@ -181,6 +182,11 @@ export function DashboardClient() {
     ? "Tutti gli inviti"
     : invitationOptions.find((invitation) => invitation.id === selectedInvitationId)?.title ?? "Invito";
 
+  const effectiveImportInvitationId =
+    selectedInvitationId !== "all"
+      ? selectedInvitationId
+      : importInvitationId || publishedInvitations[0]?.id || invitationOptions[0]?.id || "";
+
   function invitationStats(invitationId: string) {
     const rows = rsvps.filter((rsvp) => rsvp.invitationId === invitationId);
     return {
@@ -229,8 +235,8 @@ export function DashboardClient() {
   }
 
   async function handleAddInvitationGuest() {
-    if (selectedInvitationId === "all") {
-      setGuestListMessage("Seleziona prima un invito.");
+    if (!effectiveImportInvitationId) {
+      setGuestListMessage("Non ci sono inviti disponibili per l'importazione.");
       return;
     }
     setGuestListBusyId("new");
@@ -311,7 +317,7 @@ export function DashboardClient() {
     try {
       const text = await file.text();
       const rows = parseGuestCsv(text);
-      const result = await importInvitationGuests(selectedInvitationId, rows);
+      const result = await importInvitationGuests(effectiveImportInvitationId, rows);
       setGuestListMessage(result.message);
       if (result.ok) {
         const refreshed = await loadInvitationGuests();
@@ -642,15 +648,15 @@ export function DashboardClient() {
         <label
           className="button secondary"
           style={{
-            cursor: selectedInvitationId === "all" || importingGuestList ? "not-allowed" : "pointer",
-            opacity: selectedInvitationId === "all" ? 0.55 : 1
+            cursor: !effectiveImportInvitationId || importingGuestList ? "not-allowed" : "pointer",
+            opacity: !effectiveImportInvitationId ? 0.55 : 1
           }}
         >
           {importingGuestList ? "Importazione…" : "Importa contatti"}
           <input
             type="file"
             accept=".csv,text/csv,text/plain"
-            disabled={selectedInvitationId === "all" || importingGuestList}
+            disabled={!effectiveImportInvitationId || importingGuestList}
             style={{ display: "none" }}
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -813,18 +819,32 @@ export function DashboardClient() {
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <strong>{confirmedRsvps.length}</strong>
+          {selectedInvitationId === "all" ? (
+            <label className="field compact-field" style={{ margin: 0 }}>
+              <span>Importa in:</span>
+              <select
+                value={effectiveImportInvitationId}
+                onChange={(event) => setImportInvitationId(event.target.value)}
+                style={{ minWidth: 150 }}
+              >
+                {invitationOptions.map((invitation) => (
+                  <option value={invitation.id} key={invitation.id}>{invitation.title}</option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label
             className="button secondary"
             style={{
-              cursor: selectedInvitationId === "all" || importingGuestList ? "not-allowed" : "pointer",
-              opacity: selectedInvitationId === "all" ? 0.55 : 1
+              cursor: !effectiveImportInvitationId || importingGuestList ? "not-allowed" : "pointer",
+              opacity: !effectiveImportInvitationId ? 0.55 : 1
             }}
           >
             {importingGuestList ? "Importazione…" : "Importa contatti"}
             <input
               type="file"
               accept=".csv,text/csv,text/plain"
-              disabled={selectedInvitationId === "all" || importingGuestList}
+              disabled={!effectiveImportInvitationId || importingGuestList}
               style={{ display: "none" }}
               onChange={(event) => {
                 const file = event.target.files?.[0];
