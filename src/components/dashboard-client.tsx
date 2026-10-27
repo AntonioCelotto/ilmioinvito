@@ -19,8 +19,10 @@ import {
 import { DashboardRsvp, loadDashboardRsvps, updateDashboardRsvpStatus } from "@/lib/supabase/rsvps";
 import {
   InvitationGuest,
+  InvitationGuestImportRow,
   addInvitationGuest,
   deleteInvitationGuest,
+  importInvitationGuests,
   loadInvitationGuests,
   markGuestReminded
 } from "@/lib/supabase/invitation-guests";
@@ -43,7 +45,10 @@ export function DashboardClient() {
   const [guestListMessage, setGuestListMessage] = useState("");
   const [newGuestName, setNewGuestName] = useState("");
   const [newGuestPhone, setNewGuestPhone] = useState("");
+  const [newGuestEmail, setNewGuestEmail] = useState("");
+  const [newGuestInfo, setNewGuestInfo] = useState("");
   const [guestListBusyId, setGuestListBusyId] = useState("");
+  const [importingGuestList, setImportingGuestList] = useState(false);
   const [selectedInvitationId, setSelectedInvitationId] = useState("all");
   const [deletingDraftId, setDeletingDraftId] = useState("");
   const [draftActionMessage, setDraftActionMessage] = useState("");
@@ -211,15 +216,112 @@ export function DashboardClient() {
       return;
     }
     setGuestListBusyId("new");
-    const result = await addInvitationGuest(selectedInvitationId, newGuestName, newGuestPhone);
+    const result = await addInvitationGuest(selectedInvitationId, newGuestName, newGuestPhone, newGuestEmail, newGuestInfo);
     setGuestListMessage(result.message);
     if (result.ok) {
       setNewGuestName("");
       setNewGuestPhone("");
+      setNewGuestEmail("");
+      setNewGuestInfo("");
       const refreshed = await loadInvitationGuests();
       setInvitationGuests(refreshed.guests);
     }
     setGuestListBusyId("");
+  }
+
+  function parseGuestCsv(text: string): InvitationGuestImportRow[] {
+    const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((line) => line.trim().length > 0);
+    if (lines.length === 0) return [];
+
+    const separator = lines[0].includes(";") ? ";" : lines[0].includes("\t") ? "\t" : ",";
+    const parseLine = (line: string) => {
+      const cells: string[] = [];
+      let current = "";
+      let quoted = false;
+      for (let index = 0; index < line.length; index += 1) {
+        const char = line[index];
+        if (char === '"') {
+          if (quoted && line[index + 1] === '"') {
+            current += '"';
+            index += 1;
+          } else {
+            quoted = !quoted;
+          }
+        } else if (char === separator && !quoted) {
+          cells.push(current.trim());
+          current = "";
+        } else {
+          current += char;
+        }
+      }
+      cells.push(current.trim());
+      return cells;
+    };
+
+    const headers = parseLine(lines[0]).map((value) => value.toLowerCase().trim());
+    const findHeader = (...names: string[]) => headers.findIndex((header) => names.some((name) => header === name || header.includes(name)));
+    const nameIndex = findHeader("nome", "name", "invitato");
+    const surnameIndex = findHeader("cognome", "surname");
+    const phoneIndex = findHeader("cellulare", "telefono", "phone", "mobile");
+    const emailIndex = findHeader("email", "e-mail", "mail");
+    const infoIndex = findHeader("allergie", "informazioni", "note", "info");
+
+    const hasHeader = nameIndex >= 0 || phoneIndex >= 0 || emailIndex >= 0 || infoIndex >= 0;
+    const dataLines = hasHeader ? lines.slice(1) : lines;
+
+    return dataLines.map((line) => {
+      const cells = parseLine(line);
+      const fallbackName = cells[0] ?? "";
+      const firstName = nameIndex >= 0 ? cells[nameIndex] ?? "" : fallbackName;
+      const surname = surnameIndex >= 0 ? cells[surnameIndex] ?? "" : "";
+      return {
+        guestName: `${firstName} ${surname}`.trim(),
+        contactPhone: phoneIndex >= 0 ? cells[phoneIndex] ?? "" : cells[1] ?? "",
+        email: emailIndex >= 0 ? cells[emailIndex] ?? "" : cells[2] ?? "",
+        additionalInfo: infoIndex >= 0 ? cells[infoIndex] ?? "" : cells[3] ?? ""
+      };
+    }).filter((row) => row.guestName.length > 0);
+  }
+
+  async function handleGuestListImport(file: File) {
+    if (selectedInvitationId === "all") {
+      setGuestListMessage("Seleziona prima un invito.");
+      return;
+    }
+    setImportingGuestList(true);
+    setGuestListMessage("");
+    try {
+      const text = await file.text();
+      const rows = parseGuestCsv(text);
+      const result = await importInvitationGuests(selectedInvitationId, rows);
+      setGuestListMessage(result.message);
+      if (result.ok) {
+        const refreshed = await loadInvitationGuests();
+        setInvitationGuests(refreshed.guests);
+      }
+    } catch {
+      setGuestListMessage("Non è stato possibile leggere il file. Usa un CSV esportato da Excel.");
+    }
+    setImportingGuestList(false);
+  }
+
+  function guestInvitationLink(guest: InvitationGuest) {
+    return `${window.location.origin}/i/${guest.invitationSlug}`;
+  }
+
+  function guestEmailLink(guest: InvitationGuest) {
+    if (!guest.email) return "";
+    const subject = `Invito: ${guest.invitationTitle}`;
+    const body = `Ciao ${guest.guestName}, sei invitato/a. Puoi vedere l'invito e confermare la partecipazione qui: ${guestInvitationLink(guest)}`;
+    return `mailto:${guest.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function guestWhatsappInviteLink(guest: InvitationGuest) {
+    const digits = guest.contactPhone.replace(/\D/g, "");
+    if (!digits) return "";
+    const phone = digits.startsWith("39") ? digits : digits.length === 10 ? `39${digits}` : digits;
+    const message = `Ciao ${guest.guestName}, sei invitato/a a “${guest.invitationTitle}”. Puoi vedere l'invito e confermare la partecipazione qui: ${guestInvitationLink(guest)}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
   }
 
   async function handleDeleteInvitationGuest(guest: InvitationGuest) {
@@ -517,19 +619,48 @@ export function DashboardClient() {
       {selectedInvitationId === "all" ? (
         <p className="panel-note">Seleziona un invito qui sopra per aggiungere persone e inviare promemoria.</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,220px) auto", gap: 10, alignItems: "end", marginTop: 16 }}>
-          <label className="field">
-            <span>Nome invitato</span>
-            <input value={newGuestName} onChange={(event) => setNewGuestName(event.target.value)} placeholder="Es. Mario Rossi" />
-          </label>
-          <label className="field">
-            <span>Telefono WhatsApp</span>
-            <input type="tel" value={newGuestPhone} onChange={(event) => setNewGuestPhone(event.target.value)} placeholder="Es. 3331234567" />
-          </label>
-          <button className="button" type="button" disabled={guestListBusyId === "new"} onClick={() => void handleAddInvitationGuest()}>
-            {guestListBusyId === "new" ? "Aggiunta…" : "+ Aggiungi"}
-          </button>
-        </div>
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,minmax(0,1fr))", gap: 10, marginTop: 16 }}>
+            <label className="field">
+              <span>Nome invitato</span>
+              <input value={newGuestName} onChange={(event) => setNewGuestName(event.target.value)} placeholder="Es. Mario Rossi" />
+            </label>
+            <label className="field">
+              <span>Telefono WhatsApp</span>
+              <input type="tel" value={newGuestPhone} onChange={(event) => setNewGuestPhone(event.target.value)} placeholder="Es. 3331234567" />
+            </label>
+            <label className="field">
+              <span>Email</span>
+              <input type="email" value={newGuestEmail} onChange={(event) => setNewGuestEmail(event.target.value)} placeholder="nome@azienda.it" />
+            </label>
+            <label className="field">
+              <span>Allergie e informazioni</span>
+              <input value={newGuestInfo} onChange={(event) => setNewGuestInfo(event.target.value)} placeholder="Es. glutine, lattosio, note..." />
+            </label>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 12 }}>
+            <button className="button" type="button" disabled={guestListBusyId === "new"} onClick={() => void handleAddInvitationGuest()}>
+              {guestListBusyId === "new" ? "Aggiunta…" : "+ Aggiungi invitato"}
+            </button>
+            <label className="button secondary" style={{ cursor: importingGuestList ? "wait" : "pointer" }}>
+              {importingGuestList ? "Importazione…" : "Importa lista CSV"}
+              <input
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                disabled={importingGuestList}
+                style={{ display: "none" }}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleGuestListImport(file);
+                  event.currentTarget.value = "";
+                }}
+              />
+            </label>
+          </div>
+          <p className="muted" style={{ marginTop: 8 }}>
+            CSV da Excel: colonne consigliate Nome, Cognome, Cellulare, Email, Allergie/Informazioni. Sono supportati file separati da virgola, punto e virgola o tab.
+          </p>
+        </>
       )}
 
       {guestListMessage ? <p className="panel-note" role="status">{guestListMessage}</p> : null}
@@ -548,7 +679,7 @@ export function DashboardClient() {
       ) : (
         <div className="guest-table-scroll" style={{ marginTop: 16 }}>
           <table className="table guest-table">
-            <thead><tr><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Promemoria</th><th>Azioni</th></tr></thead>
+            <thead><tr><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Email</th><th>Allergie e informazioni</th><th>Promemoria</th><th>Azioni</th></tr></thead>
             <tbody>
               {visibleInvitationGuests.map((guest) => (
                 <tr key={guest.id}>
@@ -556,10 +687,14 @@ export function DashboardClient() {
                   <td>{guest.invitationTitle}</td>
                   <td><span className={`status ${guest.status === "confirmed" ? "confirmed" : "pending"}`}>{guest.status === "confirmed" ? "Partecipa" : guest.status === "declined" ? "Non partecipa" : "Nessuna risposta"}</span></td>
                   <td>{guest.contactPhone || "-"}</td>
+                  <td>{guest.email || "-"}</td>
+                  <td>{guest.additionalInfo || "Nessuna"}</td>
                   <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
                   <td>
                     <div className="draft-actions">
-                      {guest.status === "pending" ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Ricorda su WhatsApp</button> : null}
+                      {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia WhatsApp</a> : null}
+                      {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia email</a> : null}
+                      {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Promemoria</button> : null}
                       <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
                     </div>
                   </td>
