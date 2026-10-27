@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { DragEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { createFinalVideoFrameFile } from "@/lib/video-frame";
 
@@ -38,6 +38,9 @@ export function TemplateAdminClient() {
   const [message,setMessage]=useState("");
   const [busy,setBusy]=useState(false);
   const [allowed,setAllowed]=useState<boolean|null>(null);
+  const [typeFilter,setTypeFilter]=useState<"all"|"image"|"video">("all");
+  const [categoryFilter,setCategoryFilter]=useState("all");
+  const [draggedKey,setDraggedKey]=useState("");
 
   async function refresh() {
     const token=await authToken();
@@ -50,6 +53,12 @@ export function TemplateAdminClient() {
   }
 
   useEffect(()=>{void refresh();},[]);
+
+  const visibleItems=useMemo(()=>items.filter((item)=>{
+    if(typeFilter!=="all"&&item.mediaType!==typeFilter)return false;
+    if(categoryFilter!=="all"&&item.category!==categoryFilter)return false;
+    return true;
+  }),[items,typeFilter,categoryFilter]);
 
   async function submit(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,9 +111,7 @@ export function TemplateAdminClient() {
           setBusy(false);
           return;
         }
-      }catch{
-        // Il video resta utilizzabile anche se il browser non riesce a generare il poster.
-      }
+      }catch{}
     }
 
     const token=await authToken();
@@ -147,6 +154,38 @@ export function TemplateAdminClient() {
     setBusy(false);
   }
 
+  async function saveOrder(nextItems:Item[]) {
+    const token=await authToken();
+    setBusy(true);
+    setItems(nextItems);
+    const response=await fetch("/api/template-library",{
+      method:"PATCH",
+      headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({
+        orders:nextItems.map((item,index)=>({id:item.id,source:item.source,order:index}))
+      })
+    });
+    const result=await response.json().catch(()=>({})) as {error?:string};
+    setMessage(response.ok?"Ordine salvato.":result.error||"Salvataggio ordine non riuscito.");
+    if(!response.ok)await refresh();
+    setBusy(false);
+  }
+
+  function itemKey(item:Item){return `${item.source}-${item.id}`;}
+
+  function dropOn(target:Item,event:DragEvent<HTMLElement>) {
+    event.preventDefault();
+    if(!draggedKey)return;
+    const sourceIndex=items.findIndex((item)=>itemKey(item)===draggedKey);
+    const targetIndex=items.findIndex((item)=>itemKey(item)===itemKey(target));
+    if(sourceIndex<0||targetIndex<0||sourceIndex===targetIndex){setDraggedKey("");return;}
+    const next=[...items];
+    const [moved]=next.splice(sourceIndex,1);
+    next.splice(targetIndex,0,moved);
+    setDraggedKey("");
+    void saveOrder(next);
+  }
+
   async function remove(item:Item) {
     if(item.source==="legacy"){
       await updateItem(item,{published:false});
@@ -184,43 +223,76 @@ export function TemplateAdminClient() {
     </section>
 
     <section className="panel" style={{marginTop:18}}>
-      <div className="panel-header"><div><p className="eyebrow">Libreria completa</p><h2>Template gestibili</h2></div><strong>{items.length}</strong></div>
-      {items.length===0?<div className="empty-state"><h3>Nessun template</h3><p className="muted">I template compariranno qui.</p></div>:
-      <div className="template-grid">
-        {items.map(item=><article className="template-card" key={`${item.source}-${item.id}`}>
-          <div className="template-card-preview" style={{backgroundImage:item.imageUrl?`url("${item.imageUrl}")`:undefined,backgroundPosition:"center",backgroundSize:"cover"}}>
-            {item.mediaType==="video"?<video src={item.videoUrl} poster={item.posterUrl||undefined} muted loop playsInline controls style={{width:"100%",height:"100%",objectFit:"cover"}}/>:null}
+      <div className="panel-header">
+        <div><p className="eyebrow">Libreria completa</p><h2>Template gestibili</h2></div>
+        <strong>{visibleItems.length} / {items.length}</strong>
+      </div>
+
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"end",marginBottom:16}}>
+        <label style={{minWidth:160}}>Tipo
+          <select value={typeFilter} onChange={(e)=>setTypeFilter(e.target.value as "all"|"image"|"video")}>
+            <option value="all">Tutti</option>
+            <option value="image">Immagini</option>
+            <option value="video">Video</option>
+          </select>
+        </label>
+        <label style={{minWidth:200}}>Categoria
+          <select value={categoryFilter} onChange={(e)=>setCategoryFilter(e.target.value)}>
+            <option value="all">Tutte</option>
+            {categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+        <span className="muted" style={{fontSize:13}}>Trascina una mini-card per cambiarne la posizione.</span>
+      </div>
+
+      {visibleItems.length===0?<div className="empty-state"><h3>Nessun template</h3><p className="muted">Prova a cambiare i filtri.</p></div>:
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))",gap:12}}>
+        {visibleItems.map(item=><article
+          key={itemKey(item)}
+          draggable={!busy}
+          onDragStart={()=>setDraggedKey(itemKey(item))}
+          onDragEnd={()=>setDraggedKey("")}
+          onDragOver={(event)=>event.preventDefault()}
+          onDrop={(event)=>dropOn(item,event)}
+          className="template-card"
+          style={{opacity:draggedKey===itemKey(item)?.72:1,cursor:busy?"default":"grab",overflow:"hidden"}}
+        >
+          <div
+            className="template-card-preview"
+            style={{
+              height:150,
+              backgroundImage:item.imageUrl?`url("${item.imageUrl}")`:undefined,
+              backgroundPosition:"center",
+              backgroundSize:"cover",
+              position:"relative"
+            }}
+          >
+            {item.mediaType==="video"?<video src={item.videoUrl} poster={item.posterUrl||undefined} muted loop playsInline preload="metadata" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:null}
+            <span style={{position:"absolute",top:6,left:6,background:"rgba(0,0,0,.68)",color:"#fff",borderRadius:999,padding:"3px 7px",fontSize:11,fontWeight:800}}>#{item.order}</span>
+            <span style={{position:"absolute",top:6,right:6,background:"rgba(255,255,255,.9)",borderRadius:999,padding:"3px 7px",fontSize:10,fontWeight:800}}>{item.mediaType==="video"?"VIDEO":"IMG"}</span>
           </div>
-          <div className="template-card-body">
-            <div>
-              <small style={{fontWeight:800,textTransform:"uppercase",letterSpacing:".06em"}}>{item.source==="legacy"?"Storico":"Caricato da voi"}</small>
-              <input
-                defaultValue={item.name}
-                aria-label={`Nome ${item.name}`}
-                onBlur={(event)=>{const value=event.currentTarget.value.trim();if(value&&value!==item.name)void updateItem(item,{name:value});}}
-              />
-              <select
-                value={item.category}
-                onChange={(event)=>void updateItem(item,{category:event.target.value})}
-                aria-label={`Categoria ${item.name}`}
-              >
-                {categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}
-              </select>
-              <label style={{display:"flex",gap:8,alignItems:"center",marginTop:8}}>
-                <span>Ordine</span>
-                <input
-                  type="number"
-                  min="0"
-                  defaultValue={item.order}
-                  style={{width:90}}
-                  onBlur={(event)=>{const value=Number(event.currentTarget.value);if(Number.isFinite(value)&&value!==item.order)void updateItem(item,{order:value});}}
-                />
-              </label>
-              <span className={`status ${item.published?"confirmed":"pending"}`} style={{marginTop:8}}>{item.published?"Pubblicato":"Nascosto"}</span>
+          <div style={{padding:10,display:"grid",gap:7}}>
+            <input
+              defaultValue={item.name}
+              aria-label={`Nome ${item.name}`}
+              style={{fontSize:13,padding:"7px 8px"}}
+              onBlur={(event)=>{const value=event.currentTarget.value.trim();if(value&&value!==item.name)void updateItem(item,{name:value});}}
+            />
+            <select
+              value={item.category}
+              onChange={(event)=>void updateItem(item,{category:event.target.value})}
+              aria-label={`Categoria ${item.name}`}
+              style={{fontSize:12,padding:"7px 8px"}}
+            >
+              {categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+            </select>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6}}>
+              <span className={`status ${item.published?"confirmed":"pending"}`} style={{fontSize:10}}>{item.published?"Pubblicato":"Nascosto"}</span>
+              <small style={{fontSize:10,fontWeight:800}}>{item.source==="legacy"?"Storico":"Nuovo"}</small>
             </div>
-            <div className="draft-actions" style={{marginTop:12}}>
-              <button className="button secondary" disabled={busy} type="button" onClick={()=>void updateItem(item,{published:!item.published})}>{item.published?"Nascondi":"Pubblica"}</button>
-              <button className="draft-delete-button" disabled={busy} type="button" onClick={()=>void remove(item)}>{item.source==="legacy"?"Archivia":"Elimina"}</button>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              <button className="button secondary" style={{padding:"7px 6px",fontSize:11}} disabled={busy} type="button" onClick={()=>void updateItem(item,{published:!item.published})}>{item.published?"Nascondi":"Pubblica"}</button>
+              <button className="draft-delete-button" style={{padding:"7px 6px",fontSize:11}} disabled={busy} type="button" onClick={()=>void remove(item)}>{item.source==="legacy"?"Archivia":"Elimina"}</button>
             </div>
           </div>
         </article>)}
