@@ -9,6 +9,8 @@ export type InvitationGuest = {
   invitationSlug: string;
   guestName: string;
   contactPhone: string;
+  email: string;
+  additionalInfo: string;
   status: InvitationGuestStatus;
   remindedAt: string;
   createdAt: string;
@@ -23,7 +25,7 @@ export async function loadInvitationGuests(): Promise<{ guests: InvitationGuest[
 
   const { data, error } = await supabase
     .from("invitation_guests")
-    .select("id, invitation_id, guest_name, contact_phone, status, reminded_at, created_at, invitations!inner(title, slug)")
+    .select("id, invitation_id, guest_name, contact_phone, email, additional_info, status, reminded_at, created_at, invitations!inner(title, slug)")
     .order("created_at", { ascending: true });
 
   if (error) return { guests: [], message: error.message };
@@ -36,6 +38,8 @@ export async function loadInvitationGuests(): Promise<{ guests: InvitationGuest[
       invitationSlug: Array.isArray(row.invitations) ? row.invitations[0]?.slug ?? "" : row.invitations?.slug ?? "",
       guestName: row.guest_name,
       contactPhone: row.contact_phone ?? "",
+      email: row.email ?? "",
+      additionalInfo: row.additional_info ?? "",
       status: row.status === "confirmed" ? "confirmed" : row.status === "declined" ? "declined" : "pending",
       remindedAt: row.reminded_at ?? "",
       createdAt: row.created_at
@@ -44,7 +48,13 @@ export async function loadInvitationGuests(): Promise<{ guests: InvitationGuest[
   };
 }
 
-export async function addInvitationGuest(invitationId: string, guestName: string, contactPhone: string) {
+export async function addInvitationGuest(
+  invitationId: string,
+  guestName: string,
+  contactPhone: string,
+  email = "",
+  additionalInfo = ""
+) {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configurato." };
   const name = guestName.trim();
@@ -54,6 +64,8 @@ export async function addInvitationGuest(invitationId: string, guestName: string
     invitation_id: invitationId,
     guest_name: name,
     contact_phone: contactPhone.trim() || null,
+    email: email.trim() || null,
+    additional_info: additionalInfo.trim() || null,
     status: "pending",
     updated_at: new Date().toISOString()
   });
@@ -73,4 +85,40 @@ export async function markGuestReminded(id: string) {
   const remindedAt = new Date().toISOString();
   const { error } = await supabase.from("invitation_guests").update({ reminded_at: remindedAt, updated_at: remindedAt }).eq("id", id);
   return error ? { ok: false, message: error.message } : { ok: true, message: "Promemoria registrato.", remindedAt };
+}
+
+
+export type InvitationGuestImportRow = {
+  guestName: string;
+  contactPhone?: string;
+  email?: string;
+  additionalInfo?: string;
+};
+
+export async function importInvitationGuests(
+  invitationId: string,
+  rows: InvitationGuestImportRow[]
+): Promise<{ ok: boolean; message: string }> {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+
+  const cleanRows = rows
+    .map((row) => ({
+      invitation_id: invitationId,
+      guest_name: row.guestName.trim(),
+      contact_phone: row.contactPhone?.trim() || null,
+      email: row.email?.trim() || null,
+      additional_info: row.additionalInfo?.trim() || null,
+      status: "pending",
+      updated_at: new Date().toISOString()
+    }))
+    .filter((row) => row.guest_name.length > 0);
+
+  if (cleanRows.length === 0) return { ok: false, message: "Il file non contiene invitati validi." };
+  if (cleanRows.length > 500) return { ok: false, message: "Puoi importare al massimo 500 invitati per volta." };
+
+  const { error } = await supabase.from("invitation_guests").insert(cleanRows);
+  return error
+    ? { ok: false, message: error.message }
+    : { ok: true, message: `${cleanRows.length} invitati importati correttamente.` };
 }
