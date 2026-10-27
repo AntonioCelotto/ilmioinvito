@@ -3160,6 +3160,16 @@ h3 {
   align-items: center;
 }
 
+.media-download-button {
+  background: #eef6ff;
+  border: 1px solid #cfddf3;
+  color: #285d9f;
+}
+
+.media-download-button:hover {
+  background: #e5f0ff;
+}
+
 @media (max-width: 950px) {
   .dashboard-media-feed {
     grid-template-columns: repeat(2, minmax(0, 1fr));
