@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { GuestMediaItem, loadApprovedGuestMedia, uploadGuestMedia } from "@/lib/supabase/guest-media";
 
 export function InviteGuestMedia({
@@ -13,6 +13,8 @@ export function InviteGuestMedia({
   const [items, setItems] = useState<GuestMediaItem[]>([]);
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadApprovedGuestMedia(invitationId).then(setItems);
@@ -72,15 +74,58 @@ export function InviteGuestMedia({
         </div>
 
         <div className="field">
-          <label htmlFor={`guest-media-file-${invitationId}`}>Aggiungi foto o video</label>
+          <label>Aggiungi foto o video</label>
+          <div className="guest-media-source-actions">
+            <button
+              className="button secondary guest-media-source-button"
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              <span aria-hidden="true">📷</span>
+              Scatta foto
+            </button>
+            <button
+              className="button secondary guest-media-source-button"
+              type="button"
+              onClick={() => uploadInputRef.current?.click()}
+            >
+              <span aria-hidden="true">＋</span>
+              Carica dal telefono
+            </button>
+          </div>
+
           <input
+            ref={cameraInputRef}
+            id={`guest-media-camera-${invitationId}`}
+            name="media-camera"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            style={{ display: "none" }}
+            onChange={(event) => {
+              const selected = event.target.files?.[0];
+              if (!selected || !uploadInputRef.current) return;
+              const transfer = new DataTransfer();
+              transfer.items.add(selected);
+              uploadInputRef.current.files = transfer.files;
+              setMessage(`Foto pronta: ${selected.name}`);
+            }}
+          />
+
+          <input
+            ref={uploadInputRef}
             id={`guest-media-file-${invitationId}`}
             name="media"
             type="file"
             accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm"
             required
+            style={{ display: "none" }}
+            onChange={(event) => {
+              const selected = event.target.files?.[0];
+              if (selected) setMessage(`File pronto: ${selected.name}`);
+            }}
           />
-          <small>Massimo 50 MB.</small>
+          <small>Scatta una foto al momento oppure scegli una foto/video già presente sul telefono. Massimo 50 MB.</small>
         </div>
 
         <button className="button social-publish-button" disabled={uploading} type="submit">
