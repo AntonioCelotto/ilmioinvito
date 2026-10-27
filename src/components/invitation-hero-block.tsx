@@ -153,9 +153,8 @@ export function InvitationHeroBlock({
             padding: "5px 8px"
           }}
         >
-          {displayDate(draft.eventDate || "Data")}
+          {displayDate(draft.eventDate || "Data")}{draft.eventTime ? ` · ${draft.eventTime.slice(0, 5)}` : ""}
         </span>
-        <span style={{ color: coverColor, display: "none" }}>{draft.eventTime || "Ora"}</span>
       </div>
     </>
   );
