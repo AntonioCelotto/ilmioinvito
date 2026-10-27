@@ -601,9 +601,32 @@ export function DashboardClient() {
           </select>
         </label>
         <button className="button" disabled={visibleRsvps.length === 0} type="button" onClick={() => downloadGuestPdf(selectedInvitationTitle, visibleRsvps)}>Scarica PDF</button>
+        <label
+          className="button secondary"
+          style={{
+            cursor: selectedInvitationId === "all" || importingGuestList ? "not-allowed" : "pointer",
+            opacity: selectedInvitationId === "all" ? 0.55 : 1
+          }}
+        >
+          {importingGuestList ? "Importazione…" : "Importa invitati CSV"}
+          <input
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            disabled={selectedInvitationId === "all" || importingGuestList}
+            style={{ display: "none" }}
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleGuestListImport(file);
+              event.currentTarget.value = "";
+            }}
+          />
+        </label>
       </div>
 
       {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
+      <p className="panel-note">
+        Per inviti aziendali puoi importare da Excel/CSV Nome, Cognome, Cellulare, Email e Allergie/Informazioni. Seleziona prima l'invito, poi usa “Importa invitati CSV”.
+      </p>
     </section>
 
     <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
