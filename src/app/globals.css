@@ -2572,6 +2572,31 @@ h3 {
   font-weight: 700;
 }
 
+.guest-media-source-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.guest-media-source-button {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  gap: 8px;
+}
+
+@media (max-width: 560px) {
+  .guest-media-source-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .guest-media-source-button {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
 .mini-section-list {
   display: flex;
   flex-wrap: wrap;
