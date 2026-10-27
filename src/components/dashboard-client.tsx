@@ -25,6 +25,7 @@ import {
   deleteInvitationGuests,
   importInvitationGuests,
   loadInvitationGuests,
+  markGuestInvited,
   markGuestReminded
 } from "@/lib/supabase/invitation-guests";
 import {
@@ -345,7 +346,7 @@ export function DashboardClient() {
     if (!guest.email) return "";
     const subject = `Invito: ${guest.invitationTitle}`;
     const body = `Ciao ${guest.guestName}, sei invitato/a. Puoi vedere l'invito e confermare la partecipazione qui: ${guestInvitationLink(guest)}`;
-    return `mailto:${guest.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(guest.email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   }
 
   function guestWhatsappInviteLink(guest: InvitationGuest) {
@@ -354,6 +355,38 @@ export function DashboardClient() {
     const phone = digits.startsWith("39") ? digits : digits.length === 10 ? `39${digits}` : digits;
     const message = `Ciao ${guest.guestName}, sei invitato/a a “${guest.invitationTitle}”. Puoi vedere l'invito e confermare la partecipazione qui: ${guestInvitationLink(guest)}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  async function handleSendWhatsappInvite(guest: InvitationGuest) {
+    const link = guestWhatsappInviteLink(guest);
+    if (!link) {
+      setGuestListMessage("Questo contatto non ha un numero WhatsApp.");
+      return;
+    }
+    window.open(link, "_blank", "noopener,noreferrer");
+    const result = await markGuestInvited(guest.id, "whatsapp");
+    if (result.ok && result.invitedAt) {
+      setInvitationGuests((current) => current.map((item) => item.id === guest.id
+        ? { ...item, invitedAt: result.invitedAt!, inviteChannel: "whatsapp" }
+        : item));
+    }
+    setGuestListMessage(result.message);
+  }
+
+  async function handleSendEmailInvite(guest: InvitationGuest) {
+    const link = guestEmailLink(guest);
+    if (!link) {
+      setGuestListMessage("Questo contatto non ha un indirizzo email.");
+      return;
+    }
+    window.open(link, "_blank", "noopener,noreferrer");
+    const result = await markGuestInvited(guest.id, "email");
+    if (result.ok && result.invitedAt) {
+      setInvitationGuests((current) => current.map((item) => item.id === guest.id
+        ? { ...item, invitedAt: result.invitedAt!, inviteChannel: "email" }
+        : item));
+    }
+    setGuestListMessage(result.message);
   }
 
   async function handleDeleteSelectedGuests() {
@@ -831,7 +864,7 @@ export function DashboardClient() {
             onScroll={() => syncGuestTableScroll("bottom")}
           >
             <table className="table guest-table">
-              <thead><tr><th aria-label="Seleziona"></th><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Email</th><th>Allergie e informazioni</th><th>Promemoria</th><th>Azioni</th></tr></thead>
+              <thead><tr><th aria-label="Seleziona"></th><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Email</th><th>Allergie e informazioni</th><th>Invio</th><th>Azioni</th></tr></thead>
               <tbody>
                 {visibleInvitationGuests.map((guest) => (
                   <tr key={guest.id}>
@@ -851,13 +884,36 @@ export function DashboardClient() {
                     <td>{guest.contactPhone || "-"}</td>
                     <td>{guest.email || "-"}</td>
                     <td><span className="muted">Da compilare con RSVP</span></td>
-                    <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
+                    <td>
+                      {guest.invitedAt ? (
+                        <div className="guest-send-status sent">
+                          <strong>Invitato</strong>
+                          <span>{guest.inviteChannel === "email" ? "Email" : "WhatsApp"} · {new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.invitedAt))}</span>
+                        </div>
+                      ) : (
+                        <span className="guest-send-status pending">Da inviare</span>
+                      )}
+                    </td>
                     <td>
                       <div className="draft-actions guest-contact-actions">
-                        {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia invito WhatsApp</a> : null}
-                        {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia invito email</a> : null}
-                        {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Ricorda</button> : null}
-                        <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
+                        {!guest.invitedAt && guest.contactPhone ? (
+                          <button className="guest-action-button whatsapp" type="button" onClick={() => void handleSendWhatsappInvite(guest)}>
+                            <span aria-hidden="true">✆</span> WhatsApp
+                          </button>
+                        ) : null}
+                        {!guest.invitedAt && guest.email ? (
+                          <button className="guest-action-button email" type="button" onClick={() => void handleSendEmailInvite(guest)}>
+                            <span aria-hidden="true">✉</span> Email
+                          </button>
+                        ) : null}
+                        {guest.invitedAt && guest.status === "pending" && guest.contactPhone ? (
+                          <button className="guest-action-button reminder" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>
+                            <span aria-hidden="true">↻</span> Ricorda
+                          </button>
+                        ) : null}
+                        <button className="guest-action-button delete" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>
+                          <span aria-hidden="true">×</span> Elimina
+                        </button>
                       </div>
                     </td>
                   </tr>
