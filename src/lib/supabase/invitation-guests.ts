@@ -13,6 +13,8 @@ export type InvitationGuest = {
   additionalInfo: string;
   status: InvitationGuestStatus;
   remindedAt: string;
+  invitedAt: string;
+  inviteChannel: string;
   createdAt: string;
 };
 
@@ -25,7 +27,7 @@ export async function loadInvitationGuests(): Promise<{ guests: InvitationGuest[
 
   const { data, error } = await supabase
     .from("invitation_guests")
-    .select("id, invitation_id, guest_name, contact_phone, email, additional_info, status, reminded_at, created_at, invitations!inner(title, slug)")
+    .select("id, invitation_id, guest_name, contact_phone, email, additional_info, status, reminded_at, invited_at, invite_channel, created_at, invitations!inner(title, slug)")
     .order("created_at", { ascending: true });
 
   if (error) return { guests: [], message: error.message };
@@ -42,6 +44,8 @@ export async function loadInvitationGuests(): Promise<{ guests: InvitationGuest[
       additionalInfo: row.additional_info ?? "",
       status: row.status === "confirmed" ? "confirmed" : row.status === "declined" ? "declined" : "pending",
       remindedAt: row.reminded_at ?? "",
+      invitedAt: row.invited_at ?? "",
+      inviteChannel: row.invite_channel ?? "",
       createdAt: row.created_at
     })),
     message: ""
@@ -88,6 +92,19 @@ export async function deleteInvitationGuests(ids: string[]) {
   return error
     ? { ok: false, message: error.message }
     : { ok: true, message: `${uniqueIds.length} contatti eliminati.` };
+}
+
+export async function markGuestInvited(id: string, channel: "whatsapp" | "email") {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+  const invitedAt = new Date().toISOString();
+  const { error } = await supabase
+    .from("invitation_guests")
+    .update({ invited_at: invitedAt, invite_channel: channel, updated_at: invitedAt })
+    .eq("id", id);
+  return error
+    ? { ok: false, message: error.message }
+    : { ok: true, message: channel === "whatsapp" ? "Invito WhatsApp registrato." : "Invito email registrato.", invitedAt, channel };
 }
 
 export async function markGuestReminded(id: string) {
