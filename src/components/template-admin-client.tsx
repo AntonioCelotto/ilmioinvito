@@ -53,16 +53,80 @@ export function TemplateAdminClient() {
     const form=event.currentTarget;
     const data=new FormData(form);
     const file=data.get("file");
+    const name=String(data.get("name")??"").trim();
+    const category=String(data.get("category")??"evento-privato");
     if(!(file instanceof File)||!file.size){setMessage("Scegli prima un file.");return;}
-    setBusy(true);setMessage("Caricamento in corso...");
-    if(file.type.startsWith("video/")){
-      try{data.set("poster",await createFinalVideoFrameFile(file));}catch{}
+
+    const supabase=createClient();
+    if(!supabase){setMessage("Supabase non è configurato.");return;}
+    const {data:{user}}=await supabase.auth.getUser();
+    if(!user){setMessage("Sessione amministratore non valida.");return;}
+
+    setBusy(true);
+    setMessage("Caricamento in corso...");
+
+    const isVideo=file.type.startsWith("video/");
+    const bucket=isVideo?"invitation-template-videos":"invitation-location-images";
+    const ext=(file.name.split(".").pop()|| (isVideo?"mp4":"jpg")).toLowerCase().replace(/[^a-z0-9]/g,"");
+    const uploadId=crypto.randomUUID();
+    const tempPath=`${user.id}/admin-upload/${uploadId}.${ext}`;
+
+    const upload=await supabase.storage.from(bucket).upload(tempPath,file,{
+      contentType:file.type,
+      cacheControl:"3600",
+      upsert:false
+    });
+
+    if(upload.error){
+      setMessage(`Caricamento non riuscito: ${upload.error.message}`);
+      setBusy(false);
+      return;
     }
+
+    let posterTempPath="";
+    if(isVideo){
+      try{
+        const poster=await createFinalVideoFrameFile(file);
+        posterTempPath=`${user.id}/admin-upload/${uploadId}-poster.jpg`;
+        const posterUpload=await supabase.storage.from("invitation-location-images").upload(posterTempPath,poster,{
+          contentType:"image/jpeg",
+          cacheControl:"3600",
+          upsert:false
+        });
+        if(posterUpload.error){
+          await supabase.storage.from(bucket).remove([tempPath]);
+          setMessage(`Anteprima non caricata: ${posterUpload.error.message}`);
+          setBusy(false);
+          return;
+        }
+      }catch{
+        // Il video resta utilizzabile anche se il browser non riesce a generare il poster.
+      }
+    }
+
     const token=await authToken();
-    const response=await fetch("/api/template-library",{method:"POST",headers:{Authorization:`Bearer ${token}`},body:data});
+    const response=await fetch("/api/template-library",{
+      method:"POST",
+      headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({
+        name,
+        category,
+        mediaType:isVideo?"video":"image",
+        tempPath,
+        posterTempPath,
+        originalName:file.name
+      })
+    });
     const result=await response.json().catch(()=>({})) as {error?:string};
-    if(response.ok){form.reset();setMessage("Template pubblicato nella galleria.");await refresh();}
-    else setMessage(result.error||"Caricamento non riuscito.");
+    if(response.ok){
+      form.reset();
+      setMessage("Template pubblicato nella galleria.");
+      await refresh();
+    }else{
+      await supabase.storage.from(bucket).remove([tempPath]);
+      if(posterTempPath)await supabase.storage.from("invitation-location-images").remove([posterTempPath]);
+      setMessage(result.error||"Caricamento non riuscito.");
+    }
     setBusy(false);
   }
 
