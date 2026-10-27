@@ -79,6 +79,17 @@ export async function deleteInvitationGuest(id: string) {
   return error ? { ok: false, message: error.message } : { ok: true, message: "Invitato eliminato." };
 }
 
+export async function deleteInvitationGuests(ids: string[]) {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+  const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
+  if (uniqueIds.length === 0) return { ok: false, message: "Seleziona almeno un contatto." };
+  const { error } = await supabase.from("invitation_guests").delete().in("id", uniqueIds);
+  return error
+    ? { ok: false, message: error.message }
+    : { ok: true, message: `${uniqueIds.length} contatti eliminati.` };
+}
+
 export async function markGuestReminded(id: string) {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configurato." };
