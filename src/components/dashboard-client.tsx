@@ -41,7 +41,6 @@ export function DashboardClient() {
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
   const [updatingRsvpId, setUpdatingRsvpId] = useState("");
-  const [editingRsvpInfo, setEditingRsvpInfo] = useState<Record<string, string>>({});
   const [invitationGuests, setInvitationGuests] = useState<InvitationGuest[]>([]);
   const [guestListMessage, setGuestListMessage] = useState("");
   const [newGuestName, setNewGuestName] = useState("");
@@ -196,18 +195,12 @@ export function DashboardClient() {
     };
   }
 
-  async function handleRsvpInfoSave(rsvp: DashboardRsvp) {
-    const value = editingRsvpInfo[rsvp.id] ?? rsvp.additionalInfo;
+  async function handleRsvpInfoSave(rsvp: DashboardRsvp, value: string) {
     setUpdatingRsvpId(rsvp.id);
     setRsvpMessage("");
     const result = await updateDashboardRsvpInfo(rsvp.id, value);
     if (result.ok) {
       setRsvps((current) => current.map((item) => item.id === rsvp.id ? { ...item, additionalInfo: value.trim() } : item));
-      setEditingRsvpInfo((current) => {
-        const next = { ...current };
-        delete next[rsvp.id];
-        return next;
-      });
     }
     setRsvpMessage(result.message);
     setUpdatingRsvpId("");
@@ -308,8 +301,8 @@ export function DashboardClient() {
   }
 
   async function handleGuestListImport(file: File) {
-    if (selectedInvitationId === "all") {
-      setGuestListMessage("Seleziona prima un invito.");
+    if (!effectiveImportInvitationId) {
+      setGuestListMessage("Seleziona l'invito in cui importare i contatti.");
       return;
     }
     setImportingGuestList(true);
@@ -523,23 +516,29 @@ export function DashboardClient() {
                 <td>{rsvp.contactPhone || "-"}</td>
                 {!declined ? (
                   <td>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 260 }}>
+                    <form
+                      style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 260 }}
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        const form = new FormData(event.currentTarget);
+                        void handleRsvpInfoSave(rsvp, String(form.get("additionalInfo") ?? ""));
+                      }}
+                    >
                       <input
                         aria-label={`Allergie e informazioni di ${rsvp.guestName}`}
-                        value={editingRsvpInfo[rsvp.id] ?? rsvp.additionalInfo}
+                        name="additionalInfo"
+                        defaultValue={rsvp.additionalInfo}
                         placeholder="Nessuna"
-                        onChange={(event) => setEditingRsvpInfo((current) => ({ ...current, [rsvp.id]: event.target.value }))}
                         style={{ minWidth: 170 }}
                       />
                       <button
                         className="button secondary"
-                        type="button"
-                        disabled={updatingRsvpId === rsvp.id || editingRsvpInfo[rsvp.id] === undefined}
-                        onClick={() => void handleRsvpInfoSave(rsvp)}
+                        type="submit"
+                        disabled={updatingRsvpId === rsvp.id}
                       >
-                        Salva
+                        {updatingRsvpId === rsvp.id ? "Salvataggio…" : "Salva"}
                       </button>
-                    </div>
+                    </form>
                   </td>
                 ) : null}
                 <td>{new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(rsvp.createdAt))}</td>
@@ -645,11 +644,47 @@ export function DashboardClient() {
           </select>
         </label>
         <button className="button" disabled={visibleRsvps.length === 0} type="button" onClick={() => downloadGuestPdf(selectedInvitationTitle, visibleRsvps)}>Scarica PDF</button>
+
+      </div>
+
+      {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
+    </section>
+
+    <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
+      <div className="panel-header">
+        <div>
+          <p className="eyebrow">Promemoria RSVP</p>
+          <h3>Partecipa · Non partecipa · Nessuna risposta</h3>
+          <p className="muted">Aggiungi gli invitati prima di inviare il link. Chi non ha ancora risposto resta in “Nessuna risposta” e può ricevere un promemoria WhatsApp.</p>
+        </div>
+        <strong>{pendingInvitationGuests.length} da ricordare</strong>
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "end", gap: 10, marginTop: 16 }}>
+        {selectedInvitationId === "all" ? (
+          <label className="field compact-field" style={{ margin: 0 }}>
+            <span>Importa nell'invito:</span>
+            <select
+              value={effectiveImportInvitationId}
+              onChange={(event) => setImportInvitationId(event.target.value)}
+              style={{ minWidth: 170 }}
+            >
+              {invitationOptions.map((invitation) => (
+                <option value={invitation.id} key={invitation.id}>{invitation.title}</option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <label
           className="button secondary"
           style={{
             cursor: !effectiveImportInvitationId || importingGuestList ? "not-allowed" : "pointer",
             opacity: !effectiveImportInvitationId ? 0.55 : 1
+          }}
+          onClick={() => {
+            if (!importingGuestList && effectiveImportInvitationId) {
+              window.alert("COME IMPORTARE I CONTATTI\n\n1. Prepara un file CSV da Excel.\n2. Usa le colonne: Nome, Cognome, Cellulare, Email, Allergie/Informazioni.\n3. Non è obbligatorio compilare telefono ed email entrambi: ne basta uno per poter inviare l'invito.\n4. Dopo l'importazione i contatti compariranno qui come Nessuna risposta.\n5. Quando risponderanno dal link passeranno automaticamente a Partecipa o Non partecipa.");
+            }
           }}
         >
           {importingGuestList ? "Importazione…" : "Importa contatti"}
@@ -665,22 +700,6 @@ export function DashboardClient() {
             }}
           />
         </label>
-      </div>
-
-      {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
-      <p className="panel-note">
-        Per inviti aziendali puoi importare da Excel/CSV Nome, Cognome, Cellulare, Email e Allergie/Informazioni. Seleziona prima l'invito, poi usa “Importa contatti”.
-      </p>
-    </section>
-
-    <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Promemoria RSVP</p>
-          <h3>Partecipa · Non partecipa · Nessuna risposta</h3>
-          <p className="muted">Aggiungi gli invitati prima di inviare il link. Chi non ha ancora risposto resta in “Nessuna risposta” e può ricevere un promemoria WhatsApp.</p>
-        </div>
-        <strong>{pendingInvitationGuests.length} da ricordare</strong>
       </div>
 
       {selectedInvitationId === "all" ? (
@@ -709,20 +728,7 @@ export function DashboardClient() {
             <button className="button" type="button" disabled={guestListBusyId === "new"} onClick={() => void handleAddInvitationGuest()}>
               {guestListBusyId === "new" ? "Aggiunta…" : "+ Aggiungi invitato"}
             </button>
-            <label className="button secondary" style={{ cursor: importingGuestList ? "wait" : "pointer" }}>
-              {importingGuestList ? "Importazione…" : "Importa lista CSV"}
-              <input
-                type="file"
-                accept=".csv,text/csv,text/plain"
-                disabled={importingGuestList}
-                style={{ display: "none" }}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void handleGuestListImport(file);
-                  event.currentTarget.value = "";
-                }}
-              />
-            </label>
+
           </div>
           <p className="muted" style={{ marginTop: 8 }}>
             CSV da Excel: colonne consigliate Nome, Cognome, Cellulare, Email, Allergie/Informazioni. Sono supportati file separati da virgola, punto e virgola o tab.
@@ -817,47 +823,8 @@ export function DashboardClient() {
           <h3>✓ Parteciperanno — {selectedInvitationTitle}</h3>
           <p className="muted">Ospiti che hanno confermato la presenza. Puoi correggere stato, allergie e informazioni direttamente dalla tabella.</p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
-          <strong>{confirmedRsvps.length}</strong>
-          {selectedInvitationId === "all" ? (
-            <label className="field compact-field" style={{ margin: 0 }}>
-              <span>Importa in:</span>
-              <select
-                value={effectiveImportInvitationId}
-                onChange={(event) => setImportInvitationId(event.target.value)}
-                style={{ minWidth: 150 }}
-              >
-                {invitationOptions.map((invitation) => (
-                  <option value={invitation.id} key={invitation.id}>{invitation.title}</option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          <label
-            className="button secondary"
-            style={{
-              cursor: !effectiveImportInvitationId || importingGuestList ? "not-allowed" : "pointer",
-              opacity: !effectiveImportInvitationId ? 0.55 : 1
-            }}
-          >
-            {importingGuestList ? "Importazione…" : "Importa contatti"}
-            <input
-              type="file"
-              accept=".csv,text/csv,text/plain"
-              disabled={!effectiveImportInvitationId || importingGuestList}
-              style={{ display: "none" }}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void handleGuestListImport(file);
-                event.currentTarget.value = "";
-              }}
-            />
-          </label>
-        </div>
+        <strong>{confirmedRsvps.length}</strong>
       </div>
-      <p className="panel-note">
-        Importa da Excel/CSV: Nome, Cognome, Cellulare, Email e Allergie/Informazioni. I contatti importati vengono inseriti nella gestione invitati e possono ricevere il link via WhatsApp o email.
-      </p>
       <GuestTable rows={confirmedRsvps} />
     </section>
 
