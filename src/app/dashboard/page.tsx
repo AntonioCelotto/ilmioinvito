@@ -15,6 +15,7 @@ export default function DashboardPage() {
             <a className="active" href="/dashboard">
               Dashboard
             </a>
+            <a href="/admin/templates">Gestione Template</a>
             <a href="/i/dora-lorenzo-demo">Anteprima pubblica</a>
           </nav>
         </aside>
