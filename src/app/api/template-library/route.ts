@@ -92,41 +92,49 @@ export async function POST(request: Request) {
   const admin = createSupabaseAdminClient();
   if (!admin) return NextResponse.json({ error: "Servizio non configurato." }, { status: 503 });
 
-  const form = await request.formData();
-  const file = form.get("file");
-  const poster = form.get("poster");
-  const name = String(form.get("name") ?? "").trim().slice(0, 80);
-  const category = String(form.get("category") ?? "evento-privato").trim().slice(0, 40);
-  if (!(file instanceof File) || !name) return NextResponse.json({ error: "Nome e file sono obbligatori." }, { status: 400 });
-  if (file.size > 50 * 1024 * 1024) return NextResponse.json({ error: "Il file non può superare 50 MB." }, { status: 400 });
+  const body = await request.json().catch(() => null) as {
+    name?: string;
+    category?: string;
+    mediaType?: MediaType;
+    tempPath?: string;
+    posterTempPath?: string;
+    originalName?: string;
+  } | null;
 
-  const isVideo = file.type.startsWith("video/");
-  const isImage = file.type.startsWith("image/");
-  if (!isVideo && !isImage) return NextResponse.json({ error: "Formato non supportato." }, { status: 400 });
+  const name = String(body?.name ?? "").trim().slice(0, 80);
+  const category = String(body?.category ?? "evento-privato").trim().slice(0, 40);
+  const mediaType = body?.mediaType;
+  const tempPath = String(body?.tempPath ?? "");
+  const posterTempPath = String(body?.posterTempPath ?? "");
 
-  const mediaType: MediaType = isVideo ? "video" : "image";
-  const bucket = isVideo ? videoBucket : imageBucket;
+  if (!name || (mediaType !== "image" && mediaType !== "video") || !tempPath) {
+    return NextResponse.json({ error: "Dati template non validi." }, { status: 400 });
+  }
+
+  const ownPrefix = `${manager.id}/admin-upload/`;
+  if (!tempPath.startsWith(ownPrefix)) {
+    return NextResponse.json({ error: "Percorso upload non autorizzato." }, { status: 403 });
+  }
+  if (posterTempPath && !posterTempPath.startsWith(ownPrefix)) {
+    return NextResponse.json({ error: "Percorso poster non autorizzato." }, { status: 403 });
+  }
+
+  const bucket = mediaType === "video" ? videoBucket : imageBucket;
   const id = crypto.randomUUID();
-  const ext = (file.name.split(".").pop() || (isVideo ? "mp4" : "jpg")).toLowerCase().replace(/[^a-z0-9]/g, "");
-  const path = `${publishedPrefix}/${id}__${encodeMeta(name, category)}.${ext}`;
+  const ext = (body?.originalName?.split(".").pop() || tempPath.split(".").pop() || (mediaType === "video" ? "mp4" : "jpg"))
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const finalPath = `${publishedPrefix}/${id}__${encodeMeta(name, category)}.${ext}`;
 
-  const { error } = await admin.storage.from(bucket).upload(path, file, {
-    contentType: file.type,
-    cacheControl: "3600",
-    upsert: false
-  });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error: moveError } = await admin.storage.from(bucket).move(tempPath, finalPath);
+  if (moveError) return NextResponse.json({ error: moveError.message }, { status: 500 });
 
-  if (isVideo && poster instanceof File) {
+  if (mediaType === "video" && posterTempPath) {
     const posterPath = `${posterPrefix}/${id}.jpg`;
-    const { error: posterError } = await admin.storage.from(imageBucket).upload(posterPath, poster, {
-      contentType: "image/jpeg",
-      cacheControl: "3600",
-      upsert: true
-    });
-    if (posterError) {
-      await admin.storage.from(bucket).remove([path]);
-      return NextResponse.json({ error: posterError.message }, { status: 500 });
+    const { error: posterMoveError } = await admin.storage.from(imageBucket).move(posterTempPath, posterPath);
+    if (posterMoveError) {
+      await admin.storage.from(bucket).remove([finalPath]);
+      return NextResponse.json({ error: posterMoveError.message }, { status: 500 });
     }
   }
 
