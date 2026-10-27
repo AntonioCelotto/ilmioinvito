@@ -16,7 +16,7 @@ import {
   getCurrentUser,
   loadUserDraftsFromSupabase
 } from "@/lib/supabase/drafts";
-import { DashboardRsvp, loadDashboardRsvps, updateDashboardRsvpStatus } from "@/lib/supabase/rsvps";
+import { DashboardRsvp, loadDashboardRsvps, updateDashboardRsvpInfo, updateDashboardRsvpStatus } from "@/lib/supabase/rsvps";
 import {
   InvitationGuest,
   InvitationGuestImportRow,
@@ -41,6 +41,7 @@ export function DashboardClient() {
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
   const [updatingRsvpId, setUpdatingRsvpId] = useState("");
+  const [editingRsvpInfo, setEditingRsvpInfo] = useState<Record<string, string>>({});
   const [invitationGuests, setInvitationGuests] = useState<InvitationGuest[]>([]);
   const [guestListMessage, setGuestListMessage] = useState("");
   const [newGuestName, setNewGuestName] = useState("");
@@ -187,6 +188,23 @@ export function DashboardClient() {
       declined: rows.filter((rsvp) => rsvp.status === "declined").length,
       responses: new Set(rows.map((rsvp) => rsvp.responseGroupId)).size
     };
+  }
+
+  async function handleRsvpInfoSave(rsvp: DashboardRsvp) {
+    const value = editingRsvpInfo[rsvp.id] ?? rsvp.additionalInfo;
+    setUpdatingRsvpId(rsvp.id);
+    setRsvpMessage("");
+    const result = await updateDashboardRsvpInfo(rsvp.id, value);
+    if (result.ok) {
+      setRsvps((current) => current.map((item) => item.id === rsvp.id ? { ...item, additionalInfo: value.trim() } : item));
+      setEditingRsvpInfo((current) => {
+        const next = { ...current };
+        delete next[rsvp.id];
+        return next;
+      });
+    }
+    setRsvpMessage(result.message);
+    setUpdatingRsvpId("");
   }
 
   async function handleManualRsvpStatus(rsvp: DashboardRsvp, status: DashboardRsvp["status"]) {
@@ -497,7 +515,27 @@ export function DashboardClient() {
                   </select>
                 </td>
                 <td>{rsvp.contactPhone || "-"}</td>
-                {!declined ? <td>{rsvp.additionalInfo || "Nessuna"}</td> : null}
+                {!declined ? (
+                  <td>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 260 }}>
+                      <input
+                        aria-label={`Allergie e informazioni di ${rsvp.guestName}`}
+                        value={editingRsvpInfo[rsvp.id] ?? rsvp.additionalInfo}
+                        placeholder="Nessuna"
+                        onChange={(event) => setEditingRsvpInfo((current) => ({ ...current, [rsvp.id]: event.target.value }))}
+                        style={{ minWidth: 170 }}
+                      />
+                      <button
+                        className="button secondary"
+                        type="button"
+                        disabled={updatingRsvpId === rsvp.id || editingRsvpInfo[rsvp.id] === undefined}
+                        onClick={() => void handleRsvpInfoSave(rsvp)}
+                      >
+                        Salva
+                      </button>
+                    </div>
+                  </td>
+                ) : null}
                 <td>{new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(rsvp.createdAt))}</td>
               </tr>
             ))}
@@ -608,7 +646,7 @@ export function DashboardClient() {
             opacity: selectedInvitationId === "all" ? 0.55 : 1
           }}
         >
-          {importingGuestList ? "Importazione…" : "Importa invitati CSV"}
+          {importingGuestList ? "Importazione…" : "Importa contatti"}
           <input
             type="file"
             accept=".csv,text/csv,text/plain"
@@ -625,7 +663,7 @@ export function DashboardClient() {
 
       {rsvpMessage ? <p className="panel-note">{rsvpMessage}</p> : null}
       <p className="panel-note">
-        Per inviti aziendali puoi importare da Excel/CSV Nome, Cognome, Cellulare, Email e Allergie/Informazioni. Seleziona prima l'invito, poi usa “Importa invitati CSV”.
+        Per inviti aziendali puoi importare da Excel/CSV Nome, Cognome, Cellulare, Email e Allergie/Informazioni. Seleziona prima l'invito, poi usa “Importa contatti”.
       </p>
     </section>
 
@@ -769,9 +807,37 @@ export function DashboardClient() {
 
     <section className="panel guest-dashboard" style={{ marginTop: 18 }}>
       <div className="panel-header">
-        <div><h3>✓ Parteciperanno — {selectedInvitationTitle}</h3><p className="muted">Ospiti che hanno confermato la presenza.</p></div>
-        <strong>{confirmedRsvps.length}</strong>
+        <div>
+          <h3>✓ Parteciperanno — {selectedInvitationTitle}</h3>
+          <p className="muted">Ospiti che hanno confermato la presenza. Puoi correggere stato, allergie e informazioni direttamente dalla tabella.</p>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", justifyContent: "flex-end" }}>
+          <strong>{confirmedRsvps.length}</strong>
+          <label
+            className="button secondary"
+            style={{
+              cursor: selectedInvitationId === "all" || importingGuestList ? "not-allowed" : "pointer",
+              opacity: selectedInvitationId === "all" ? 0.55 : 1
+            }}
+          >
+            {importingGuestList ? "Importazione…" : "Importa contatti"}
+            <input
+              type="file"
+              accept=".csv,text/csv,text/plain"
+              disabled={selectedInvitationId === "all" || importingGuestList}
+              style={{ display: "none" }}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleGuestListImport(file);
+                event.currentTarget.value = "";
+              }}
+            />
+          </label>
+        </div>
       </div>
+      <p className="panel-note">
+        Importa da Excel/CSV: Nome, Cognome, Cellulare, Email e Allergie/Informazioni. I contatti importati vengono inseriti nella gestione invitati e possono ricevere il link via WhatsApp o email.
+      </p>
       <GuestTable rows={confirmedRsvps} />
     </section>
 
