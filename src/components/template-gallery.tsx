@@ -36,6 +36,9 @@ function colorBrightness(hexColor: string) {
 
 function applyTemplateAndOpenBuilder(template: InvitationTemplate) {
   window.localStorage.setItem(selectedTemplateStorageKey, template.id);
+  if (template.id.startsWith("admin-")) {
+    window.localStorage.setItem(customTemplateStorageKey, JSON.stringify(template));
+  }
   const editingId = new URLSearchParams(window.location.search).get("edit");
   const editingDraft = editingId ? readEditingDraft() : null;
 
@@ -217,13 +220,18 @@ function CustomVideoTemplateUpload() {
 
 export function TemplateGallery() {
   const [managedTemplates,setManagedTemplates]=useState<InvitationTemplate[]>([]);
+  const [legacyOverrides,setLegacyOverrides]=useState<Record<string,{hidden?:boolean;category?:InvitationTemplate["category"];order?:number;name?:string}>>({});
 
   useEffect(()=>{
     let active=true;
     fetch("/api/template-library",{cache:"no-store"})
       .then((response)=>response.ok?response.json():Promise.reject())
-      .then((data:{items:Array<{id:string;name:string;category:InvitationTemplate["category"];mediaType:"image"|"video";imageUrl:string;videoUrl:string;posterUrl:string}>})=>{
+      .then((data:{
+        items:Array<{id:string;name:string;category:InvitationTemplate["category"];mediaType:"image"|"video";imageUrl:string;videoUrl:string;posterUrl:string;order?:number;source?:"custom"}>;
+        overrides?:Record<string,{hidden?:boolean;category?:InvitationTemplate["category"];order?:number;name?:string}>
+      })=>{
         if(!active)return;
+        setLegacyOverrides(data.overrides??{});
         setManagedTemplates((data.items??[]).map((item)=>({
           id:`admin-${item.id}`,
           category:item.category,
@@ -239,19 +247,34 @@ export function TemplateGallery() {
             fontStyle:"serif",
             backgroundImage:item.imageUrl||item.posterUrl,
             backgroundVideo:item.mediaType==="video"?item.videoUrl:undefined
-          }
-        })));
+          },
+          __adminOrder:item.order??10000
+        } as InvitationTemplate & {__adminOrder:number})));
       })
       .catch(()=>{});
     return()=>{active=false;};
   },[]);
 
   const {videoTemplates,imageTemplates}=useMemo(()=>{
-    const availableTemplates=[...managedTemplates,...invitationTemplates.filter(template=>!eighteenTemplateIds.has(template.id))];
+    const legacy=invitationTemplates.flatMap((template,index)=>{
+      const override=legacyOverrides[template.id]??{};
+      const hidden=override.hidden??eighteenTemplateIds.has(template.id);
+      if(hidden)return [];
+      return [{
+        ...template,
+        name:override.name||template.name,
+        category:override.category||template.category,
+        __adminOrder:Number.isFinite(override.order)?Number(override.order):index
+      } as InvitationTemplate & {__adminOrder:number}];
+    });
+    const availableTemplates=[
+      ...legacy,
+      ...managedTemplates
+    ].sort((a,b)=>((a as InvitationTemplate & {__adminOrder?:number}).__adminOrder??0)-((b as InvitationTemplate & {__adminOrder?:number}).__adminOrder??0));
     const videos=availableTemplates.filter(template=>Boolean(template.theme.backgroundVideo));
-    const images=availableTemplates.filter(template=>!template.theme.backgroundVideo).sort((a,b)=>colorBrightness(b.theme.primaryColor)-colorBrightness(a.theme.primaryColor));
+    const images=availableTemplates.filter(template=>!template.theme.backgroundVideo);
     return{videoTemplates:videos,imageTemplates:images};
-  },[managedTemplates]);
+  },[managedTemplates,legacyOverrides]);
 
   const selectTemplate=(template:InvitationTemplate)=>applyTemplateAndOpenBuilder(template);
   return <><div className="template-gallery-actions"><a className="template-upload-jump" href="#carica-template">Carica immagine<span aria-hidden="true">↓</span></a><a className="template-upload-jump" href="#carica-template-video">Carica video<span aria-hidden="true">↓</span></a></div><TemplateSection title="Inviti video" description="Template animati: le anteprime partono automaticamente senza audio. Se il browser blocca l'avvio, basta toccare il video." templates={videoTemplates} onSelect={selectTemplate}/><section style={{marginBottom:"3.5rem"}}><div className="template-grid">{imageTemplates.map(template=><TemplateCard key={template.id} template={template} onSelect={selectTemplate}/>)}</div></section><CustomTemplateUpload/><CustomVideoTemplateUpload/></>;
