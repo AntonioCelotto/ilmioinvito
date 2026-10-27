@@ -2801,6 +2801,16 @@ h3 {
   color: #fff;
 }
 
+.draft-actions .draft-share-button {
+  background: #eef7f0;
+  border: 1px solid #cfe3d4;
+  color: #215f35;
+}
+
+.draft-actions .draft-share-button:hover {
+  background: #e4f2e8;
+}
+
 .draft-delete-button {
   background: #fff;
   border: 1px solid #d9a4a4;
