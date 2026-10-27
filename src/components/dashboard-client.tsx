@@ -499,6 +499,47 @@ export function DashboardClient() {
     setUpdatingGuestMediaId("");
   }
 
+  async function handleGuestMediaDownload(item: GuestMediaItem) {
+    setUpdatingGuestMediaId(item.id);
+    setGuestMediaMessage("");
+    try {
+      const response = await fetch(item.url);
+      if (!response.ok) throw new Error("download");
+      const blob = await response.blob();
+      const extension = item.storagePath.split(".").pop() || (item.mediaType === "photo" ? "jpg" : "mp4");
+      const safeGuest = item.guestName.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || "ricordo";
+      const fileName = `${safeGuest}-${item.id.slice(0, 8)}.${extension}`;
+      const file = new File([blob], fileName, { type: blob.type || (item.mediaType === "photo" ? "image/jpeg" : "video/mp4") });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: item.mediaType === "photo" ? "Salva foto" : "Salva video"
+        });
+        setGuestMediaMessage(item.mediaType === "photo" ? "Foto pronta per essere salvata sul dispositivo." : "Video pronto per essere salvato sul dispositivo.");
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      setGuestMediaMessage(item.mediaType === "photo" ? "Download della foto avviato." : "Download del video avviato.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setGuestMediaMessage("");
+      } else {
+        setGuestMediaMessage("Non è stato possibile scaricare il contenuto.");
+      }
+    } finally {
+      setUpdatingGuestMediaId("");
+    }
+  }
+
   async function handleGuestMediaDelete(item: GuestMediaItem) {
     if (!window.confirm(`Vuoi eliminare definitivamente il contenuto condiviso da ${item.guestName}?`)) return;
     setUpdatingGuestMediaId(item.id);
@@ -536,6 +577,14 @@ export function DashboardClient() {
             <video src={item.url} controls preload="metadata" />
           )}
           <div className="draft-actions dashboard-media-actions">
+            <button
+              className="button secondary media-download-button"
+              disabled={updatingGuestMediaId === item.id}
+              type="button"
+              onClick={() => void handleGuestMediaDownload(item)}
+            >
+              {item.mediaType === "photo" ? "Scarica foto" : "Scarica video"}
+            </button>
             {item.status !== "approved" ? (
               <button className="button" disabled={updatingGuestMediaId === item.id} type="button" onClick={() => handleGuestMediaStatus(item, "approved")}>Pubblica sull’invito</button>
             ) : <span className="status confirmed">Pubblicato</span>}
