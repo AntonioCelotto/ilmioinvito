@@ -73,7 +73,7 @@ async function readManifest(): Promise<OverrideManifest> {
 async function writeManifest(manifest: OverrideManifest) {
   const admin = createSupabaseAdminClient();
   if (!admin) return { error: new Error("Servizio non configurato.") };
-  const body = new Blob([JSON.stringify(manifest, null, 2)], { type: "application/json" });
+  const body = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
   return admin.storage.from(imageBucket).upload(manifestPath, body, {
     contentType: "application/json",
     cacheControl: "60",
