@@ -306,12 +306,11 @@ export function DashboardClient() {
       const email = emailIndex >= 0
         ? cells[emailIndex] ?? ""
         : emailLike(rawSecond) ? rawSecond : emailLike(rawThird) ? rawThird : "";
-      const additionalInfo = infoIndex >= 0 ? cells[infoIndex] ?? "" : "";
       return {
         guestName: `${firstName} ${surname}`.trim(),
         contactPhone,
         email,
-        additionalInfo
+        additionalInfo: ""
       };
     }).filter((row) => row.guestName.length > 0);
   }
@@ -851,13 +850,13 @@ export function DashboardClient() {
                     <td><span className={`status ${guest.status === "confirmed" ? "confirmed" : "pending"}`}>{guest.status === "confirmed" ? "Partecipa" : guest.status === "declined" ? "Non partecipa" : "Nessuna risposta"}</span></td>
                     <td>{guest.contactPhone || "-"}</td>
                     <td>{guest.email || "-"}</td>
-                    <td>{guest.additionalInfo || "Nessuna"}</td>
+                    <td><span className="muted">Da compilare con RSVP</span></td>
                     <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
                     <td>
-                      <div className="draft-actions">
-                        {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia WhatsApp</a> : null}
-                        {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia email</a> : null}
-                        {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Promemoria</button> : null}
+                      <div className="draft-actions guest-contact-actions">
+                        {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia invito WhatsApp</a> : null}
+                        {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia invito email</a> : null}
+                        {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Ricorda</button> : null}
                         <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
                       </div>
                     </td>
