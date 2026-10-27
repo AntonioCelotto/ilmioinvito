@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { saveDraftToSupabase, uploadCustomTemplateImage, uploadCustomTemplateVideo } from "@/lib/supabase/drafts";
+import { recordContentUploadConsent, saveDraftToSupabase, uploadCustomTemplateImage, uploadCustomTemplateVideo } from "@/lib/supabase/drafts";
 import {
   customTemplateStorageKey,
   invitationTemplates,
@@ -88,10 +88,10 @@ function TemplateSection({ title, description, templates, onSelect }: { title:st
 }
 
 function CustomTemplateUpload() {
-  const [file,setFile]=useState<File|null>(null),[previewUrl,setPreviewUrl]=useState(""),[message,setMessage]=useState(""),[uploading,setUploading]=useState(false);
+  const [file,setFile]=useState<File|null>(null),[previewUrl,setPreviewUrl]=useState(""),[message,setMessage]=useState(""),[uploading,setUploading]=useState(false),[rightsAccepted,setRightsAccepted]=useState(false);
   function handleFile(selectedFile?:File){setMessage("");if(!selectedFile){setFile(null);setPreviewUrl("");return;}if(!["image/jpeg","image/png","image/webp"].includes(selectedFile.type)){setMessage("Carica un'immagine JPG, PNG o WebP.");return;}if(selectedFile.size>8*1024*1024){setMessage("L'immagine non può superare 8 MB.");return;}setFile(selectedFile);const reader=new FileReader();reader.onload=()=>setPreviewUrl(String(reader.result??""));reader.readAsDataURL(selectedFile);}
-  async function useCustomTemplate(){if(!file){setMessage("Seleziona prima un'immagine.");return;}setUploading(true);setMessage("Caricamento della grafica in corso...");const result=await uploadCustomTemplateImage(file);if(result.status==="error"){setUploading(false);setMessage(result.message);return;}const customTemplate:InvitationTemplate={id:`custom-upload-${Date.now()}`,category:"evento-privato",name:"La tua grafica",description:"Template creato con l'immagine caricata da te.",occasionLabel:"Template personale",previewTitle:"Il tuo evento",previewSubtitle:"Personalizza testi, colori e contenuti",theme:{template:"classicLight",primaryColor:"#fffaf2",accentColor:"#b87333",fontStyle:"serif",backgroundImage:result.url}};window.localStorage.setItem(customTemplateStorageKey,JSON.stringify(customTemplate));applyTemplateAndOpenBuilder(customTemplate);}
-  return <section className="custom-template-upload" id="carica-template" aria-labelledby="custom-template-title"><div className="custom-template-copy"><p className="eyebrow">Il tuo stile</p><h2 id="custom-template-title">Carica la tua grafica</h2><p>Usa un'immagine personale come sfondo del tuo invito. Per il risultato migliore scegli un formato verticale 9:16.</p><label className="custom-template-file"><span>{file?"Cambia immagine":"Scegli un'immagine"}</span><input accept="image/jpeg,image/png,image/webp" type="file" onChange={(event)=>handleFile(event.target.files?.[0])}/></label><small>JPG, PNG o WebP, massimo 8 MB.</small>{message?<p className="custom-template-message" aria-live="polite">{message}</p>:null}<button className="button" disabled={!file||uploading} type="button" onClick={useCustomTemplate}>{uploading?"Caricamento...":"Usa la mia grafica"}</button></div><div className={`custom-template-preview${previewUrl?" has-image":""}`} style={previewUrl?{backgroundImage:`url("${previewUrl}")`}:undefined} aria-label="Anteprima della grafica personale">{previewUrl?null:<div><span aria-hidden="true">＋</span><strong>Anteprima immagine</strong></div>}</div></section>;
+  async function useCustomTemplate(){if(!file){setMessage("Seleziona prima un'immagine.");return;}if(!rightsAccepted){setMessage("Devi confermare di avere i diritti necessari per usare e pubblicare questo contenuto.");return;}setUploading(true);setMessage("Registrazione della dichiarazione...");const consent=await recordContentUploadConsent("template_image",file.name);if(consent.status==="error"){setUploading(false);setMessage(consent.message);return;}setMessage("Caricamento della grafica in corso...");const result=await uploadCustomTemplateImage(file);if(result.status==="error"){setUploading(false);setMessage(result.message);return;}const customTemplate:InvitationTemplate={id:`custom-upload-${Date.now()}`,category:"evento-privato",name:"La tua grafica",description:"Template creato con l'immagine caricata da te.",occasionLabel:"Template personale",previewTitle:"Il tuo evento",previewSubtitle:"Personalizza testi, colori e contenuti",theme:{template:"classicLight",primaryColor:"#fffaf2",accentColor:"#b87333",fontStyle:"serif",backgroundImage:result.url}};window.localStorage.setItem(customTemplateStorageKey,JSON.stringify(customTemplate));applyTemplateAndOpenBuilder(customTemplate);}
+  return <section className="custom-template-upload" id="carica-template" aria-labelledby="custom-template-title"><div className="custom-template-copy"><p className="eyebrow">Il tuo stile</p><h2 id="custom-template-title">Carica la tua grafica</h2><p>Usa un'immagine personale come sfondo del tuo invito. Per il risultato migliore scegli un formato verticale 9:16.</p><label className="custom-template-file"><span>{file?"Cambia immagine":"Scegli un'immagine"}</span><input accept="image/jpeg,image/png,image/webp" type="file" onChange={(event)=>handleFile(event.target.files?.[0])}/></label><small>JPG, PNG o WebP, massimo 8 MB.</small><label className="check-row" style={{marginTop:"12px"}}><input checked={rightsAccepted} type="checkbox" onChange={(event)=>setRightsAccepted(event.target.checked)}/><span>Confermo di avere i diritti, le autorizzazioni e le licenze necessarie per utilizzare e pubblicare questo contenuto. Accetto le <a href="/condizioni" target="_blank" rel="noreferrer">condizioni sui contenuti caricati</a>.</span></label>{message?<p className="custom-template-message" aria-live="polite">{message}</p>:null}<button className="button" disabled={!file||!rightsAccepted||uploading} type="button" onClick={useCustomTemplate}>{uploading?"Caricamento...":"Usa la mia grafica"}</button></div><div className={`custom-template-preview${previewUrl?" has-image":""}`} style={previewUrl?{backgroundImage:`url("${previewUrl}")`}:undefined} aria-label="Anteprima della grafica personale">{previewUrl?null:<div><span aria-hidden="true">＋</span><strong>Anteprima immagine</strong></div>}</div></section>;
 }
 
 function CustomVideoTemplateUpload() {
@@ -99,6 +99,7 @@ function CustomVideoTemplateUpload() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [message, setMessage] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [rightsAccepted, setRightsAccepted] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -135,7 +136,18 @@ function CustomVideoTemplateUpload() {
       setMessage("Seleziona prima un video.");
       return;
     }
+    if (!rightsAccepted) {
+      setMessage("Devi confermare di avere i diritti necessari per usare e pubblicare questo contenuto.");
+      return;
+    }
     setUploading(true);
+    setMessage("Registrazione della dichiarazione...");
+    const consent = await recordContentUploadConsent("template_video", file.name);
+    if (consent.status === "error") {
+      setUploading(false);
+      setMessage(consent.message);
+      return;
+    }
     setMessage("Preparazione dell’ultimo fotogramma...");
     let posterFile: File;
     try {
@@ -187,8 +199,12 @@ function CustomVideoTemplateUpload() {
           <input accept="video/mp4,video/webm,video/quicktime,.mov" type="file" onChange={(event) => handleFile(event.target.files?.[0])} />
         </label>
         <small>MP4, WebM o MOV, massimo 50 MB. MP4 è il formato più compatibile.</small>
+        <label className="check-row" style={{marginTop:"12px"}}>
+          <input checked={rightsAccepted} type="checkbox" onChange={(event) => setRightsAccepted(event.target.checked)} />
+          <span>Confermo di avere i diritti, le autorizzazioni e le licenze necessarie per utilizzare e pubblicare questo contenuto. Accetto le <a href="/condizioni" target="_blank" rel="noreferrer">condizioni sui contenuti caricati</a>.</span>
+        </label>
         {message ? <p className="custom-template-message" aria-live="polite">{message}</p> : null}
-        <button className="button" disabled={!file || uploading} type="button" onClick={useCustomVideoTemplate}>
+        <button className="button" disabled={!file || !rightsAccepted || uploading} type="button" onClick={useCustomVideoTemplate}>
           {uploading ? "Caricamento..." : "Usa il mio video"}
         </button>
       </div>
