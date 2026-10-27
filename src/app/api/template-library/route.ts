@@ -61,10 +61,39 @@ async function managerFromRequest(request: Request) {
 async function readManifest(): Promise<OverrideManifest> {
   const admin = createSupabaseAdminClient();
   if (!admin) return {};
-  const { data, error } = await admin.storage.from(imageBucket).download(manifestPath);
-  if (error || !data) return {};
+
+  const { data: rows, error } = await admin
+    .from("template_admin_overrides")
+    .select("template_key,hidden,category,sort_order,name");
+
+  if (!error && rows && rows.length > 0) {
+    return Object.fromEntries(rows.map((row) => [
+      row.template_key,
+      {
+        hidden: row.hidden ?? undefined,
+        category: row.category ?? undefined,
+        order: row.sort_order ?? undefined,
+        name: row.name ?? undefined
+      }
+    ]));
+  }
+
+  const { data } = await admin.storage.from(imageBucket).download(manifestPath);
+  if (!data) return {};
   try {
-    return JSON.parse(await data.text()) as OverrideManifest;
+    const legacy = JSON.parse(await data.text()) as OverrideManifest;
+    const entries = Object.entries(legacy);
+    if (entries.length) {
+      await admin.from("template_admin_overrides").upsert(entries.map(([template_key, value]) => ({
+        template_key,
+        hidden: value.hidden ?? null,
+        category: value.category ?? null,
+        sort_order: value.order ?? null,
+        name: value.name ?? null,
+        updated_at: new Date().toISOString()
+      })), { onConflict: "template_key" });
+    }
+    return legacy;
   } catch {
     return {};
   }
@@ -73,12 +102,23 @@ async function readManifest(): Promise<OverrideManifest> {
 async function writeManifest(manifest: OverrideManifest) {
   const admin = createSupabaseAdminClient();
   if (!admin) return { error: new Error("Servizio non configurato.") };
-  const body = Buffer.from(JSON.stringify(manifest, null, 2), "utf8");
-  return admin.storage.from(imageBucket).upload(manifestPath, body, {
-    contentType: "application/json",
-    cacheControl: "60",
-    upsert: true
-  });
+
+  const rows = Object.entries(manifest).map(([template_key, value]) => ({
+    template_key,
+    hidden: value.hidden ?? null,
+    category: value.category ?? null,
+    sort_order: value.order ?? null,
+    name: value.name ?? null,
+    updated_at: new Date().toISOString()
+  }));
+
+  if (!rows.length) return { error: null };
+
+  const { error } = await admin
+    .from("template_admin_overrides")
+    .upsert(rows, { onConflict: "template_key" });
+
+  return { error };
 }
 
 async function listPrefix(bucket: string, prefix: string, mediaType: MediaType) {
