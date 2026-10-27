@@ -115,10 +115,17 @@ export async function updateGuestMediaStatus(id: string, status: GuestMediaItem[
 export async function deleteGuestMedia(item: GuestMediaItem) {
   const supabase = createClient();
   if (!supabase) return { ok: false, message: "Supabase non configurato." };
-  const { error } = await supabase.from("guest_media").delete().eq("id", item.id);
-  if (error) return { ok: false, message: error.message };
-  const { error: storageError } = await supabase.storage.from(bucket).remove([item.storagePath]);
-  return storageError
-    ? { ok: true, message: "Contenuto eliminato. Il file verrà ripulito automaticamente." }
-    : { ok: true, message: "Contenuto eliminato definitivamente." };
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  if (!token) return { ok: false, message: "Sessione non valida." };
+
+  const response = await fetch(`/api/guest-media/${encodeURIComponent(item.id)}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const result = await response.json().catch(() => ({})) as { error?: string; deleted?: boolean };
+  return response.ok && result.deleted
+    ? { ok: true, message: "Contenuto eliminato definitivamente." }
+    : { ok: false, message: result.error ?? "Eliminazione non riuscita." };
 }
