@@ -2491,6 +2491,16 @@ h3 {
   gap: 10px;
 }
 
+.guest-contact-actions {
+  flex-wrap: wrap;
+  min-width: 330px;
+}
+
+.guest-contact-actions .button,
+.guest-contact-actions .draft-delete-button {
+  white-space: nowrap;
+}
+
 .mini-section-list {
   display: flex;
   flex-wrap: wrap;
