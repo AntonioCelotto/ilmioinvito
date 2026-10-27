@@ -119,7 +119,7 @@ export async function importInvitationGuests(
       guest_name: row.guestName.trim(),
       contact_phone: row.contactPhone?.trim() || null,
       email: row.email?.trim() || null,
-      additional_info: row.additionalInfo?.trim() || null,
+      additional_info: null,
       status: "pending",
       updated_at: new Date().toISOString()
     }))
