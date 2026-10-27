@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthPanel } from "@/components/auth-panel";
 import {
   InvitationDraft,
@@ -22,6 +22,7 @@ import {
   InvitationGuestImportRow,
   addInvitationGuest,
   deleteInvitationGuest,
+  deleteInvitationGuests,
   importInvitationGuests,
   loadInvitationGuests,
   markGuestReminded
@@ -58,6 +59,10 @@ export function DashboardClient() {
   const [updatingGuestMediaId, setUpdatingGuestMediaId] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminPublishingId, setAdminPublishingId] = useState("");
+  const [selectedGuestIds, setSelectedGuestIds] = useState<string[]>([]);
+  const guestTableTopScrollRef = useRef<HTMLDivElement>(null);
+  const guestTableBottomScrollRef = useRef<HTMLDivElement>(null);
+  const syncingGuestScrollRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -291,11 +296,22 @@ export function DashboardClient() {
       const fallbackName = cells[0] ?? "";
       const firstName = nameIndex >= 0 ? cells[nameIndex] ?? "" : fallbackName;
       const surname = surnameIndex >= 0 ? cells[surnameIndex] ?? "" : "";
+      const rawSecond = cells[1] ?? "";
+      const rawThird = cells[2] ?? "";
+      const rawFourth = cells[3] ?? "";
+      const emailLike = (value: string) => value.includes("@");
+      const contactPhone = phoneIndex >= 0
+        ? cells[phoneIndex] ?? ""
+        : emailLike(rawSecond) ? "" : rawSecond;
+      const email = emailIndex >= 0
+        ? cells[emailIndex] ?? ""
+        : emailLike(rawSecond) ? rawSecond : emailLike(rawThird) ? rawThird : "";
+      const additionalInfo = infoIndex >= 0 ? cells[infoIndex] ?? "" : "";
       return {
         guestName: `${firstName} ${surname}`.trim(),
-        contactPhone: phoneIndex >= 0 ? cells[phoneIndex] ?? "" : cells[1] ?? "",
-        email: emailIndex >= 0 ? cells[emailIndex] ?? "" : cells[2] ?? "",
-        additionalInfo: infoIndex >= 0 ? cells[infoIndex] ?? "" : cells[3] ?? ""
+        contactPhone,
+        email,
+        additionalInfo
       };
     }).filter((row) => row.guestName.length > 0);
   }
@@ -339,6 +355,33 @@ export function DashboardClient() {
     const phone = digits.startsWith("39") ? digits : digits.length === 10 ? `39${digits}` : digits;
     const message = `Ciao ${guest.guestName}, sei invitato/a a “${guest.invitationTitle}”. Puoi vedere l'invito e confermare la partecipazione qui: ${guestInvitationLink(guest)}`;
     return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  async function handleDeleteSelectedGuests() {
+    const ids = selectedGuestIds.filter((id) => visibleInvitationGuests.some((guest) => guest.id === id));
+    if (ids.length === 0) {
+      setGuestListMessage("Seleziona almeno un contatto da eliminare.");
+      return;
+    }
+    if (!window.confirm(`Vuoi eliminare ${ids.length} contatti selezionati?`)) return;
+    setGuestListBusyId("bulk");
+    const result = await deleteInvitationGuests(ids);
+    setGuestListMessage(result.message);
+    if (result.ok) {
+      setInvitationGuests((current) => current.filter((guest) => !ids.includes(guest.id)));
+      setSelectedGuestIds((current) => current.filter((id) => !ids.includes(id)));
+    }
+    setGuestListBusyId("");
+  }
+
+  function syncGuestTableScroll(source: "top" | "bottom") {
+    if (syncingGuestScrollRef.current) return;
+    const from = source === "top" ? guestTableTopScrollRef.current : guestTableBottomScrollRef.current;
+    const to = source === "top" ? guestTableBottomScrollRef.current : guestTableTopScrollRef.current;
+    if (!from || !to) return;
+    syncingGuestScrollRef.current = true;
+    to.scrollLeft = from.scrollLeft;
+    window.requestAnimationFrame(() => { syncingGuestScrollRef.current = false; });
   }
 
   async function handleDeleteInvitationGuest(guest: InvitationGuest) {
@@ -750,32 +793,80 @@ export function DashboardClient() {
           <p className="muted">Inserisci nome e telefono delle persone a cui mandi l'invito: così saprai esattamente chi non ha ancora risposto.</p>
         </div>
       ) : (
-        <div className="guest-table-scroll" style={{ marginTop: 16 }}>
-          <table className="table guest-table">
-            <thead><tr><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Email</th><th>Allergie e informazioni</th><th>Promemoria</th><th>Azioni</th></tr></thead>
-            <tbody>
-              {visibleInvitationGuests.map((guest) => (
-                <tr key={guest.id}>
-                  <td><strong>{guest.guestName}</strong></td>
-                  <td>{guest.invitationTitle}</td>
-                  <td><span className={`status ${guest.status === "confirmed" ? "confirmed" : "pending"}`}>{guest.status === "confirmed" ? "Partecipa" : guest.status === "declined" ? "Non partecipa" : "Nessuna risposta"}</span></td>
-                  <td>{guest.contactPhone || "-"}</td>
-                  <td>{guest.email || "-"}</td>
-                  <td>{guest.additionalInfo || "Nessuna"}</td>
-                  <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
-                  <td>
-                    <div className="draft-actions">
-                      {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia WhatsApp</a> : null}
-                      {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia email</a> : null}
-                      {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Promemoria</button> : null}
-                      <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="guest-bulk-actions">
+            <label className="check-row" style={{ margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={visibleInvitationGuests.length > 0 && visibleInvitationGuests.every((guest) => selectedGuestIds.includes(guest.id))}
+                onChange={(event) => {
+                  const visibleIds = visibleInvitationGuests.map((guest) => guest.id);
+                  setSelectedGuestIds((current) => event.target.checked
+                    ? Array.from(new Set([...current, ...visibleIds]))
+                    : current.filter((id) => !visibleIds.includes(id)));
+                }}
+              />
+              <span>Seleziona tutto ({visibleInvitationGuests.length})</span>
+            </label>
+            <button
+              className="draft-delete-button"
+              type="button"
+              disabled={guestListBusyId === "bulk" || selectedGuestIds.filter((id) => visibleInvitationGuests.some((guest) => guest.id === id)).length === 0}
+              onClick={() => void handleDeleteSelectedGuests()}
+            >
+              {guestListBusyId === "bulk" ? "Eliminazione…" : `Elimina selezionati (${selectedGuestIds.filter((id) => visibleInvitationGuests.some((guest) => guest.id === id)).length})`}
+            </button>
+          </div>
+          <div
+            className="guest-table-top-scroll"
+            ref={guestTableTopScrollRef}
+            onScroll={() => syncGuestTableScroll("top")}
+            aria-label="Scorrimento orizzontale tabella invitati"
+          >
+            <div className="guest-table-scroll-spacer" />
+          </div>
+          <div
+            className="guest-table-scroll"
+            style={{ marginTop: 6 }}
+            ref={guestTableBottomScrollRef}
+            onScroll={() => syncGuestTableScroll("bottom")}
+          >
+            <table className="table guest-table">
+              <thead><tr><th aria-label="Seleziona"></th><th>Invitato</th><th>Invito</th><th>Stato</th><th>Telefono</th><th>Email</th><th>Allergie e informazioni</th><th>Promemoria</th><th>Azioni</th></tr></thead>
+              <tbody>
+                {visibleInvitationGuests.map((guest) => (
+                  <tr key={guest.id}>
+                    <td>
+                      <input
+                        aria-label={`Seleziona ${guest.guestName}`}
+                        type="checkbox"
+                        checked={selectedGuestIds.includes(guest.id)}
+                        onChange={(event) => setSelectedGuestIds((current) => event.target.checked
+                          ? Array.from(new Set([...current, guest.id]))
+                          : current.filter((id) => id !== guest.id))}
+                      />
+                    </td>
+                    <td><strong>{guest.guestName}</strong></td>
+                    <td>{guest.invitationTitle}</td>
+                    <td><span className={`status ${guest.status === "confirmed" ? "confirmed" : "pending"}`}>{guest.status === "confirmed" ? "Partecipa" : guest.status === "declined" ? "Non partecipa" : "Nessuna risposta"}</span></td>
+                    <td>{guest.contactPhone || "-"}</td>
+                    <td>{guest.email || "-"}</td>
+                    <td>{guest.additionalInfo || "Nessuna"}</td>
+                    <td>{guest.remindedAt ? new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(guest.remindedAt)) : "Mai inviato"}</td>
+                    <td>
+                      <div className="draft-actions">
+                        {guestWhatsappInviteLink(guest) ? <a className="button secondary" href={guestWhatsappInviteLink(guest)} target="_blank" rel="noreferrer">Invia WhatsApp</a> : null}
+                        {guestEmailLink(guest) ? <a className="button secondary" href={guestEmailLink(guest)}>Invia email</a> : null}
+                        {guest.status === "pending" && guest.contactPhone ? <button className="button secondary" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleReminder(guest)}>Promemoria</button> : null}
+                        <button className="draft-delete-button" type="button" disabled={guestListBusyId === guest.id} onClick={() => void handleDeleteInvitationGuest(guest)}>Elimina</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </section>
 
