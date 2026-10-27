@@ -53,7 +53,8 @@ export async function uploadGuestMedia(
   if (!response.ok || !result.item) return { ok: false, message: result.error ?? "Caricamento non riuscito." };
   return {
     ok: true,
-    message: "Caricato! Il proprietario dell’invito potrà approvare il contenuto dalla dashboard."
+    item: result.item,
+    message: "Pubblicato! Il ricordo è ora visibile nell’album dell’invito."
   };
 }
 
