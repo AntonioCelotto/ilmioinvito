@@ -6,6 +6,7 @@ import { createFinalVideoFrameFile } from "@/lib/video-frame";
 
 type Item = {
   id: string;
+  source: "legacy" | "custom";
   name: string;
   category: string;
   mediaType: "image" | "video";
@@ -13,6 +14,7 @@ type Item = {
   videoUrl: string;
   posterUrl: string;
   published: boolean;
+  order: number;
 };
 
 const categories = [
@@ -43,7 +45,8 @@ export function TemplateAdminClient() {
     const response=await fetch("/api/template-library",{headers:{Authorization:`Bearer ${token}`},cache:"no-store"});
     if(!response.ok){setAllowed(false);return;}
     const data=await response.json() as {items:Item[]};
-    setItems(data.items);setAllowed(true);
+    setItems([...data.items].sort((a,b)=>a.order-b.order));
+    setAllowed(true);
   }
 
   useEffect(()=>{void refresh();},[]);
@@ -130,18 +133,35 @@ export function TemplateAdminClient() {
     setBusy(false);
   }
 
-  async function toggle(item:Item) {
-    const token=await authToken();setBusy(true);
-    const response=await fetch("/api/template-library",{method:"PATCH",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({id:item.id,mediaType:item.mediaType,published:!item.published})});
-    setMessage(response.ok?(item.published?"Template nascosto.":"Template pubblicato."):"Aggiornamento non riuscito.");
-    await refresh();setBusy(false);
+  async function updateItem(item:Item, patch:Partial<Pick<Item,"published"|"name"|"category"|"order">>) {
+    const token=await authToken();
+    setBusy(true);
+    const response=await fetch("/api/template-library",{
+      method:"PATCH",
+      headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({id:item.id,source:item.source,...patch})
+    });
+    const result=await response.json().catch(()=>({})) as {error?:string};
+    setMessage(response.ok?"Template aggiornato.":result.error||"Aggiornamento non riuscito.");
+    await refresh();
+    setBusy(false);
   }
 
   async function remove(item:Item) {
+    if(item.source==="legacy"){
+      await updateItem(item,{published:false});
+      setMessage("Template storico nascosto dalla galleria. Il file originale è rimasto intatto.");
+      return;
+    }
     if(!window.confirm(`Eliminare definitivamente “${item.name}”?`))return;
     const token=await authToken();setBusy(true);
-    const response=await fetch("/api/template-library",{method:"DELETE",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({id:item.id,mediaType:item.mediaType})});
-    setMessage(response.ok?"Template eliminato.":"Eliminazione non riuscita.");
+    const response=await fetch("/api/template-library",{
+      method:"DELETE",
+      headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({id:item.id,source:item.source,mediaType:item.mediaType})
+    });
+    const result=await response.json().catch(()=>({})) as {error?:string};
+    setMessage(response.ok?"Template eliminato definitivamente.":result.error||"Eliminazione non riuscita.");
     await refresh();setBusy(false);
   }
 
@@ -152,7 +172,7 @@ export function TemplateAdminClient() {
     <section className="panel">
       <p className="eyebrow">Amministrazione</p>
       <h1>Gestione Template</h1>
-      <p className="muted">Carica immagini e video: quando sono pubblicati compaiono automaticamente nella galleria Template di ilmioinvito.com.</p>
+      <p className="muted">Qui gestisci sia i template storici sia quelli caricati da voi. I template storici possono essere nascosti, rinominati, spostati di categoria e riordinati senza cancellare il file originale.</p>
       <form onSubmit={submit} style={{display:"grid",gap:12,maxWidth:720,marginTop:20}}>
         <label>Nome template<input name="name" required placeholder="Es. Festa elegante" /></label>
         <label>Categoria<select name="category" defaultValue="evento-privato">{categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
@@ -164,18 +184,43 @@ export function TemplateAdminClient() {
     </section>
 
     <section className="panel" style={{marginTop:18}}>
-      <div className="panel-header"><div><p className="eyebrow">Libreria</p><h2>Template caricati</h2></div><strong>{items.length}</strong></div>
-      {items.length===0?<div className="empty-state"><h3>Nessun template amministrativo</h3><p className="muted">Il primo che caricherai comparirà qui.</p></div>:
+      <div className="panel-header"><div><p className="eyebrow">Libreria completa</p><h2>Template gestibili</h2></div><strong>{items.length}</strong></div>
+      {items.length===0?<div className="empty-state"><h3>Nessun template</h3><p className="muted">I template compariranno qui.</p></div>:
       <div className="template-grid">
-        {items.map(item=><article className="template-card" key={item.id}>
+        {items.map(item=><article className="template-card" key={`${item.source}-${item.id}`}>
           <div className="template-card-preview" style={{backgroundImage:item.imageUrl?`url("${item.imageUrl}")`:undefined,backgroundPosition:"center",backgroundSize:"cover"}}>
             {item.mediaType==="video"?<video src={item.videoUrl} poster={item.posterUrl||undefined} muted loop playsInline controls style={{width:"100%",height:"100%",objectFit:"cover"}}/>:null}
           </div>
           <div className="template-card-body">
-            <div><h3>{item.name}</h3><p>{categories.find(([v])=>v===item.category)?.[1]||item.category}</p><span className={`status ${item.published?"confirmed":"pending"}`}>{item.published?"Pubblicato":"Nascosto"}</span></div>
+            <div>
+              <small style={{fontWeight:800,textTransform:"uppercase",letterSpacing:".06em"}}>{item.source==="legacy"?"Storico":"Caricato da voi"}</small>
+              <input
+                defaultValue={item.name}
+                aria-label={`Nome ${item.name}`}
+                onBlur={(event)=>{const value=event.currentTarget.value.trim();if(value&&value!==item.name)void updateItem(item,{name:value});}}
+              />
+              <select
+                value={item.category}
+                onChange={(event)=>void updateItem(item,{category:event.target.value})}
+                aria-label={`Categoria ${item.name}`}
+              >
+                {categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+              </select>
+              <label style={{display:"flex",gap:8,alignItems:"center",marginTop:8}}>
+                <span>Ordine</span>
+                <input
+                  type="number"
+                  min="0"
+                  defaultValue={item.order}
+                  style={{width:90}}
+                  onBlur={(event)=>{const value=Number(event.currentTarget.value);if(Number.isFinite(value)&&value!==item.order)void updateItem(item,{order:value});}}
+                />
+              </label>
+              <span className={`status ${item.published?"confirmed":"pending"}`} style={{marginTop:8}}>{item.published?"Pubblicato":"Nascosto"}</span>
+            </div>
             <div className="draft-actions" style={{marginTop:12}}>
-              <button className="button secondary" disabled={busy} type="button" onClick={()=>void toggle(item)}>{item.published?"Nascondi":"Pubblica"}</button>
-              <button className="draft-delete-button" disabled={busy} type="button" onClick={()=>void remove(item)}>Elimina</button>
+              <button className="button secondary" disabled={busy} type="button" onClick={()=>void updateItem(item,{published:!item.published})}>{item.published?"Nascondi":"Pubblica"}</button>
+              <button className="draft-delete-button" disabled={busy} type="button" onClick={()=>void remove(item)}>{item.source==="legacy"?"Archivia":"Elimina"}</button>
             </div>
           </div>
         </article>)}
