@@ -3,6 +3,20 @@
   max-width: 100vw;
   min-height: 100svh;
   overflow-x: hidden;
+  overflow-y: visible;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+.publicInvite :global(.invite-background-video) {
+  pointer-events: none;
+  touch-action: none;
+}
+
+.publicInvite :global(.invitation-custom-theme),
+.publicInvite :global(.invite-content-background),
+.publicInvite :global(.invite-dynamic-sections) {
+  touch-action: pan-y;
 }
 
 .publicInvite :global(.invite-content-background) {
