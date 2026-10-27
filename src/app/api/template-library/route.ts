@@ -235,14 +235,30 @@ export async function PATCH(request: Request) {
     category?: string;
     order?: number;
     name?: string;
+    orders?: Array<{ id: string; source: "legacy" | "custom"; order: number }>;
   } | null;
+
+  const manifest = await readManifest();
+
+  if (Array.isArray(body?.orders)) {
+    for (const item of body.orders) {
+      if (!item?.id || (item.source !== "legacy" && item.source !== "custom") || !Number.isFinite(item.order)) continue;
+      const key = item.source === "custom" ? `admin-${item.id}` : item.id;
+      manifest[key] = {
+        ...(manifest[key] ?? {}),
+        order: Math.max(0, Math.round(item.order))
+      };
+    }
+    const { error } = await writeManifest(manifest);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ updated: true });
+  }
 
   if (!body?.id || (body.source !== "legacy" && body.source !== "custom")) {
     return NextResponse.json({ error: "Template non valido." }, { status: 400 });
   }
 
   const key = body.source === "custom" ? `admin-${body.id}` : body.id;
-  const manifest = await readManifest();
   const current = manifest[key] ?? {};
   const next: TemplateOverride = { ...current };
 
