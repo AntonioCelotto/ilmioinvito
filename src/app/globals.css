@@ -2427,8 +2427,28 @@ h3 {
   overflow-x: auto;
 }
 
+.guest-table-top-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 100%;
+}
+
+.guest-table-scroll-spacer {
+  height: 1px;
+  min-width: 1180px;
+}
+
+.guest-bulk-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
 .guest-table {
-  min-width: 820px;
+  min-width: 1180px;
 }
 
 .guest-table th:nth-child(4),
