@@ -16,7 +16,7 @@ import {
   getCurrentUser,
   loadUserDraftsFromSupabase
 } from "@/lib/supabase/drafts";
-import { DashboardRsvp, loadDashboardRsvps } from "@/lib/supabase/rsvps";
+import { DashboardRsvp, loadDashboardRsvps, updateDashboardRsvpStatus } from "@/lib/supabase/rsvps";
 import {
   InvitationGuest,
   addInvitationGuest,
@@ -38,6 +38,7 @@ export function DashboardClient() {
   const [remoteMessage, setRemoteMessage] = useState("");
   const [rsvps, setRsvps] = useState<DashboardRsvp[]>([]);
   const [rsvpMessage, setRsvpMessage] = useState("");
+  const [updatingRsvpId, setUpdatingRsvpId] = useState("");
   const [invitationGuests, setInvitationGuests] = useState<InvitationGuest[]>([]);
   const [guestListMessage, setGuestListMessage] = useState("");
   const [newGuestName, setNewGuestName] = useState("");
@@ -181,6 +182,18 @@ export function DashboardClient() {
       declined: rows.filter((rsvp) => rsvp.status === "declined").length,
       responses: new Set(rows.map((rsvp) => rsvp.responseGroupId)).size
     };
+  }
+
+  async function handleManualRsvpStatus(rsvp: DashboardRsvp, status: DashboardRsvp["status"]) {
+    if (rsvp.status === status) return;
+    setUpdatingRsvpId(rsvp.id);
+    setRsvpMessage("");
+    const result = await updateDashboardRsvpStatus(rsvp.id, status);
+    if (result.ok) {
+      setRsvps((current) => current.map((item) => item.id === rsvp.id ? { ...item, status } : item));
+    }
+    setRsvpMessage(result.message);
+    setUpdatingRsvpId("");
   }
 
   function reminderWhatsappLink(guest: InvitationGuest) {
@@ -369,7 +382,18 @@ export function DashboardClient() {
               <tr key={rsvp.id}>
                 <td><strong>{rsvp.guestName}</strong></td>
                 <td>{rsvp.invitationTitle}</td>
-                <td><span className={`status ${declined ? "pending" : "confirmed"}`}>{declined ? "Non partecipa" : "Partecipa"}</span></td>
+                <td>
+                  <select
+                    aria-label={`Stato di ${rsvp.guestName}`}
+                    disabled={updatingRsvpId === rsvp.id}
+                    value={rsvp.status}
+                    onChange={(event) => void handleManualRsvpStatus(rsvp, event.target.value as DashboardRsvp["status"])}
+                    style={{ minWidth: 132 }}
+                  >
+                    <option value="confirmed">Partecipa</option>
+                    <option value="declined">Non partecipa</option>
+                  </select>
+                </td>
                 <td>{rsvp.contactPhone || "-"}</td>
                 {!declined ? <td>{rsvp.additionalInfo || "Nessuna"}</td> : null}
                 <td>{new Intl.DateTimeFormat("it-IT", { dateStyle: "short", timeStyle: "short" }).format(new Date(rsvp.createdAt))}</td>
