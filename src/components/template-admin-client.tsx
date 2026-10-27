@@ -41,6 +41,7 @@ export function TemplateAdminClient() {
   const [typeFilter,setTypeFilter]=useState<"all"|"image"|"video">("all");
   const [categoryFilter,setCategoryFilter]=useState("all");
   const [draggedKey,setDraggedKey]=useState("");
+  const [orderDirty,setOrderDirty]=useState(false);
 
   async function refresh() {
     const token=await authToken();
@@ -154,20 +155,24 @@ export function TemplateAdminClient() {
     setBusy(false);
   }
 
-  async function saveOrder(nextItems:Item[]) {
+  async function saveOrder() {
     const token=await authToken();
     setBusy(true);
-    setItems(nextItems);
     const response=await fetch("/api/template-library",{
       method:"PATCH",
       headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},
       body:JSON.stringify({
-        orders:nextItems.map((item,index)=>({id:item.id,source:item.source,order:index}))
+        orders:items.map((item,index)=>({id:item.id,source:item.source,order:index}))
       })
     });
     const result=await response.json().catch(()=>({})) as {error?:string};
-    setMessage(response.ok?"Ordine salvato.":result.error||"Salvataggio ordine non riuscito.");
-    if(!response.ok)await refresh();
+    if(response.ok){
+      setItems((current)=>current.map((item,index)=>({...item,order:index})));
+      setOrderDirty(false);
+      setMessage("Ordine salvato correttamente.");
+    }else{
+      setMessage(result.error||"Salvataggio ordine non riuscito.");
+    }
     setBusy(false);
   }
 
@@ -183,7 +188,9 @@ export function TemplateAdminClient() {
     const [moved]=next.splice(sourceIndex,1);
     next.splice(targetIndex,0,moved);
     setDraggedKey("");
-    void saveOrder(next);
+    setItems(next);
+    setOrderDirty(true);
+    setMessage("Ordine modificato: premi “Salva ordine” per confermare.");
   }
 
   async function remove(item:Item) {
@@ -243,6 +250,14 @@ export function TemplateAdminClient() {
           </select>
         </label>
         <span className="muted" style={{fontSize:13}}>Trascina una mini-card per cambiarne la posizione.</span>
+        <button
+          className="button"
+          type="button"
+          disabled={busy||!orderDirty}
+          onClick={()=>void saveOrder()}
+        >
+          {busy?"Salvataggio...":orderDirty?"Salva ordine":"Ordine salvato"}
+        </button>
       </div>
 
       {visibleItems.length===0?<div className="empty-state"><h3>Nessun template</h3><p className="muted">Prova a cambiare i filtri.</p></div>:
