@@ -71,6 +71,23 @@ export async function updateDashboardRsvpStatus(id: string, status: RsvpStatus):
     : { ok: true, message: status === "confirmed" ? "Stato aggiornato: partecipa." : "Stato aggiornato: non partecipa." };
 }
 
+export async function updateDashboardRsvpInfo(id: string, additionalInfo: string): Promise<{ ok: boolean; message: string }> {
+  const supabase = createClient();
+  if (!supabase) return { ok: false, message: "Supabase non configurato." };
+
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { ok: false, message: "Accedi per modificare gli invitati." };
+
+  const { error } = await supabase
+    .from("rsvps")
+    .update({ additional_info: additionalInfo.trim() || null })
+    .eq("id", id);
+
+  return error
+    ? { ok: false, message: error.message }
+    : { ok: true, message: "Allergie e informazioni aggiornate." };
+}
+
 export async function loadDashboardRsvps(): Promise<{
   rsvps: DashboardRsvp[];
   message: string;
