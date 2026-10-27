@@ -216,7 +216,43 @@ function CustomVideoTemplateUpload() {
 }
 
 export function TemplateGallery() {
-  const {videoTemplates,imageTemplates}=useMemo(()=>{const availableTemplates=invitationTemplates.filter(template=>!eighteenTemplateIds.has(template.id));const videos=availableTemplates.filter(template=>Boolean(template.theme.backgroundVideo));const images=availableTemplates.filter(template=>!template.theme.backgroundVideo).sort((a,b)=>colorBrightness(b.theme.primaryColor)-colorBrightness(a.theme.primaryColor));return{videoTemplates:videos,imageTemplates:images};},[]);
+  const [managedTemplates,setManagedTemplates]=useState<InvitationTemplate[]>([]);
+
+  useEffect(()=>{
+    let active=true;
+    fetch("/api/template-library",{cache:"no-store"})
+      .then((response)=>response.ok?response.json():Promise.reject())
+      .then((data:{items:Array<{id:string;name:string;category:InvitationTemplate["category"];mediaType:"image"|"video";imageUrl:string;videoUrl:string;posterUrl:string}>})=>{
+        if(!active)return;
+        setManagedTemplates((data.items??[]).map((item)=>({
+          id:`admin-${item.id}`,
+          category:item.category,
+          name:item.name,
+          description:item.mediaType==="video"?"Template video pubblicato dagli amministratori.":"Template grafico pubblicato dagli amministratori.",
+          occasionLabel:"Template",
+          previewTitle:"Il tuo evento",
+          previewSubtitle:"Personalizza testi e contenuti",
+          theme:{
+            template:"classicLight",
+            primaryColor:"#151313",
+            accentColor:"#b87333",
+            fontStyle:"serif",
+            backgroundImage:item.imageUrl||item.posterUrl,
+            backgroundVideo:item.mediaType==="video"?item.videoUrl:undefined
+          }
+        })));
+      })
+      .catch(()=>{});
+    return()=>{active=false;};
+  },[]);
+
+  const {videoTemplates,imageTemplates}=useMemo(()=>{
+    const availableTemplates=[...managedTemplates,...invitationTemplates.filter(template=>!eighteenTemplateIds.has(template.id))];
+    const videos=availableTemplates.filter(template=>Boolean(template.theme.backgroundVideo));
+    const images=availableTemplates.filter(template=>!template.theme.backgroundVideo).sort((a,b)=>colorBrightness(b.theme.primaryColor)-colorBrightness(a.theme.primaryColor));
+    return{videoTemplates:videos,imageTemplates:images};
+  },[managedTemplates]);
+
   const selectTemplate=(template:InvitationTemplate)=>applyTemplateAndOpenBuilder(template);
   return <><div className="template-gallery-actions"><a className="template-upload-jump" href="#carica-template">Carica immagine<span aria-hidden="true">↓</span></a><a className="template-upload-jump" href="#carica-template-video">Carica video<span aria-hidden="true">↓</span></a></div><TemplateSection title="Inviti video" description="Template animati: le anteprime partono automaticamente senza audio. Se il browser blocca l'avvio, basta toccare il video." templates={videoTemplates} onSelect={selectTemplate}/><section style={{marginBottom:"3.5rem"}}><div className="template-grid">{imageTemplates.map(template=><TemplateCard key={template.id} template={template} onSelect={selectTemplate}/>)}</div></section><CustomTemplateUpload/><CustomVideoTemplateUpload/></>;
 }
