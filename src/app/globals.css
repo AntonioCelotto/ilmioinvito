@@ -3243,3 +3243,33 @@ h3 {
 .operator-page p { line-height:1.65; }
 .operator-page .field input,.operator-page .field select { width:100%; }
 @media(max-width:600px) { .operator-page .panel { padding:20px; } }
+
+.operator-invitation {
+  display:grid;
+  grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+  align-items:center;
+  gap:clamp(24px,4vw,64px);
+  width:calc(100% - 48px);
+  max-width:1180px;
+  margin:64px auto;
+  padding:clamp(24px,4vw,48px);
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:linear-gradient(120deg,#f7eae6,var(--panel));
+}
+.operator-invitation h2 { margin:12px 0 20px; font-size:clamp(28px,3.5vw,42px); line-height:1.12; letter-spacing:-.035em; }
+.operator-invitation-copy > p:not(.eyebrow) { color:var(--muted); line-height:1.7; }
+.operator-invitation ul { padding-left:20px; margin:20px 0 0; line-height:1.7; }
+.operator-invitation li + li { margin-top:8px; }
+.operator-invitation-action { display:flex; flex-direction:column; align-items:flex-start; gap:18px; padding:28px; border-radius:18px; background:var(--panel); border:1px solid var(--line); }
+.operator-invitation-label { color:var(--accent-dark); font-size:12px; font-weight:650; text-transform:uppercase; letter-spacing:.08em; }
+.operator-invitation-action .button { width:100%; display:flex; align-items:center; justify-content:center; gap:12px; white-space:normal; text-align:center; line-height:1.4; }
+.operator-invitation-action p { margin:0; color:var(--muted); font-size:14px; line-height:1.65; }
+@media(max-width:800px) {
+  .operator-invitation { grid-template-columns:1fr; margin:40px auto; }
+  .operator-invitation-action { padding:24px; }
+}
+@media(max-width:450px) {
+  .operator-invitation { width:calc(100% - 32px); padding:24px 20px; }
+  .operator-invitation-action { padding:20px; }
+}

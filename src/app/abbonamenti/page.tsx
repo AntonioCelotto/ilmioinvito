@@ -1,3 +1,4 @@
+import { OperatorInvitation } from "@/components/operator-invitation";
 import { PricingCheckoutButton } from "@/components/pricing-checkout-button";
 
 const plans = [
@@ -44,6 +45,7 @@ export default async function AbbonamentiPage({
         <nav className="pricing-nav" aria-label="Navigazione abbonamenti">
           <a href="/templates">Template</a>
           <a href="/dashboard">Dashboard</a>
+          <a href="/operatori">Area operatori</a>
         </nav>
       </header>
 
@@ -94,6 +96,8 @@ export default async function AbbonamentiPage({
           <PricingCheckoutButton productKey="guest_pack_50" label="Aggiungi 50 invitati" invitationId={invitationId} />
         </div>
       </section>
+
+      <OperatorInvitation />
 
       <section className="pricing-security">
         <h2>Pagamento protetto</h2>
