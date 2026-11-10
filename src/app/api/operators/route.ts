@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { operatorContext, noStore } from "@/lib/operators/server";
-import { availableCredits, type OperatorGrant } from "@/lib/operators/types";
+import { availableCredits, operatorPackages, type OperatorGrant } from "@/lib/operators/types";
 import { allowRequest } from "@/lib/rate-limit";
 
 export async function GET(request: Request) {
@@ -29,9 +29,11 @@ export async function POST(request: Request) {
   const { data: existing, error: lookupError } = await db.from("operator_accounts").select("user_id").eq("user_id", user.id).maybeSingle();
   if (lookupError) return NextResponse.json({ error: "Verifica account non riuscita." }, { status: 500 });
   if (existing) return NextResponse.json({ error: "La richiesta è già presente. Contatta l’amministratore per aggiornare i dati." }, { status: 409 });
+  const requestedPackage = body.requested_package_key ?? "advice";
+  if (requestedPackage !== "advice" && !operatorPackages.some(pack => pack.key === requestedPackage)) return NextResponse.json({ error: "Scegli un pacchetto valido." }, { status: 400 });
   const values = Object.fromEntries(fields.map(key => [key, body[key].trim()]));
   // Approval and credits never come from signup metadata or from the request body.
-  const { error } = await db.from("operator_accounts").insert({ ...values, user_id: user.id, email: user.email, status: "pending", terms_version: "2026-11-10" });
+  const { error } = await db.from("operator_accounts").insert({ ...values, user_id: user.id, email: user.email, status: "pending", requested_package_key: requestedPackage, terms_version: "2026-11-10" });
   if (error) return NextResponse.json({ error: "Richiesta non registrata. Riprova." }, { status: 500 });
   return NextResponse.json({ ok: true }, noStore);
 }

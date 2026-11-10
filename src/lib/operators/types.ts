@@ -8,6 +8,7 @@ export type OperatorAccount = {
   vat_number: string;
   billing_address: string;
   status: OperatorStatus;
+  requested_package_key?: string | null;
   created_at: string;
 };
 export type OperatorGrant = {

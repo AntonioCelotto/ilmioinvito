@@ -1,15 +1,16 @@
+import { fulfillOperatorSession, retrieveOperatorSession, type OperatorStripeSession } from "@/lib/operators/stripe";
 import { NextResponse } from "next/server";
 import { billingProducts, isBillingProductKey } from "@/lib/billing-plans";
 import { verifyStripeWebhookSignature } from "@/lib/stripe-rest";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
-type StripeCheckoutSession = {
+type StripeCheckoutSession = OperatorStripeSession & {
   id: string;
   amount_total?: number | null;
   currency?: string | null;
   payment_status?: string;
   payment_intent?: string | null;
-  metadata?: { owner_id?: string; product_key?: string; invitation_id?: string };
+  metadata?: OperatorStripeSession["metadata"] & { owner_id?: string; product_key?: string; invitation_id?: string };
 };
 
 export async function POST(request: Request) {
@@ -28,11 +29,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Payload webhook non valido." }, { status: 400 });
   }
 
-  if (event.type !== "checkout.session.completed") {
+  if (event.type !== "checkout.session.completed" && event.type !== "checkout.session.async_payment_succeeded") {
     return NextResponse.json({ received: true });
   }
 
   const session = event.data?.object;
+  if (session?.metadata?.purchase_type === "operator_package") {
+    const admin = createSupabaseAdminClient();
+    if (!admin) return NextResponse.json({ error: "Database non configurato." }, { status: 503 });
+    try {
+      await fulfillOperatorSession(admin, await retrieveOperatorSession(session.id));
+      return NextResponse.json({ received: true });
+    } catch { return NextResponse.json({ error: "Accredito operatore non riuscito." }, { status: 500 }); }
+  }
   const ownerId = session?.metadata?.owner_id;
   const productKey = session?.metadata?.product_key;
   const invitationId = session?.metadata?.invitation_id;

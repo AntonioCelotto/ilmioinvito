@@ -1,0 +1,46 @@
+begin;
+do $$
+declare
+  actor uuid:=gen_random_uuid();
+  other_actor uuid:=gen_random_uuid();
+  order_a uuid:=gen_random_uuid();
+  order_b uuid:=gen_random_uuid();
+  applied boolean;
+  blocked boolean;
+begin
+  insert into auth.users(id,email,raw_user_meta_data) values(actor,'stripe-sql-'||actor||'@example.invalid','{}'),(other_actor,'stripe-sql-'||other_actor||'@example.invalid','{}');
+  insert into public.profiles(id,email) values(actor,'test@example.invalid'),(other_actor,'other@example.invalid') on conflict(id) do nothing;
+  insert into public.operator_accounts(user_id,full_name,company_name,email,phone,vat_number,billing_address,terms_version,status) values(actor,'Test','Test','test@example.invalid','0','test','test','test','active');
+  insert into public.operator_stripe_orders(id,operator_id,package_key,package_name,event_count,net_cents) values(order_a,actor,'ten','10 eventi Firma',10,69000),(order_b,actor,'pilot','Evento pilota Firma',1,8900);
+  blocked:=false;
+  begin perform public.apply_operator_stripe_checkout(order_a,other_actor,'ten','cs_test_QAorderA','pi_QAA',69000,15180,84180); exception when others then blocked:=sqlerrm='OPERATOR_ORDER_NOT_FOUND'; end;
+  assert blocked,'Cannot credit another operator order';
+  blocked:=false;
+  begin perform public.apply_operator_stripe_checkout(order_a,actor,'ten','cs_test_QAorderA','pi_QAA',6900,1518,8418); exception when others then blocked:=sqlerrm='OPERATOR_PAYMENT_MISMATCH'; end;
+  assert blocked,'Wrong amount must not grant credits';
+  assert not exists(select 1 from public.operator_credit_grants where operator_id=actor),'Failed verification grants no credits';
+  applied:=public.apply_operator_stripe_checkout(order_a,actor,'ten','cs_test_QAorderA','pi_QAA',69000,15180,84180);
+  assert applied,'First confirmation applies';
+  assert(select sum(event_count)=10 from public.operator_credit_grants where operator_id=actor),'Exactly 10 credits granted';
+  assert(select status='paid' and total_cents=84180 from public.operator_stripe_orders where id=order_a),'Payment and taxes recorded';
+  applied:=public.apply_operator_stripe_checkout(order_a,actor,'ten','cs_test_QAorderA','pi_QAA',69000,15180,84180);
+  assert not applied,'Duplicate webhook must not grant twice';
+  assert(select count(*)=1 from public.operator_credit_grants where operator_id=actor),'Exactly one grant after duplicate';
+  blocked:=false;
+  begin perform public.apply_operator_stripe_checkout(order_b,actor,'pilot','cs_test_QAorderA','pi_QAA',8900,1958,10858); exception when unique_violation then blocked:=true; end;
+  assert blocked,'Session cannot pay another order';
+  assert(select count(*)=1 from public.operator_credit_grants where operator_id=actor),'Failed transaction rolls back grant';
+  update public.operator_accounts set status='suspended' where user_id=actor;
+  applied:=public.apply_operator_stripe_checkout(order_b,actor,'pilot','cs_test_QAorderB','pi_QAB',8900,0,8900);
+  assert applied,'Approved paid order fulfilled even after suspension';
+  assert(select sum(event_count)=11 from public.operator_credit_grants where operator_id=actor),'Zero-tax authoritative checkout supported';
+  assert not has_function_privilege('authenticated','public.apply_operator_stripe_checkout(uuid,uuid,text,text,text,integer,integer,integer)','execute'),'Only backend can apply payment';
+  assert not has_table_privilege('authenticated','public.operator_stripe_orders','update'),'Clients cannot mark orders paid';
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',other_actor,'role','authenticated')::text,true);
+  set local role authenticated;
+  assert(select count(*)=0 from public.operator_stripe_orders),'Order RLS isolates users';
+  reset role;
+end;
+$$;
+rollback;
+select 'Operator Stripe order checks passed; fixtures rolled back' as result;
