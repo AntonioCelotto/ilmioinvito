@@ -1,3 +1,4 @@
+import type { InvitationCustomFont } from "@/lib/fonts/shared";
 export type InvitationSectionKey =
   | "countdown"
   | "ceremony"
@@ -53,6 +54,8 @@ export type InvitationTheme = {
     | "minimalist"
     | "soft"
     | "bold";
+  customHeadingFont?: InvitationCustomFont;
+  customBodyFont?: InvitationCustomFont;
   backgroundImage?: string;
   backgroundVideo?: string;
   textColor?: string;

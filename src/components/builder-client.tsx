@@ -1,5 +1,9 @@
 "use client";
 
+import { OperatorFontEditor } from "@/components/operator-font-editor";
+import { InvitationCustomFonts } from "@/components/invitation-custom-fonts";
+import { customFontStyles, customFontAttributes } from "@/lib/fonts/shared";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { demoInvitation } from "@/lib/demo-data";
@@ -1440,6 +1444,7 @@ export function BuilderClient() {
           );
         })}
 
+        {(isAdmin || operator?.account?.status === "active") ? <OperatorFontEditor theme={draft.theme} onChange={updateTheme} /> : null}
         <h3>Personalizza il template</h3>
         <div className="field-row">
           <div className="field">
@@ -1568,8 +1573,10 @@ export function BuilderClient() {
           <span className="live-preview-badge">Live</span>
         </div>
         <div
-          className={`preview-phone theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
+          className={`preview-phone invitation-custom-fonts theme-${draft.theme.template} preview-font-${draft.theme.fontStyle}`}
+          {...customFontAttributes(draft.theme)}
           style={{
+            ...customFontStyles(draft.theme),
             backgroundColor: draft.theme.primaryColor,
             backgroundImage: previewBackgroundSource
               ? `linear-gradient(rgba(255, 250, 242, 0.08), rgba(255, 250, 242, 0.18)), url("${previewBackgroundSource}")`
@@ -1586,6 +1593,7 @@ export function BuilderClient() {
             "--invitation-font-scale": draft.theme.fontScale ?? 1
           } as CSSProperties}
         >
+          <InvitationCustomFonts theme={draft.theme} />
           <div className="phone-notch" aria-hidden="true" />
           <div className="phone-screen" ref={previewScreenRef}>
             <header className={`phone-hero-preview${draft.theme.backgroundVideo ? " phone-video-only-hero" : ""}`}>

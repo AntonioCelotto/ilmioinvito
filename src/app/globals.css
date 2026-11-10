@@ -3283,3 +3283,18 @@ h3 {
 .operator-confirmation::backdrop { background:#2f202080; }
 .operator-confirmation h2 { font-size:28px; line-height:1.25; }
 .operator-confirmation p { line-height:1.65; }
+
+.operator-font-editor { margin:24px 0; padding:22px; border:1px solid var(--line); border-radius:16px; background:#fff9f5; }
+.operator-font-editor h3 { margin:8px 0 12px; }
+.operator-font-editor p { line-height:1.6; }
+.operator-font-editor .field { display:flex; flex-direction:column; gap:8px; margin:14px 0; }
+.operator-font-editor .field-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.operator-font-editor select,.operator-font-editor input:not([type=checkbox]) { width:100%; min-width:0; }
+.operator-font-editor summary { cursor:pointer; font-weight:600; margin:20px 0; }
+.operator-font-editor input[type=checkbox] { flex-shrink:0; }
+.operator-font-editor .muted { font-size:13px; }
+/* No custom-font attribute means none of these rules apply to existing invites. */
+.invitation-custom-fonts[data-custom-body-font="true"] { font-family:var(--custom-body-font) !important; }
+.invitation-custom-fonts[data-custom-body-font="true"] :is(p,span,div,strong,small,label,input,textarea,select,button,a,li,td,th,time) { font-family:inherit !important; }
+.invitation-custom-fonts[data-custom-heading-font="true"] :is(h1,h2,h3,h4,h5,h6,.phone-featured-text,.invitation-hero-title,.phone-location>strong,.phone-social-heading>strong,.social-composer-heading>strong,.cover-elements-preview>div,[aria-label="Testo copertina"]) { font-family:var(--custom-heading-font) !important; }
+@media(max-width:650px) { .operator-font-editor .field-row { grid-template-columns:1fr; gap:0; } }

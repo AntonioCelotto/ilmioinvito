@@ -1,0 +1,50 @@
+// Isolated font validation and route tests; no network or production fixtures.
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
+const actor='a131e6fb-3341-45ba-919a-e43ec2580961',fontId='a131e6fb-3341-45ba-919a-e43ec2580962';
+let status='pending',uploadCalls=[],inserts=[],filters=[],removeCalls=[],rowFailure=false;
+let invitationRow={id:fontId,slug:'font-qa',title:'Test',status:'draft',invitation_content:{theme:{}},updated_at:'2026-11-10T10:00:00Z'};
+const db={from(table){return {select(){return this},eq(key,value){filters.push({table,key,value});return this},order:async()=>({data:[],error:null}),maybeSingle:async()=>({data:table==='operator_accounts'?{status}:invitationRow,error:null}),insert:async(row)=>{inserts.push(row);return {error:rowFailure?{message:'fixture'}:null}},then(resolve){return Promise.resolve({count:0,error:null}).then(resolve)}}},storage:{from(bucket){return {upload:async(key,buffer,options)=>{uploadCalls.push({bucket,key,buffer,options});return {error:null}},remove:async(keys)=>{removeCalls.push(keys);return {error:null}}}}}};
+const cache=new Map();
+function load(file){const filename=path.resolve(file);if(cache.has(filename))return cache.get(filename).exports;const module={exports:{}};cache.set(filename,module);const js=ts.transpileModule(fs.readFileSync(filename,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;const req=name=>{if(name==='server-only')return {};if(name==='@/lib/supabase/server')return {createServerAuthClient:()=>({auth:{getUser:async()=>({data:{user:{id:actor,email:'qa@example.invalid',app_metadata:{}}},error:null})}}),createSupabaseAdminClient:()=>db};if(name==='@/lib/supabase/client')return {createClient:()=>db};if(name==='@/lib/rate-limit')return {allowRequest:()=>true};if(name.startsWith('@/'))return load('src/'+name.slice(2)+'.ts');if(name.startsWith('.'))return load(path.resolve(path.dirname(filename),name)+'.ts');return require(name)};vm.runInThisContext('(function(require,module,exports){'+js+'\n})',{filename})(req,module,module.exports);return module.exports}
+(async()=>{
+ process.env.NEXT_PUBLIC_SUPABASE_URL='https://font-fixture.supabase.co';
+ const shared=load('src/lib/fonts/shared.ts'),validate=load('src/lib/fonts/validation.ts').validateFontFile;
+ const font={id:fontId,ownerId:actor,name:'Elegante <safe>',format:'woff2'};
+ assert.deepEqual(shared.normalizeCustomFont(font),font);
+ assert.equal(shared.normalizeCustomFont({...font,id:'";}body{display:none}'}),undefined);
+ assert.equal(shared.normalizeCustomFont({...font,format:'svg'}),undefined);
+ assert.equal(shared.customFontRules({}), '','No rules for existing invitations');
+ assert.deepEqual(shared.customFontStyles({}),{},'No typography overrides for existing invitations');
+ assert.equal(shared.customFontAttributes({})['data-custom-heading-font'],undefined);
+ const rules=shared.customFontRules({customHeadingFont:font,customBodyFont:font});
+ assert.equal((rules.match(/@font-face/g)||[]).length,1,'Same file declared once');
+ assert.ok(!rules.includes('<safe>'),'Display names never enter CSS');
+ assert.ok(rules.includes('/'+actor+'/'+fontId+'.woff2'));
+ const woff=new Uint8Array(48);woff.set(Buffer.from('wOF2'));new DataView(woff.buffer).setUint32(8,48);new DataView(woff.buffer).setUint16(12,1);
+ assert.equal(validate(woff,'font.woff2'),'woff2');
+ assert.throws(()=>validate(woff,'font.svg'));
+ assert.throws(()=>validate(Buffer.from('<svg onload="alert(1)" />'),'font.woff2'));
+ assert.throws(()=>validate(woff.slice(0,20),'font.woff2'));
+ assert.throws(()=>validate(new Uint8Array(shared.fontMaxBytes+1),'font.woff2'));
+ const route=load('src/app/api/operators/fonts/route.ts');
+ function request(licensed=true){const body=new FormData();body.set('file',new File([woff],'font.woff2'));body.set('name','Elegante');body.set('licensed',String(licensed));body.set('owner_id',fontId);return new Request('https://www.ilmioinvito.com/api/operators/fonts',{method:'POST',headers:{authorization:'Bearer fixture'},body})}
+ assert.equal((await route.POST(request())).status,403,'Pending operator cannot upload');
+ assert.equal(uploadCalls.length,0);
+ status='active';
+ assert.equal((await route.POST(request(false))).status,400,'Web licence confirmation required');
+ assert.equal((await route.POST(request())).status,200);
+ assert.equal(inserts[0].owner_id,actor,'Owner comes only from verified token');
+ assert.ok(uploadCalls[0].key.startsWith(actor+'/'));
+ assert.equal(uploadCalls[0].options.upsert,false,'Files cannot replace an existing font');
+ rowFailure=true;
+ assert.equal((await route.POST(request())).status,400);
+ assert.equal(removeCalls.length,1,'Failed metadata write removes orphan upload');
+ await route.GET(new Request('https://www.ilmioinvito.com/api/operators/fonts',{headers:{authorization:'Bearer fixture'}}));
+ assert.ok(filters.some(item=>item.table==='operator_fonts'&&item.key==='owner_id'&&item.value===actor),'Catalogue restricted to owner');
+ const drafts=load('src/lib/supabase/drafts.ts');
+ invitationRow.invitation_content.theme={customHeadingFont:font,customBodyFont:font};
+ const draft=await drafts.findDraftBySlugFromSupabase('font-qa');
+ assert.deepEqual(draft.theme.customHeadingFont,font,'Heading font survives database reload');
+ assert.deepEqual(draft.theme.customBodyFont,font,'Body font survives database reload');
+ console.log('Font checks passed: file validation, CSS isolation, legacy fallback, upload authorization, ownership, licence, cleanup and theme reload.');
+})().catch(error=>{console.error(error);process.exitCode=1});

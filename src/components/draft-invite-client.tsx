@@ -8,6 +8,8 @@ import { findDraftBySlugFromSupabase } from "@/lib/supabase/drafts";
 import { InviteRsvp } from "@/components/invite-rsvp";
 import { LiveCountdown } from "@/components/live-countdown";
 import { InviteGuestMedia } from "@/components/invite-guest-media";
+import { InvitationCustomFonts } from "@/components/invitation-custom-fonts";
+import { customFontStyles, customFontAttributes } from "@/lib/fonts/shared";
 import { InvitationHeroBlock } from "@/components/invitation-hero-block";
 
 type DraftInviteClientProps = { slug: string };
@@ -76,6 +78,7 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
  const contentBackgroundSource = invitation.theme.backgroundImage;
  const contentBackgroundImage = contentBackgroundSource ? `url("${contentBackgroundSource}")` : "none";
  const themeStyles={
+   ...customFontStyles(invitation.theme),
    "--invitation-text-color":invitation.theme.textColor??(invitation.theme.template==="classicLight"?"#2f2a24":"#ffffff"),
    "--invitation-button-color":invitation.theme.buttonColor??invitation.theme.accentColor,
    "--invitation-button-text":invitation.theme.buttonTextColor??"#ffffff",
@@ -91,7 +94,8 @@ export function DraftInviteClient({slug}:DraftInviteClientProps){
    backgroundColor:invitation.theme.primaryColor
  } as CSSProperties;
 
- return <main className={`invitation-custom-theme theme-${invitation.theme.template} preview-font-${invitation.theme.fontStyle}${videoStarted&&!videoFinished?" invitation-video-playing":""}`} style={themeStyles}>
+ return <main className={`invitation-custom-theme invitation-custom-fonts theme-${invitation.theme.template} preview-font-${invitation.theme.fontStyle}${videoStarted&&!videoFinished?" invitation-video-playing":""}`} style={themeStyles} {...customFontAttributes(invitation.theme)}>
+  <InvitationCustomFonts theme={invitation.theme} />
   <section className={`invite-hero theme-${invitation.theme.template}`} style={{backgroundColor:invitation.theme.primaryColor,backgroundImage:invitation.theme.backgroundImage?`linear-gradient(rgba(255,250,242,.12),rgba(255,250,242,.22)), url("${invitation.theme.backgroundImage}")`:`linear-gradient(180deg,rgba(15,13,12,.2),${invitation.theme.primaryColor})`,backgroundPosition:"center",backgroundSize:"cover"}}>
    {invitation.theme.backgroundVideo?<><video aria-hidden="true" className="invite-background-video" crossOrigin="anonymous" ref={videoRef} onEnded={()=>setVideoFinished(true)} onPlay={()=>setVideoStarted(true)} playsInline poster={invitation.theme.backgroundImage} preload="auto" src={invitation.theme.backgroundVideo}/>{!videoStarted&&!videoFinished?<button className="video-invitation-opener" type="button" onClick={startVideo}><span aria-hidden="true">✦</span>Apri l&apos;invito</button>:null}</>:null}
    {!invitation.theme.backgroundVideo||videoFinished?<div className={`${invitation.theme.backgroundVideo?"invite-video-data ":""}public-hero-content`}>
