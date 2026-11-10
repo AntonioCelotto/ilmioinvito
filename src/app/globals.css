@@ -3192,3 +3192,48 @@ h3 {
     width: 100%;
   }
 }
+
+/* Professional operators: shared brand, separate account and credit controls. */
+.operator-page { min-height:100vh; }
+.operator-header { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:24px clamp(20px,5vw,72px); border-bottom:1px solid var(--line); background:var(--panel); }
+.operator-header nav { display:flex; gap:24px; flex-wrap:wrap; }
+.operator-page-content { max-width:1180px; margin:0 auto; padding:48px 24px 80px; }
+.operator-page-content > h1 { font-size:clamp(32px,5vw,52px); margin:10px 0 30px; letter-spacing:-.04em; }
+.operator-page-content .panel, .operator-admin-card { margin-bottom:22px; }
+.operator-intro-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+.operator-steps { padding-left:24px; line-height:1.8; }
+.operator-form { display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:850px; }
+.operator-full-width { grid-column:1/-1; }
+.operator-banner { display:flex; align-items:center; justify-content:space-between; gap:28px; }
+.operator-banner p { line-height:1.6; max-width:740px; }
+.operator-credit-count { display:flex; flex-direction:column; text-align:center; min-width:145px; }
+.operator-credit-count strong { font-size:54px; line-height:1.1; color:var(--accent-dark); }
+.operator-credit-count span { color:var(--muted); font-size:14px; }
+.operator-actions { display:flex; flex-wrap:wrap; gap:12px; margin:22px 0; }
+.operator-package-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:24px 0; }
+.operator-package-grid article { padding:20px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.operator-package-grid strong { display:block; font-size:27px; color:var(--accent-dark); }
+.operator-package-grid small { font-size:14px; }
+.operator-package-grid p { font-size:14px; color:var(--muted); }
+.operator-text-button { background:none; border:0; color:var(--accent-dark); text-decoration:underline; padding:20px 0 0; cursor:pointer; }
+.operator-message { background:#f3e7e3; border:1px solid var(--line); border-radius:12px; padding:16px 20px; overflow-wrap:anywhere; }
+.operator-table-wrap { overflow-x:auto; }
+.operator-table { width:100%; border-collapse:collapse; text-align:left; min-width:530px; }
+.operator-table th,.operator-table td { padding:14px 12px; border-bottom:1px solid var(--line); }
+.operator-table th { font-size:13px; color:var(--muted); }
+.operator-history { list-style:none; padding:0; }
+.operator-history li { display:flex; justify-content:space-between; gap:20px; padding:14px 0; border-bottom:1px solid var(--line); }
+.operator-history span { color:var(--muted); }
+.operator-grant-form { display:grid; grid-template-columns:1fr 1fr auto; align-items:end; gap:16px; padding:22px 0; border-top:1px solid var(--line); }
+.operator-admin-card summary { cursor:pointer; padding:16px 0; font-weight:600; }
+.operator-page-content a:not(.button):not(.brand) { text-decoration:underline; text-underline-offset:3px; }
+@media(max-width:800px) {
+  .operator-intro-grid,.operator-form { grid-template-columns:1fr; }
+  .operator-package-grid { grid-template-columns:repeat(2,1fr); }
+  .operator-banner { align-items:flex-start; flex-direction:column; }
+  .operator-credit-count { text-align:left; }
+  .operator-grant-form { grid-template-columns:1fr; }
+  .operator-header { align-items:flex-start; flex-direction:column; }
+  .operator-history li { flex-direction:column; gap:6px; }
+}
+@media(max-width:450px) { .operator-package-grid { grid-template-columns:1fr; } }

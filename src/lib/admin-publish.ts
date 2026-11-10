@@ -1,8 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 
-export function isProjectAdmin(user: { app_metadata?: Record<string, unknown> } | null | undefined) {
-  return user?.app_metadata?.app_role === "admin" && user.app_metadata.project_owner === true;
-}
+export { isProjectAdmin } from "@/lib/admin-role";
 
 export async function publishInvitationAsAdmin(invitationId: string) {
   const supabase = createClient();

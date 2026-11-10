@@ -35,6 +35,9 @@ import {
   updateGuestMediaStatus
 } from "@/lib/supabase/guest-media";
 import { downloadGuestPdf } from "@/lib/guest-pdf";
+import { OperatorDashboardNotice } from "@/components/operator-dashboard-notice";
+import { loadOperatorSummary, publishInvitationAsOperator } from "@/lib/operators/client";
+import type { OperatorSummary } from "@/lib/operators/types";
 import { isProjectAdmin, publishInvitationAsAdmin } from "@/lib/admin-publish";
 
 export function DashboardClient() {
@@ -59,6 +62,8 @@ export function DashboardClient() {
   const [guestMediaMessage, setGuestMediaMessage] = useState("");
   const [updatingGuestMediaId, setUpdatingGuestMediaId] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [operator, setOperator] = useState<OperatorSummary | null>(null);
+  const [operatorReady, setOperatorReady] = useState(false);
   const [adminPublishingId, setAdminPublishingId] = useState("");
   const [selectedGuestIds, setSelectedGuestIds] = useState<string[]>([]);
   const guestTableTopScrollRef = useRef<HTMLDivElement>(null);
@@ -77,6 +82,12 @@ export function DashboardClient() {
         return;
       }
 
+      try {
+        const summary = await loadOperatorSummary();
+        if (active) { setOperator(summary); setOperatorReady(true); }
+      } catch {
+        if (active) { setOperatorReady(false); setDraftActionMessage("Impossibile verificare l’account. Ricarica la pagina prima di pubblicare."); }
+      }
       const result = await loadUserDraftsFromSupabase();
       if (!active) return;
 
@@ -446,7 +457,24 @@ export function DashboardClient() {
     window.location.href = `/builder?edit=${encodeURIComponent(draft.id)}`;
   }
 
-  function handlePublish(draft: InvitationDraft) {
+  async function handlePublish(draft: InvitationDraft) {
+    if (!operatorReady) return;
+    if (operator?.account) {
+      setAdminPublishingId(draft.id);
+      setDraftActionMessage("");
+      try {
+        const result = await publishInvitationAsOperator(draft.id);
+        if (result.ok) {
+          const published = { ...draft, status: "published" as const, updatedAt: new Date().toISOString() };
+          saveDraft(published);
+          setDrafts(current => current.map(item => item.id === draft.id ? published : item));
+          setOperator(await loadOperatorSummary());
+        }
+        setDraftActionMessage(result.message);
+      } catch { setDraftActionMessage("Ricarica la dashboard per verificare la pubblicazione."); }
+      finally { setAdminPublishingId(""); }
+      return;
+    }
     setEditingDraft(draft);
     window.location.href = `/abbonamenti?invito=${encodeURIComponent(draft.id)}&titolo=${encodeURIComponent(draft.title)}`;
   }
@@ -751,7 +779,7 @@ export function DashboardClient() {
               </button>
             ) : null}
             <button className="button draft-edit-button" type="button" onClick={() => handleEdit(draft)}>Modifica</button>
-            {!published ? <button className="button draft-publish-button" type="button" onClick={() => handlePublish(draft)}>Pubblica e paga</button> : null}
+            {!published ? <button className="button draft-publish-button" disabled={!operatorReady || Boolean(adminPublishingId) || (Boolean(operator?.account) && operator?.account?.status !== "active")} type="button" onClick={() => void handlePublish(draft)}>{adminPublishingId === draft.id ? "Pubblicazione…" : operator?.account ? "Pubblica con 1 credito" : "Pubblica e paga"}</button> : null}
             {!published && isAdmin ? <button className="button secondary" disabled={adminPublishingId === draft.id} type="button" onClick={() => handleAdminPublish(draft)}>{adminPublishingId === draft.id ? "Pubblicazione…" : "Pubblica come amministratore"}</button> : null}
             <button className="draft-delete-button" disabled={deletingDraftId === draft.id} type="button" onClick={() => handleDelete(draft)}>{deletingDraftId === draft.id ? "Eliminazione…" : "Elimina"}</button>
           </div>
@@ -763,7 +791,7 @@ export function DashboardClient() {
   return <>
     <div className="toolbar">
       <div>
-        <p className="eyebrow">Dashboard cliente</p>
+        <p className="eyebrow">{operator?.account ? "Dashboard operatore" : "Dashboard cliente"}</p>
         <h2>I tuoi inviti</h2>
         <p className="muted">Qui vedi bozze, inviti pubblicati, RSVP e impostazioni principali.</p>
       </div>
@@ -771,13 +799,15 @@ export function DashboardClient() {
     </div>
 
     <AuthPanel />
+    <OperatorDashboardNotice />
+    {isAdmin ? <div className="operator-actions"><a className="button light" href="/admin/operatori">Gestisci operatori e crediti</a></div> : null}
 
     <section className="panel dashboard-section">
       <div className="panel-header"><h3>Inviti pubblicati</h3><span className="muted">{publishedInvitations.length} pubblicati</span></div>
       {remoteMessage ? <p className="panel-note">{remoteMessage}</p> : null}
       {draftActionMessage ? <p className="panel-note dashboard-action-message" role="status">{draftActionMessage}</p> : null}
       {publishedInvitations.length === 0 ? (
-        <div className="empty-state"><h3>Nessun invito pubblicato</h3><p className="muted">Dopo il pagamento, gli inviti pubblicati compariranno qui.</p></div>
+        <div className="empty-state"><h3>Nessun invito pubblicato</h3><p className="muted">Gli inviti pubblicati compariranno qui.</p></div>
       ) : <InvitationRows items={publishedInvitations} published />}
     </section>
 

@@ -30,6 +30,10 @@ export async function POST(request: Request) {
     const admin = createSupabaseAdminClient();
     if (!admin) return NextResponse.json({ error: "Pagamenti non ancora configurati." }, { status: 503 });
 
+    const { data: operatorAccount, error: operatorError } = await admin.from("operator_accounts").select("status").eq("user_id", data.user.id).maybeSingle();
+    if (operatorError) return NextResponse.json({ error: "Verifica account non riuscita. Riprova." }, { status: 503 });
+    if (operatorAccount) return NextResponse.json({ error: "Il tuo account usa i crediti operatore. Pubblica dalla dashboard senza acquistare il singolo invito." }, { status: 409 });
+
     const { data: invitation } = await admin
       .from("invitations")
       .select("id,title,slug,status")

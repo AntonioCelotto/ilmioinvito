@@ -9,7 +9,7 @@ export default function TemplateAdminPage() {
         <nav aria-label="Amministrazione">
           <a href="/dashboard">Dashboard</a>
           <a href="/templates">Template</a>
-          <a className="active" href="/admin/templates">Gestione Template</a>
+          <a className="active" href="/admin/templates">Gestione Template</a><a href="/admin/operatori">Gestione operatori</a>
         </nav>
       </aside>
       <section className="main"><AuthGate><TemplateAdminClient /></AuthGate></section>

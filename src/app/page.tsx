@@ -10,7 +10,7 @@ const featuredTemplates = [
 export default function HomePage() {
   return (
     <main className="home-page">
-      <header className="topbar home-topbar"><a className="brand" href="/">ilmioinvito.com</a><nav className="nav" aria-label="Navigazione principale"><a href="#come-funziona">Come funziona</a><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/login">Accedi</a><a className="home-nav-cta" href="/registrati">Crea il tuo invito</a></nav></header>
+      <header className="topbar home-topbar"><a className="brand" href="/">ilmioinvito.com</a><nav className="nav" aria-label="Navigazione principale"><a href="#come-funziona">Come funziona</a><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/operatori">Area operatori</a><a href="/login">Accedi</a><a className="home-nav-cta" href="/registrati">Crea il tuo invito</a></nav></header>
 
       <section className="hero home-hero">
         <div className="hero-inner home-hero-layout">
@@ -35,7 +35,7 @@ export default function HomePage() {
 
       <section className="section home-final-cta"><div className="section-inner"><p className="eyebrow">Il tuo invito, a modo tuo</p><h2>Inizia oggi a creare qualcosa di speciale.</h2><p>Progetta gratuitamente il tuo invito e guarda ogni modifica in tempo reale.</p><div className="actions"><a className="button" href="/registrati">Crea il tuo invito</a><a className="button light" href="/templates">Esplora i template</a></div></div></section>
 
-      <footer className="home-footer"><a className="brand" href="/">ilmioinvito.com</a><p>Inviti digitali personalizzati per i momenti che contano.</p><nav><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/login">Accedi</a><a href="/registrati">Registrati</a><a href="/privacy">Privacy</a><a href="/condizioni">Condizioni</a></nav></footer>
+      <footer className="home-footer"><a className="brand" href="/">ilmioinvito.com</a><p>Inviti digitali personalizzati per i momenti che contano.</p><nav><a href="/templates">Template</a><a href="/abbonamenti">Prezzi</a><a href="/operatori">Area operatori</a><a href="/login">Accedi</a><a href="/registrati">Registrati</a><a href="/privacy">Privacy</a><a href="/condizioni">Condizioni</a></nav></footer>
     </main>
   );
 }

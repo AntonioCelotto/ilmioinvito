@@ -8,9 +8,10 @@ import {
 
 type AuthFormProps = {
   mode: "login" | "register";
+  returnTo?: string;
 };
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, returnTo }: AuthFormProps) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,6 +19,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const isRegister = mode === "register";
+
+  function destination() {
+    const target = returnTo ?? new URLSearchParams(window.location.search).get("ritorno");
+    return target && target.startsWith("/") && !target.startsWith("//") && !target.includes("\\") ? target : "/templates";
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,7 +53,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (isRegister && result.data?.session) {
-      window.location.href = "/templates";
+      window.location.href = destination();
       return;
     }
 
@@ -58,7 +64,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       return;
     }
 
-    window.location.href = "/templates";
+    window.location.href = destination();
   }
 
   return (

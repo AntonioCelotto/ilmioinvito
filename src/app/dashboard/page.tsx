@@ -16,6 +16,8 @@ export default function DashboardPage() {
               Dashboard
             </a>
             <a href="/admin/templates">Gestione Template</a>
+            <a href="/admin/operatori">Gestione operatori</a>
+            <a href="/operatori">Area operatori</a>
             <a href="/i/dora-lorenzo-demo">Anteprima pubblica</a>
           </nav>
         </aside>

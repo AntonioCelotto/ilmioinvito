@@ -29,6 +29,8 @@ import {
 import { LiveCountdown } from "@/components/live-countdown";
 import { InvitationHeroBlock } from "@/components/invitation-hero-block";
 import { captureVideoFrameDataUrl } from "@/lib/video-frame";
+import { loadOperatorSummary, publishInvitationAsOperator } from "@/lib/operators/client";
+import type { OperatorSummary } from "@/lib/operators/types";
 import { isProjectAdmin, publishInvitationAsAdmin } from "@/lib/admin-publish";
 
 const sectionLabels: Record<InvitationSectionKey, string> = {
@@ -476,6 +478,8 @@ export function BuilderClient() {
   const [videoFinished, setVideoFinished] = useState(false);
   const [videoStarted, setVideoStarted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [operator, setOperator] = useState<OperatorSummary | null>(null);
+  const [operatorReady, setOperatorReady] = useState(false);
   const [lastVideoFrame, setLastVideoFrame] = useState("");
   const [draggedBlock, setDraggedBlock] =
     useState<InvitationSectionKey | null>(null);
@@ -523,7 +527,11 @@ export function BuilderClient() {
   const previewBackgroundSource = lastVideoFrame || draft.theme.backgroundImage;
 
   useEffect(() => {
-    void getCurrentUser().then((user) => setIsAdmin(isProjectAdmin(user)));
+    void getCurrentUser().then(async (user) => {
+      setIsAdmin(isProjectAdmin(user));
+      if (user) setOperator(await loadOperatorSummary());
+      setOperatorReady(true);
+    }).catch(() => setSavedMessage("Impossibile verificare l’account. Ricarica la pagina prima di pubblicare."));
   }, []);
 
   useEffect(() => {
@@ -892,6 +900,11 @@ export function BuilderClient() {
   }
 
   async function handlePublish() {
+    if (!operatorReady) return;
+    if (operator?.account && draft.status !== "published") {
+      await handleOperatorPublish();
+      return;
+    }
     if (draft.status !== "published") {
       setPublishing(true);
       setSavedMessage("Salvataggio della bozza prima del pagamento...");
@@ -939,6 +952,25 @@ export function BuilderClient() {
     }
 
     setPublishing(false);
+  }
+
+  async function handleOperatorPublish() {
+    setPublishing(true);
+    setSavedMessage("Salvataggio della bozza e verifica del credito operatore…");
+    try {
+      const nextDraft = { ...draft, slug: draftSlug(draft.title, draft.id), status: "draft" as const, updatedAt: new Date().toISOString() };
+      saveDraft(nextDraft);
+      const saved = await saveDraftToSupabase(nextDraft);
+      if (saved.status !== "remote") { setSavedMessage(saved.message); return; }
+      const result = await publishInvitationAsOperator(nextDraft.id);
+      setSavedMessage(result.message);
+      if (result.ok) {
+        const published = { ...nextDraft, status: "published" as const };
+        saveDraft(published); setDraft(published);
+        setOperator(await loadOperatorSummary());
+      }
+    } catch { setSavedMessage("Verifica la pubblicazione dalla dashboard prima di riprovare. Lo stesso evento non consuma un secondo credito."); }
+    finally { setPublishing(false); }
   }
 
   async function handleAdminPublish() {
@@ -1493,13 +1525,14 @@ export function BuilderClient() {
           </label>
         </div>
 
+        {operator?.account ? <p className="panel-note">{operator.account.status === "active" ? `Operatore · ${operator.available} crediti disponibili. La prima pubblicazione utilizza 1 credito Firma.` : "L’account operatore deve essere abilitato per nuove pubblicazioni. Puoi salvare le bozze."} <a href="/operatori">Area operatori</a></p> : null}
         <div className="builder-save-actions">
           <button className="button secondary builder-draft-button" type="button" onClick={handleSave}>
             Salva bozza
           </button>
           <button
             className="button"
-            disabled={publishing}
+            disabled={publishing || !operatorReady || (Boolean(operator?.account) && operator?.account?.status !== "active" && draft.status !== "published")}
             type="button"
             onClick={handlePublish}
           >
@@ -1507,7 +1540,7 @@ export function BuilderClient() {
               ? "Pubblicazione..."
               : draft.status === "published"
                 ? "Aggiorna invito pubblico"
-                : "Pubblica e paga"}
+                : operator?.account ? "Pubblica con 1 credito" : "Pubblica e paga"}
           </button>
           {isAdmin && draft.status !== "published" ? (
             <button className="button secondary" disabled={publishing} type="button" onClick={handleAdminPublish}>
