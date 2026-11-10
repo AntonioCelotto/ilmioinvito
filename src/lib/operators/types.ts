@@ -37,8 +37,8 @@ export function availableCredits(grants: OperatorGrant[], now = Date.now()) {
   return grants.reduce((total, grant) => total + (Date.parse(grant.expires_at) > now ? grant.event_count - grant.used_count : 0), 0);
 }
 export const operatorPackages = [
-  { key: "pilot", name: "Evento pilota Firma", events: 1, price: 89 },
-  { key: "five", name: "5 eventi Firma", events: 5, price: 395 },
-  { key: "ten", name: "10 eventi Firma", events: 10, price: 690 },
-  { key: "twentyfive", name: "25 eventi Firma", events: 25, price: 1475 }
+  { key: "pilot", stripePriceId: "price_1UaCY3Qa5onFFcwq2E7Nu1qp", name: "Evento pilota Firma", events: 1, price: 89 },
+  { key: "five", stripePriceId: "price_1UaCYHQa5onFFcwqHkKfUFBj", name: "5 eventi Firma", events: 5, price: 395 },
+  { key: "ten", stripePriceId: "price_1UaCYNQa5onFFcwqDpdF9geC", name: "10 eventi Firma", events: 10, price: 690 },
+  { key: "twentyfive", stripePriceId: "price_1UaCYSQa5onFFcwqEkhL0202", name: "25 eventi Firma", events: 25, price: 1475 }
 ] as const;

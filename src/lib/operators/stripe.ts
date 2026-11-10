@@ -44,12 +44,9 @@ export function operatorCheckoutBody(params: { orderId: string; operatorId: stri
   const pack = operatorPackages.find(item => item.key === params.packageKey);
   if (!pack) throw new Error("Pacchetto non valido.");
   const body = new URLSearchParams({
-    mode: "payment", "managed_payments[enabled]": "false", "payment_method_types[0]": "card",
-    "line_items[0][price_data][currency]": "eur",
-    "line_items[0][price_data][unit_amount]": String(pack.price * 100),
-    "line_items[0][price_data][tax_behavior]": "exclusive",
-    "line_items[0][price_data][product_data][name]": `Il Mio Invito Operatori — ${pack.name}`,
-    "line_items[0][price_data][product_data][description]": `${pack.events} eventi Firma con grafica propria e invitati illimitati. Crediti attivabili entro 12 mesi.`,
+    mode: "payment", "managed_payments[enabled]": "false",
+    integration_identifier: "ilmioinvito_operators_rkfnqvaz",
+    "line_items[0][price]": pack.stripePriceId,
     "line_items[0][quantity]": "1",
     "automatic_tax[enabled]": "true", "tax_id_collection[enabled]": "true",
     billing_address_collection: "required", customer_creation: "always",

@@ -25,10 +25,12 @@ const request=body=>new Request('https://www.ilmioinvito.com/api/operators/check
  assert.equal((await checkout.POST(request({packageKey:'invalid',requestId:order}))).status,400);
  assert.equal((await checkout.POST(request({packageKey:'ten',requestId:order,amount:1,events:9999}))).status,200);
  const call=stripeCalls.find(item=>item.url.endsWith('checkout/sessions'));
- assert.equal(call.init.body.get('line_items[0][price_data][unit_amount]'),'69000');
+ assert.equal(call.init.body.get('line_items[0][price]'),'price_1UaCYNQa5onFFcwqDpdF9geC');
+ assert.equal(call.init.body.has('line_items[0][price_data][unit_amount]'),false);
+ assert.equal(call.init.body.has('payment_method_types[0]'),false);
  assert.equal(call.init.body.get('mode'),'payment');
  assert.equal(call.init.body.get('automatic_tax[enabled]'),'true');
- assert.equal(call.init.body.get('line_items[0][price_data][tax_behavior]'),'exclusive');
+ assert.equal(call.init.body.get('integration_identifier'),'ilmioinvito_operators_rkfnqvaz');
  assert.equal(call.init.body.get('metadata[operator_id]'),user);
  assert.equal(call.init.headers['Idempotency-Key'],'operator-checkout-'+order);
  const helper=load('src/lib/operators/stripe.ts');
