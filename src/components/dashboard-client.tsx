@@ -799,7 +799,7 @@ export function DashboardClient() {
     </div>
 
     <AuthPanel />
-    <OperatorDashboardNotice />
+    <OperatorDashboardNotice summary={operator} />
     {isAdmin ? <div className="operator-actions"><a className="button light" href="/admin/operatori">Gestisci operatori e crediti</a></div> : null}
 
     <section className="panel dashboard-section">

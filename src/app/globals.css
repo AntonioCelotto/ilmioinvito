@@ -3237,3 +3237,9 @@ h3 {
   .operator-history li { flex-direction:column; gap:6px; }
 }
 @media(max-width:450px) { .operator-package-grid { grid-template-columns:1fr; } }
+.operator-page .panel { padding:28px; border-radius:18px; }
+.operator-page h2 { font-size:clamp(24px,2.4vw,32px); line-height:1.2; margin:12px 0 18px; letter-spacing:-.025em; }
+.operator-page h3 { font-size:20px; line-height:1.3; }
+.operator-page p { line-height:1.65; }
+.operator-page .field input,.operator-page .field select { width:100%; }
+@media(max-width:600px) { .operator-page .panel { padding:20px; } }
